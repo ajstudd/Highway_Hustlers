@@ -19,6 +19,8 @@ export type Rider = {
   cc: number;
   character: string;
   colorName: string;
+  /** versioned colour frame set; omit to use the bike id */
+  imageSet?: string;
   /** glow colour behind the bike */
   glow: string;
   /** frames live in /public/bikes/<id>/00.webp … */
@@ -33,13 +35,13 @@ export type Rider = {
 export const RIDERS: Rider[] = [
   {
     id: 'hunter-350', name: 'Anjali',
-    brand: 'Royal Enfield', model: 'Hunter 350', cc: 349, character: 'Retro roadster', colorName: 'Rebel Blue',
-    glow: '#3d7bd9', frames: 36, dir: 1, facing: 'right',
+    brand: 'Royal Enfield', model: 'Hunter 350', cc: 349, character: 'Retro roadster', colorName: 'Tokyo Black', imageSet: 'hunter-350-tokyo-black-v2',
+    glow: '#788ea4', frames: 36, dir: 1, facing: 'right',
   },
   {
     id: 'apache-rr310', name: 'Priyanshu',
-    brand: 'TVS', model: 'Apache RR 310', cc: 312, character: 'Sport tourer', colorName: 'Racing Red',
-    glow: '#e2433a', frames: 24, dir: 1, facing: 'right',
+    brand: 'TVS', model: 'Apache RR 310', cc: 312, character: 'Sport tourer', colorName: 'Titanium Black', imageSet: 'apache-rr310-titanium-black-factory-v3',
+    glow: '#89939e', frames: 24, dir: 1, facing: 'right',
   },
   {
     id: 'speed-400', name: 'Akshad',
@@ -48,8 +50,8 @@ export const RIDERS: Rider[] = [
   },
   {
     id: 'classic-350', name: 'Shivank',
-    brand: 'Royal Enfield', model: 'Classic 350', cc: 349, character: 'Timeless classic', colorName: 'Medallion Bronze',
-    glow: '#b9824a', frames: 36, dir: -1, facing: 'right',
+    brand: 'Royal Enfield', model: 'Classic 350', cc: 349, character: 'Timeless classic', colorName: 'Gun Grey', imageSet: 'classic-350-gun-grey-v2',
+    glow: '#8693a0', frames: 36, dir: -1, facing: 'right',
   },
   {
     id: 'cb350rs', name: 'Enricquo',
@@ -73,23 +75,23 @@ export const RIDERS: Rider[] = [
   },
   {
     id: 'xpulse-210', name: 'Ashutosh',
-    brand: 'Hero', model: 'Xpulse 210', cc: 210, character: 'Adventure', colorName: 'White',
-    glow: '#9fb6d6', frames: 12, dir: -1, facing: 'right',
+    brand: 'Hero', model: 'Xpulse 210', cc: 210, character: 'Adventure', colorName: 'Azure Blue', imageSet: 'xpulse-210-azure-blue',
+    glow: '#3575d5', frames: 12, dir: -1, facing: 'right',
   },
   {
     id: 'tvs-raider-125', name: 'Aryan',
-    brand: 'TVS', model: 'Raider 125', cc: 124, character: 'Everyday street', colorName: 'Striking Red',
-    glow: '#e0413a', frames: 8, dir: -1, facing: 'right',
+    brand: 'TVS', model: 'Raider 125', cc: 124, character: 'Everyday street', colorName: 'Black Panther', imageSet: 'tvs-raider-125-black-panther',
+    glow: '#80629e', frames: 8, dir: -1, facing: 'right',
   },
   {
     id: 'cb125-hornet', name: 'Pawan',
-    brand: 'Honda', model: 'CB125 Hornet', cc: 123, character: 'Street naked', colorName: 'Black & Yellow',
-    glow: '#d6d23a', frames: 24, dir: 1, facing: 'right',
+    brand: 'Honda', model: 'CB125 Hornet', cc: 123, character: 'Street naked', colorName: 'Pearl Igneous Black', imageSet: 'cb125-hornet-pearl-igneous-black',
+    glow: '#a8997b', frames: 24, dir: 1, facing: 'right',
   },
 ];
 
 export const frameSrc = (riderId: string, i: number) =>
-  `/bikes/${riderId}/${String(i).padStart(2, '0')}.webp`;
+  `/bikes/${RIDERS.find(r => r.id === riderId)?.imageSet ?? riderId}/${String(i).padStart(2, '0')}.webp`;
 
 /** Manifesto — words wrapped in *asterisks* get the accent treatment */
 export const MANIFESTO =

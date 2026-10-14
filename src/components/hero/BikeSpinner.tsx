@@ -57,7 +57,7 @@ export function BikeSpinner({ rider, intro = false, onInteract }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [rider.id, n, intro, spins, reduced]);
+  }, [rider.id, rider.imageSet, n, intro, spins, reduced]);
 
   // render loop
   useEffect(() => {

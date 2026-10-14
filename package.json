@@ -7,6 +7,7 @@
     "dev": "vite",
     "test:sunday": "node scripts/test-sunday.mjs && node scripts/test-actors.mjs",
     "test:site": "node scripts/test-site.mjs",
+    "test:bike-colours": "node scripts/test-bike-colours.mjs",
     "build": "vite build",
     "preview": "vite preview"
   },

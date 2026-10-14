@@ -38,6 +38,8 @@ Flat, generic decorative scenes, assembled miniature maps, disconnected visual k
 - Keep copy short and specific. Avoid repeated slogans, redundant instructions and invented rider quotes. Instagram (`hhr_bhopal_`) is the only social call to action; no WhatsApp button.
 - Preserve the fuller Our vibe paragraph: shared company, sunrise rides, dhaba chai, lakeside picnics, no ego or jealousy, any bike welcome, and treating riders as our own. Its culture and relaxed tone are intentional, not filler. Keep “We are not a racing club” removed.
 - Identify Ninja 300 rider as Junaid K, and R15M/Pulsar N250 rider as Junaid A. Let the Sunday illustration occupy most of the available viewport, with compact controls kept visible.
+- Hero colours: Hunter Tokyo Black, RR 310 Titanium Black, Classic Gun Grey, Xpulse Azure Blue, Raider Black Panther, CB125 Hornet Pearl Igneous Black. Preserve rotation. Prefer manufacturer colour turntables; use deterministic masked paint adaptation where matching angle sets are unavailable, and disclose that adaptation in credits.
+- RR 310 uses TVS Mexico's genuine 24-frame Negro Titanio turntable, not recoloured Racing Red frames. Preserve the factory decals, grey tank, black fairings and red trellis; only apply a shared crop/scale to fit the hero canvas.
 
 ## Accessibility & Inclusion
 

@@ -8,6 +8,7 @@
     "test:sunday": "node scripts/test-sunday.mjs && node scripts/test-actors.mjs",
     "test:site": "node scripts/test-site.mjs",
     "test:bike-colours": "node scripts/test-bike-colours.mjs",
+    "test:ride-bikes": "node scripts/test-ride-bikes.mjs",
     "build": "vite build",
     "preview": "vite preview"
   },

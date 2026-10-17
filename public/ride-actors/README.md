@@ -6,4 +6,8 @@ Fictional representative riders, not likenesses of Highway Hustlers members.
 - Male head scan: “Infinite” by Lee Perry-Smith, https://www.triplegangers.com/ and http://www.ir-ltd.net/ , CC BY 3.0. Adapted scale, skin tone and attachment to the riding skeleton. Original license is included in HEAD-LICENSE.txt. License: https://creativecommons.org/licenses/by/3.0/
 - Asset source: https://github.com/mrdoob/three.js/tree/dev/examples/models/gltf
 
-The meshes are embedded scene assets, not offered as standalone stock downloads. All action animation and motorcycles are authored for this website.
+The meshes are embedded scene assets, not offered as standalone stock downloads.
+Action poses and driving logic are authored for this website. The playable game
+uses the licensed Hunter 350 described in [the motorcycle credits](../ride-bikes/README.md),
+not the old procedural motorcycle approximations. These actors are fictional riders;
+the scene does not claim to depict particular HH members.

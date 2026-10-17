@@ -4,8 +4,8 @@
 
 The geometry was retrieved on 2026-10-13 using the [OSRM road-routing API](https://project-osrm.org/docs/v5.5.1/api/) with OpenStreetMap road data. The original request URL, snapped waypoints, leg distances and full road geometry are retained in the JSON. Road access and routing can change; this snapshot is for visual storytelling only.
 
-The route is rendered as a north-up SVG outline in an F1-style corner overlay, using the retained real road coordinates. A gold trail and three rider dots share the scene's journey position. Stop dots support mouse and keyboard selection; accessible labels explain the example route without adding visible location text.
+The playable Sunday game projects this route uniformly into a condensed world (about 3.7 km rather than the source 43.5 km). Tiny junctions are rounded for riding. The road and north-up corner minimap share this projection; player and companion dots follow actual vehicle positions. Checkpoints are reached by driving, not by clicking map dots or scrolling a timeline.
 
-The tile-map side panel, map headers, coordinates, zoom controls and network-dependent notices were removed following user feedback. No map tiles or external mapping runtime are required. Visible [OpenStreetMap attribution](https://www.openstreetmap.org/copyright) is placed below the ride controller, outside the scene.
+No map tiles or external mapping runtime are required. [OpenStreetMap attribution](https://www.openstreetmap.org/copyright) and an explanation of the condensed route are included with the ride credits, outside the minimap.
 
-The full-width Three.js ride scene is explicitly an illustration: its scenic road, building placement, farms and lake are not a geographic 3D reconstruction. Both visuals share one six-stop journey coordinate.
+The scenery, architecture, lakeshore shapes and activity props are interpretations, not a geographic 3D reconstruction. The route is recognisably Bhopal, but the game is not navigation or an official club itinerary. Native page scrolling is independent of gameplay.

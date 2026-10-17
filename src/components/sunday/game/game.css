@@ -1,0 +1,154 @@
+.ride-game { --ride-hud: 2; --ride-overlay: 4; position: relative; isolation: isolate; height: clamp(580px, 78svh, 900px); min-height: 580px; overflow: hidden; border-radius: 12px; background: #1d3029; color: #f2ebdd; }
+.ride-game:focus-visible { outline: 2px solid #f5a524; outline-offset: 5px; }
+.ride-game:fullscreen { width: 100%; height: 100dvh; max-height: none; border-radius: 0; }
+.ride-game.ride-expanded { position: fixed; inset: 0; width: 100%; height: 100dvh; min-height: 0; max-height: none; border-radius: 0; z-index: var(--layer-ride-expanded, 70); }
+.ride-game button, .ride-game a { -webkit-tap-highlight-color: transparent; }
+.ride-game button:focus-visible, .ride-game a:focus-visible, .ride-text-button:focus-visible { outline: 2px solid #ffc75b; outline-offset: 4px; }
+.ride-game button:disabled { opacity: .65; cursor: default; }
+.ride-webgl, .ride-webgl canvas, .ride-vignette { position: absolute; inset: 0; width: 100%; height: 100%; }
+.ride-vignette { pointer-events: none; background: linear-gradient(#07140d66, transparent 25%, transparent 60%, #07140d8c); z-index: 1; }
+.ride-topbar { position: absolute; z-index: var(--ride-hud); inset: 24px 24px auto; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; pointer-events: none; }
+.ride-objective { max-width: min(390px, 55%); background: #111d18e8; padding: 14px 18px; border-radius: 5px; box-shadow: 0 4px 20px #07140d22; }
+.ride-objective > span { color: #f5bb54; display: flex; gap: 8px; align-items: center; font-size: .75rem; font-weight: 600; }
+.ride-objective i { height: 3px; width: 3px; background: currentColor; border-radius: 50%; }
+.ride-objective strong { display: block; margin-top: 5px; font-size: 1rem; line-height: 1.3; font-weight: 500; }
+.ride-objective small { display: block; margin-top: 7px; color: #d1dacc; font-size: .75rem; }
+.ride-utilities { display: flex; align-items: center; gap: 4px; pointer-events: auto; padding: 4px; border-radius: 5px; background: #111d18dc; }
+.ride-utilities button, .ride-overlay-close { min-width: 40px; min-height: 40px; display: grid; place-items: center; border-radius: 3px; }
+.ride-utilities time { font-variant-numeric: tabular-nums; padding: 0 10px; font-size: .95rem; }
+.ride-utilities time small { color: #c6d2c7; font-size: .65rem; }
+.ride-utilities button:hover, .ride-overlay-close:hover { background: #ffffff14; }
+.ride-garage-intro { position: absolute; z-index: var(--ride-hud); left: 6%; bottom: 96px; max-width: min(330px, calc(100% - 36px)); max-height: calc(100% - 220px); overflow-y: auto; padding: 24px; border-radius: 7px; background: #0b1511eb; box-shadow: 0 20px 70px #10241f26; }
+.ride-selected-bike { display: flex; align-items: center; gap: 7px; font-size: .8rem; color: #f4bb59; }
+.ride-game h3 { font-family: 'Bricolage Grotesque', sans-serif; font-size: clamp(1.6rem, 3vw, 2.6rem); line-height: 1.1; letter-spacing: -.035em; text-wrap: balance; }
+.ride-garage-intro h3 { margin-top: 9px; }
+.ride-garage-intro p { margin: 14px 0 24px; color: #d1d7cb; font-size: .95rem; line-height: 1.55; }
+.ride-primary { min-height: 48px; display: inline-flex; justify-content: center; align-items: center; gap: 12px; border-radius: 4px; background: #f5a524; color: #1a170f; padding: 12px 18px; font-size: .88rem; font-weight: 600; transition: background 150ms ease-out, transform 150ms ease-out; }
+.ride-primary:hover:not(:disabled) { background: #ffc35b; }
+.ride-primary:active:not(:disabled) { transform: scale(.98); }
+.ride-game kbd { display: inline-grid; place-items: center; min-width: 21px; height: 22px; border: 1px solid currentColor; border-radius: 3px; padding: 0 4px; font: inherit; font-size: .72rem; line-height: 1; opacity: .8; }
+.ride-guided-choice { display: flex; gap: 9px; align-items: flex-start; margin-top: 19px; font-size: .82rem; cursor: pointer; padding: 6px 0; }
+.ride-guided-choice input { margin-top: 3px; accent-color: #f5a524; width: 16px; height: 16px; }
+.ride-guided-choice small { display: block; margin-top: 3px; color: #bccabe; font-size: .75rem; }
+.ride-minimap { position: absolute; z-index: var(--ride-hud); width: 176px; height: 150px; left: 24px; bottom: 92px; background: #14271ee8; border: 1px solid #c2d0ae55; border-radius: 8px; box-shadow: 0 5px 22px #08160e22; pointer-events: none; }
+.ride-minimap svg { width: 100%; height: 100%; }
+.ride-minimap > span { position: absolute; left: 50%; top: 5px; font-size: .6rem; color: #e4d9b4; }
+.ride-speed { position: absolute; z-index: var(--ride-hud); right: 32px; bottom: 96px; width: 105px; text-align: right; text-shadow: 0 2px 8px #07140db3; }
+.ride-speed strong { font: 500 3.4rem/.9 'Bricolage Grotesque', sans-serif; font-variant-numeric: tabular-nums; }
+.ride-speed > span { display: block; margin-top: 6px; font-size: .75rem; }
+.ride-speed > div { height: 3px; background: #dce6cf55; margin-top: 10px; }
+.ride-speed i { display: block; width: 100%; height: 100%; background: #f5b64b; transform-origin: left; transition: transform 120ms linear; }
+.ride-chapter-rail { position: absolute; inset: auto 24px 22px; z-index: var(--ride-hud); display: flex; justify-content: center; gap: 0; padding: 0; list-style: none; pointer-events: none; }
+.ride-chapter-rail li { display: flex; gap: 7px; align-items: center; color: #e6e7d580; padding: 8px 18px; border-top: 1px solid #e9edda30; }
+.ride-chapter-rail li > span { display: grid; place-items: center; font-size: .65rem; width: 18px; height: 18px; border-radius: 50%; border: 1px solid currentColor; }
+.ride-chapter-rail small { font-size: .75rem; white-space: nowrap; }
+.ride-chapter-rail .is-current { color: #ffc45c; border-color: #f4b64f; }
+.ride-chapter-rail .is-done { color: #d2e5c3; }
+.ride-context-action { min-width: 280px; }
+.ride-context-action small { display: block; margin-top: 8px; color: #fff0d4; font-size: .75rem; text-shadow: 0 2px 6px #001a0d; }
+.ride-overlay { position: absolute; inset: 0; z-index: var(--ride-overlay); display: grid; place-items: center; padding: 24px; background: #081810b3; }
+.ride-overlay > div { position: relative; width: min(100%, 480px); padding: 40px; border-radius: 8px; background: #13271c; text-align: center; box-shadow: 0 20px 80px #00160c55; max-height: 100%; overflow: auto; }
+.ride-overlay > div > span { font-size: .85rem; color: #c7d3c4; }
+.ride-overlay h3 { margin: 12px 0 28px; }
+.ride-overlay .ride-text-button { display: flex; margin: 10px auto 0; }
+.ride-overlay-close { position: absolute; top: 8px; right: 8px; }
+.ride-help { text-align: left !important; }
+.ride-help h3 { font-size: 1.8rem; padding-right: 18px; }
+.ride-help dl { display: flex; flex-direction: column; gap: 10px; }
+.ride-help dl > div { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.ride-help dt { display: flex; align-items: center; gap: 4px; color: #f6c36b; }
+.ride-help dd { font-size: .85rem; }
+.ride-help p { color: #cfdacb; font-size: .85rem; line-height: 1.55; margin: 20px 0; }
+.ride-help a { text-decoration: underline; text-underline-offset: 3px; color: #f5c576; }
+.ride-complete { position: absolute; z-index: var(--ride-hud); top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(90%, 420px); background: #10291de8; text-align: center; padding: 32px; border-radius: 8px; }
+.ride-complete > svg { color: #edb34f; margin: 0 auto 12px; }
+.ride-complete > span { color: #f4c571; font-size: .75rem; }
+.ride-complete h3 { margin: 12px 0 15px; }
+.ride-complete p { font-size: .9rem; color: #d3dccb; line-height: 1.6; margin-bottom: 20px; }
+.ride-complete > a, .ride-postcard-button { display: flex; justify-content: center; gap: 8px; align-items: center; margin: 20px auto 0; font-size: .82rem; color: #efc273; }
+.ride-overlay > .ride-postcard { width: min(100%,760px); }
+.ride-postcard img { display: block; width: 100%; max-height: 48svh; object-fit: contain; border-radius: 3px; margin-bottom: 20px; }
+.ride-postcard p { font-size: .72rem; color: #c6d2be; margin-top: 12px; }
+.ride-photo-save { position: absolute; z-index: var(--ride-hud); top: 145px; left: 24px; display: flex; gap: 8px; align-items: center; padding: 12px 14px; background: #13271de8; color: #ffca70; font-size: .8rem; border-radius: 4px; }
+.ride-photo-error { position: absolute; top: 160px; left: 24px; z-index: var(--ride-hud); font-size: .8rem; padding: 12px; background: #281e13; }
+.ride-captured::after { content: ''; position: absolute; z-index: 3; inset: 0; background: #fff; pointer-events: none; animation: ride-shutter 400ms ease-out forwards; }
+@keyframes ride-shutter { from { opacity: .65; } to { opacity: 0; } }
+.ride-text-button { display: inline-flex; align-items: center; gap: 9px; color: #e8d6b5; font-size: .85rem; min-height: 44px; padding: 8px 0; }
+.ride-text-button:hover { color: #f5b64b; }
+.ride-bottom-note { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding: 8px 2px; color: #b4ac9e; font-size: .72rem; }
+.ride-bottom-note button { min-height: 38px; text-decoration: underline; text-underline-offset: 4px; }
+.ride-bottom-note > div { display: flex; gap: 18px; align-items: center; }
+.ride-bottom-note a { color: #c5c1b4; text-decoration: underline; text-underline-offset: 3px; }
+.ride-loading-shell, .ride-load-screen { min-height: 580px; display: grid; place-items: center; background: #1c3026; }
+.ride-load-screen { position: absolute; inset: 0; z-index: var(--ride-overlay); padding: 24px; text-align: center; }
+.ride-load-screen p { margin-top: 16px; max-width: 36ch; color: #d1d7c7; font-size: .9rem; line-height: 1.5; }
+.ride-load-screen .ride-primary { margin-top: 20px; }
+.ride-loading-line { display: block; margin: 24px auto; width: 100px; height: 2px; background: #f5b64b; opacity: .7; }
+.ride-written-story { padding: 0; list-style: none; }
+.ride-written-story li { display: flex; gap: 24px; align-items: flex-start; padding: 28px 0; border-top: 1px solid #f2ebdd22; }
+.ride-written-story li > span { color: #efb54c; font-size: 1.25rem; min-width: 58px; }
+.ride-written-story li > svg { color: #dac99f; margin-top: 3px; flex-shrink: 0; }
+.ride-written-story h3 { font: 600 1.5rem 'Bricolage Grotesque', sans-serif; }
+.ride-written-story p { margin-top: 8px; color: #bcb3a5; max-width: 55ch; line-height: 1.6; }
+.ride-touch-controls { display: none; }
+@media (pointer: coarse), (max-width: 760px) {
+  .ride-touch-controls { position: absolute; z-index: var(--ride-hud); bottom: 86px; left: 20px; right: 20px; display: flex; justify-content: space-between; pointer-events: none; }
+  .ride-touch-controls > div { display: flex; gap: 10px; }
+  .ride-touch-controls button { display: grid; place-items: center; width: 54px; height: 54px; border: 1px solid #d7e5c980; border-radius: 50%; background: #16291ee0; pointer-events: auto; touch-action: none; user-select: none; }
+  .ride-touch-controls .ride-throttle { background: #e8a334; color: #1a2116; border-color: #f0b956; }
+  .ride-context-action { bottom: 155px; }
+  .ride-minimap { bottom: 170px; width: 130px; height: 115px; }
+  .ride-speed { bottom: 180px; right: 24px; }
+  .ride-utilities button { min-width: 44px; min-height: 44px; }
+}
+@media (max-width: 760px) {
+  .ride-game { height: min(760px, 84svh); min-height: 570px; border-radius: 7px; }
+  .ride-topbar { inset: 14px 14px auto; gap: 8px; }
+  .ride-objective { padding: 10px 12px; max-width: 56%; }
+  .ride-objective strong { font-size: .85rem; }
+  .ride-objective > span, .ride-objective small { font-size: .65rem; }
+  .ride-utilities { gap: 0; flex-wrap: wrap; max-width: 140px; justify-content: flex-end; }
+  .ride-utilities time { width: 100%; text-align: right; padding: 3px 8px 5px; font-size: .85rem; }
+  .ride-utilities button { min-width: 38px; min-height: 38px; }
+  .ride-garage-intro { left: 18px; padding: 20px; max-width: min(280px, calc(100% - 36px)); }
+  .ride-garage-intro h3 { font-size: 2rem; }
+  .ride-garage-intro p { font-size: .85rem; margin: 12px 0 18px; }
+  .ride-minimap { width: 130px; height: 115px; left: 16px; }
+  .ride-speed { right: 20px; width: 84px; }
+  .ride-speed strong { font-size: 2.8rem; }
+  .ride-chapter-rail { inset: auto 12px 13px; justify-content: space-between; }
+  .ride-chapter-rail li { flex: 1; padding: 10px 2px 4px; flex-direction: column; gap: 5px; }
+  .ride-chapter-rail small { font-size: .57rem; }
+  .ride-chapter-rail li > span { width: 16px; height: 16px; font-size: .55rem; }
+  .ride-context-action { bottom: 76px; min-width: 230px; }
+  .ride-context-action .ride-primary { font-size: .78rem; padding: 10px 12px; gap: 8px; }
+  .ride-context-action small { font-size: .67rem; max-width: 230px; }
+  .ride-overlay { padding: 14px; }
+  .ride-overlay > div { padding: 28px 22px; }
+  .ride-help h3 { font-size: 1.5rem; }
+  .ride-photo-save { left: 14px; top: 130px; font-size: .72rem; }
+  .ride-bottom-note { font-size: .65rem; align-items: flex-start; }
+  .ride-bottom-note > span { padding-top: 11px; }
+  .ride-written-story li { gap: 14px; }
+}
+@media (max-width: 760px) {
+  .ride-minimap { bottom: 207px; }
+  .ride-speed { bottom: 215px; }
+  .ride-touch-controls { bottom: 78px; left: 16px; right: 16px; }
+}
+@media (prefers-reduced-motion: reduce) { .ride-game *, .ride-game *::after { animation: none !important; transition: none !important; } }
+@media (max-height: 520px) {
+  .ride-expanded .ride-garage-intro { bottom: 76px; max-height: calc(100% - 170px); padding: 14px 18px; }
+  .ride-expanded .ride-garage-intro h3 { font-size: 1.6rem; margin-top: 5px; }
+  .ride-expanded .ride-garage-intro p { display: none; }
+  .ride-expanded .ride-guided-choice { margin-top: 8px; }
+  .ride-expanded .ride-selected-bike { display: none; }
+}
+
+.ride-context-action { position: absolute; left: 50%; bottom: 100px; transform: translateX(-50%); z-index: var(--ride-hud); text-align: center; }
+.ride-preferences { border: 0; border-top: 1px solid #d1dbcb33; margin: 22px 0; padding-top: 10px; }
+.ride-preferences legend { color: #f5c576; font-size: .8rem; padding-right: 10px; }
+.ride-preferences label { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 10px 0; font-size: .85rem; cursor: pointer; }
+.ride-preferences small { display: block; margin-top: 4px; font-size: .72rem; color: #cfdacb; }
+.ride-preferences input { accent-color: #f5a524; width: 20px; height: 20px; flex-shrink: 0; }
+@media (pointer: coarse), (max-width: 760px) { .ride-context-action { bottom: 147px; } }

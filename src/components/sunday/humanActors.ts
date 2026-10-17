@@ -8,6 +8,7 @@ export type BikeStyle='roadster'|'sport'|'adventure';
 let femaleTemplate:THREE.Group|undefined,maleTemplate:THREE.Group|undefined,headTemplate:THREE.Group|undefined;
 let headColor:THREE.Texture|undefined,headNormal:THREE.Texture|undefined;
 let pending:Promise<void>|undefined;
+export function detailedRideActorsReady() { return !!femaleTemplate && !!maleTemplate && !!headTemplate; }
 
 export function prepareRideActors() {
   if(pending)return pending;
@@ -18,11 +19,11 @@ export function prepareRideActors() {
     loader.loadAsync('/ride-actors/head.glb').then(g=>{headTemplate=g.scene;}),
     textures.loadAsync('/ride-actors/head-color.jpg').then(t=>{t.colorSpace=THREE.SRGBColorSpace;t.flipY=false;headColor=t;}),
     textures.loadAsync('/ride-actors/head-normal.jpg').then(t=>{t.flipY=false;headNormal=t;}),
-  ]).then(()=>undefined).catch(error=>{console.warn('Detailed ride actors unavailable; using the lightweight fallback.',error);});
+  ]).then(()=>undefined).catch(error=>{pending=undefined;console.warn('Detailed ride actors unavailable.',error);});
   return pending;
 }
 
-export function createHuman(jacketColor:string,skinColor:string,female:boolean,style:BikeStyle):Person {
+export function createHuman(jacketColor:string,skinColor:string,female:boolean,style:BikeStyle,fit?:{hipHeight:number;lean:number;seatedHipHeight?:number}):Person {
   const template=maleTemplate;
   if(!template || !headTemplate)return createPerson(jacketColor,skinColor);
   const group=new THREE.Group(),model=clone(template) as THREE.Group;
@@ -43,10 +44,10 @@ export function createHuman(jacketColor:string,skinColor:string,female:boolean,s
   const right=[bone('LeftArm'),bone('LeftForeArm'),bone('LeftHand')] as const;
   const feet=[['RightUpLeg','RightLeg','RightFoot'],['LeftUpLeg','LeftLeg','LeftFoot']].map(names=>names.map(bone));
   const hips=bone('Hips'),head=bone('Head'),spine=bone('Spine');
-  const rest=[...bones.values()].map(b=>({bone:b,q:b.quaternion.clone(),p:b.position.clone()}));
+  const rest=[...bones.values()].map(b=>({bone:b,q:b.quaternion.clone(),p:b.position.clone(),s:b.scale.clone()}));
   const modelOrigin=model.position.clone();
   const hipHeight=group.worldToLocal(hips.getWorldPosition(new THREE.Vector3())).y;
-  const seatLift=1.28-hipHeight;
+  const seatLift=(fit?.hipHeight??1.28)-hipHeight;
   const materials:THREE.MeshStandardMaterial[]=[];
 
   model.traverse(object=>{
@@ -131,12 +132,12 @@ export function createHuman(jacketColor:string,skinColor:string,female:boolean,s
 
   const applyPose:NonNullable<Person['applyPose']>=(chapter,time,index,opacity,walking,riding,physical)=>{
     group.visible=opacity>.02;materials.forEach(m=>{m.opacity=opacity;});
-    rest.forEach(r=>{r.bone.quaternion.copy(r.q);r.bone.position.copy(r.p);});
+    rest.forEach(r=>{r.bone.quaternion.copy(r.q);r.bone.position.copy(r.p);r.bone.scale.copy(r.s);});
     model.position.copy(modelOrigin);model.position.y+=seatLift*THREE.MathUtils.smoothstep(riding,.62,1);
     if(!riding)head.rotateY(Math.sin(time*.9+index)*.06);
     group.updateWorldMatrix(true,true);
     const levelHead=head.getWorldQuaternion(new THREE.Quaternion());
-    const lean=(style==='sport'?.95:style==='adventure'?.45:.65)*riding;
+    const lean=(fit?.lean??(style==='sport'?.95:style==='adventure'?.45:.65))*riding;
     const spinePosition=spine.getWorldPosition(new THREE.Vector3());
     orientJoint(spine,bone('Spine1'),spinePosition.add(new THREE.Vector3(0,Math.cos(lean),Math.sin(lean)).applyQuaternion(group.getWorldQuaternion(new THREE.Quaternion()))));
     if(riding>.01){head.quaternion.copy(head.parent!.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(levelHead));head.updateWorldMatrix(false,true);}
@@ -144,7 +145,7 @@ export function createHuman(jacketColor:string,skinColor:string,female:boolean,s
     const atStop=physical?.atStop??(!walking&&riding<.1);
     const sit=chapter===3?(physical?.stopBlend??(atStop?1:0)):0;
     const seated=sit>.01;
-    if(seated){model.position.y+=(.87-hipHeight)*sit;group.updateWorldMatrix(true,true);}
+    if(seated){model.position.y+=((fit?.seatedHipHeight??.87)-hipHeight)*sit;group.updateWorldMatrix(true,true);}
     const action=time;
     if(chapter===0){const lift=THREE.MathUtils.smoothstep(time,.25,1.55),release=THREE.MathUtils.smoothstep(time,1.8,2.7);const headY=local(head.getWorldPosition(new THREE.Vector3())).y+.11;helmet.position.set(0,THREE.MathUtils.lerp(1.08,headY,lift),THREE.MathUtils.lerp(.42,.04,lift));lh=[-.13,THREE.MathUtils.lerp(helmet.position.y,1.05,release),THREE.MathUtils.lerp(helmet.position.z+.04,.08,release)];rh=[.13,lh[1],lh[2]];}
     if(chapter===1){const greet=Math.sin(Math.min(1,time/2.7)*Math.PI);rh=[.30,1.04+greet*.30,.1+greet*.32];}
@@ -174,7 +175,8 @@ export function createHuman(jacketColor:string,skinColor:string,female:boolean,s
         foot[2]=(phase<.62?.42-phase/.62*.84:-.42+THREE.MathUtils.smoothstep(swing,0,1)*.84)*weight;
       }
       const target=[THREE.MathUtils.lerp(foot[0],side*.23,riding),THREE.MathUtils.lerp(foot[1],.62,riding),THREE.MathUtils.lerp(foot[2],.21,riding)];
-      const footWorld=physical?.feet?.[i]??world(target);
+      const footWorld=world(target);
+      if(physical?.feet?.[i])footWorld.lerp(physical.feet[i],atStop?1:THREE.MathUtils.smoothstep(riding,0,1));
       solveLimb(upper,lower,end,footWorld,world([side*.26,.74,.9]));
       orientJoint(end,bone(i===0?'RightToeBase':'LeftToeBase'),footWorld.clone().add(new THREE.Vector3(0,-.035,.18).applyQuaternion(group.getWorldQuaternion(new THREE.Quaternion()))));
       end.scale.setScalar(.88);

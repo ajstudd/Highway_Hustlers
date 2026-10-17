@@ -1,0 +1,86 @@
+[
+  {
+    "id": "kerwa",
+    "name": "Kerwa Dam",
+    "lat": 23.168,
+    "lon": 77.355,
+    "km": 20,
+    "kind": "Sunday morning",
+    "description": "Green roads and a lakeside stop.",
+    "published": true,
+    "legacyId": "kerwa",
+    "media": []
+  },
+  {
+    "id": "bhojpur",
+    "name": "Bhojpur",
+    "lat": 23.0983,
+    "lon": 77.5797,
+    "km": 30,
+    "kind": "Sunday morning",
+    "description": "A ride out to Bhojeshwar temple.",
+    "published": true,
+    "legacyId": "bhojpur",
+    "media": []
+  },
+  {
+    "id": "kolar",
+    "name": "Kolar Dam",
+    "lat": 22.9643,
+    "lon": 77.3369,
+    "km": 40,
+    "kind": "Sunday morning",
+    "description": "Forest roads and reservoir views.",
+    "published": true,
+    "legacyId": "kolar",
+    "media": []
+  },
+  {
+    "id": "bhimbetka",
+    "name": "Bhimbetka",
+    "lat": 22.9387,
+    "lon": 77.6122,
+    "km": 45,
+    "kind": "Sunday morning",
+    "description": "Rock shelters and a walk after the ride.",
+    "published": true,
+    "legacyId": "bhimbetka",
+    "media": []
+  },
+  {
+    "id": "raisen",
+    "name": "Raisen Fort",
+    "lat": 23.33,
+    "lon": 77.788,
+    "km": 45,
+    "kind": "Sunday morning",
+    "description": "A hilltop fort overlooking Raisen.",
+    "published": true,
+    "legacyId": "raisen",
+    "media": []
+  },
+  {
+    "id": "sanchi",
+    "name": "Sanchi",
+    "lat": 23.4793,
+    "lon": 77.7398,
+    "km": 50,
+    "kind": "Full day",
+    "description": "A day out at the stupas.",
+    "published": true,
+    "legacyId": "sanchi",
+    "media": []
+  },
+  {
+    "id": "pachmarhi",
+    "name": "Pachmarhi",
+    "lat": 22.4674,
+    "lon": 78.4346,
+    "km": 200,
+    "kind": "Weekend",
+    "description": "A weekend in the Satpura hills.",
+    "published": true,
+    "legacyId": "pachmarhi",
+    "media": []
+  }
+]

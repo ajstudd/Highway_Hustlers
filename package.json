@@ -9,16 +9,24 @@
     "test:site": "node scripts/test-site.mjs",
     "test:bike-colours": "node scripts/test-bike-colours.mjs",
     "test:ride-bikes": "node scripts/test-ride-bikes.mjs",
+    "test:admin": "node scripts/test-admin.mjs && node scripts/test-photo-compression.mjs",
+    "admin:password": "node scripts/admin-password.mjs",
     "build": "vite build",
     "preview": "vite preview"
   },
+  "engines": {
+    "node": "24.x"
+  },
   "dependencies": {
+    "@neondatabase/serverless": "^1.2.0",
+    "heic-to": "^1.6.6",
     "lucide-react": "^0.460.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "three": "^0.186.1"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.10",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@types/three": "^0.186.0",

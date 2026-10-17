@@ -1,0 +1,6 @@
+{
+  "maxSourceBytes": 25000000,
+  "maxPhotoBytes": 1500000,
+  "maxPhotoDimension": 2048,
+  "maxVideoDimension": 1280
+}

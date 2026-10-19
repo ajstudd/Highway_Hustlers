@@ -1,5 +1,33 @@
 # Hero colour sets
 
+## Unassigned prank-bike drafts
+
+`src/data/garage-drafts.json` adds three unassigned catalogue drafts without changing
+the 11 existing public hero entries or the Sunday game. New databases include these
+drafts. Existing dashboard catalogues are offered missing drafts on load, but the
+administrator must Save draft to persist them; saved edits and existing IDs are
+never overwritten. Assigning and publishing remain explicit admin actions.
+
+| Bike | Colour | Prepared views | Source and processing |
+| --- | --- | --- | --- |
+| TVS XL100 Heavy Duty Alloy | Red | 8 | [TVS India](https://www.tvsmotor.com/tvs-xl100/tvs-xl100-heavy-duty-alloy), native transparent 700×500 WebP. Files 1–8 are retained; the page's swapped 7/8 positions are put in angular order, and file 9's repeated opening angle is omitted. `tvs-xl100-hd-alloy-red-v1` starts at source 4 (right profile), `dir: 1`. |
+| Honda Navi | Yellow | 8 | [Honda Ecuador](https://motos.honda.com.ec/producto/navi-6), native transparent 1000×800 PNG `NAVI_1.png`–`NAVI_8.png`. `honda-navi-yellow-v1` starts at source 8 (right profile), `dir: -1`. |
+| Honda Monkey 125 | Pending | 0 | [Honda Spain](https://www.honda.es/motorcycles/range/125cc/monkey/Overview.html) currently embeds a Sketchfab 3D viewer, not a downloadable photographic turntable. The user explicitly chose to leave it pending rather than use single-photo tilt or invented angles. No model was ripped, no imagery generated, and the empty draft cannot be published. |
+
+The XL100 and Navi preserve factory RGB/alpha and their existing soft source
+shadows, with only one shared crop, scale and placement per complete set. Outputs
+are lossless transparent 1200×720 WebP. No paint changes or background removal.
+Ordered URLs and cyclic offsets are recorded in `scripts/bike-sources/tvs-xl100-red.json`
+and `scripts/bike-sources/honda-navi-yellow.json`. Rebuild with
+`node scripts/prepare-prank-bikes.mjs <Sharp package directory> <temporary source cache> tvs-xl100-red honda-navi-yellow`.
+The helper refuses to overwrite an existing output directory. For all-angle
+light/dark audits, run `node scripts/test-prank-bikes.mjs <Sharp package directory> <audit output directory>`.
+
+Manufacturer imagery remains © TVS/Honda. Public availability and attribution do
+not establish an open reuse licence; these drafts are not automatically published.
+
+## Existing members' bikes
+
 The original sets remain available for source/reference and the Sunday fallback. The hero uses versioned colour directories so cached images cannot mix old and new assets. Hunter and Classic use revision `-v2`; Apache uses `-factory-v3`, replacing the earlier paint approximation with genuine factory imagery.
 
 | Bike | Colour | Frames | Method / official reference |

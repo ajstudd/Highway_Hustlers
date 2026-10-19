@@ -1,0 +1,20 @@
+{
+  "imageSet": "tvs-xl100-hd-alloy-red-v1",
+  "sourcePage": "https://www.tvsmotor.com/tvs-xl100/tvs-xl100-heavy-duty-alloy",
+  "variant": "Heavy Duty Alloy",
+  "colour": "Red",
+  "sourceSequence": "Factory files 1–8 in angular order; the page swaps 7/8. File 9 repeats the opening angle and is omitted.",
+  "startFrame": 3,
+  "lossless": true,
+  "curl": true,
+  "frames": [
+    "https://www.tvsmotor.com/tvs-xl100/-/media/Brand-Pages/XL100/Colours/TVS-XL100-HD-Alloy/Red-New/1.webp",
+    "https://www.tvsmotor.com/tvs-xl100/-/media/Brand-Pages/XL100/Colours/TVS-XL100-HD-Alloy/Red-New/2.webp",
+    "https://www.tvsmotor.com/tvs-xl100/-/media/Brand-Pages/XL100/Colours/TVS-XL100-HD-Alloy/Red-New/3.webp",
+    "https://www.tvsmotor.com/tvs-xl100/-/media/Brand-Pages/XL100/Colours/TVS-XL100-HD-Alloy/Red-New/4.webp",
+    "https://www.tvsmotor.com/tvs-xl100/-/media/Brand-Pages/XL100/Colours/TVS-XL100-HD-Alloy/Red-New/5.webp",
+    "https://www.tvsmotor.com/tvs-xl100/-/media/Brand-Pages/XL100/Colours/TVS-XL100-HD-Alloy/Red-New/6.webp",
+    "https://www.tvsmotor.com/tvs-xl100/-/media/Brand-Pages/XL100/Colours/TVS-XL100-HD-Alloy/Red-New/7.webp",
+    "https://www.tvsmotor.com/tvs-xl100/-/media/Brand-Pages/XL100/Colours/TVS-XL100-HD-Alloy/Red-New/8.webp"
+  ]
+}

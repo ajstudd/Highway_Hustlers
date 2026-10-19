@@ -45,8 +45,9 @@ try {
   const login = await request('login','POST',{password}); assert.equal(login.status,200);
   const cookie = login.headers.get('set-cookie').split(';')[0];
   const doc = (await request('editor','GET',undefined,cookie)).data;
-  assert.equal(doc.garage.bikes.length,11); assert.equal(doc.garage.members.length,10);
-  assert.equal(doc.garage.bikes.reduce((n,b) => n+b.frames.length,0),257);
+  assert.equal(doc.garage.bikes.length,14); assert.equal(doc.garage.members.length,10);
+  assert.equal(doc.garage.bikes.filter(b => b.status === 'published').reduce((n,b) => n+b.frames.length,0),257);
+  assert.equal(doc.garage.bikes.filter(b => b.status === 'draft').length,3);
   let result = await request('publish','POST',{revision:doc.revision,garageRevision:doc.garageRevision},cookie); assert.equal(result.status,200);
   assert.equal(assets.get('hh-site/published.json').riders.length,11);
   const garage = structuredClone(doc.garage);

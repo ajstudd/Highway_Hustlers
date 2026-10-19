@@ -1,0 +1,37 @@
+[
+  {
+    "id": "tvs-xl100", "brand": "TVS", "model": "XL100 Heavy Duty Alloy", "cc": 100,
+    "character": "Utility moped", "colorName": "Red", "glow": "#c83a36", "dir": 1,
+    "facing": "right", "status": "draft",
+    "frames": [
+      { "source": "local", "path": "/bikes/tvs-xl100-hd-alloy-red-v1/00.webp", "width": 1200, "height": 720 },
+      { "source": "local", "path": "/bikes/tvs-xl100-hd-alloy-red-v1/01.webp", "width": 1200, "height": 720 },
+      { "source": "local", "path": "/bikes/tvs-xl100-hd-alloy-red-v1/02.webp", "width": 1200, "height": 720 },
+      { "source": "local", "path": "/bikes/tvs-xl100-hd-alloy-red-v1/03.webp", "width": 1200, "height": 720 },
+      { "source": "local", "path": "/bikes/tvs-xl100-hd-alloy-red-v1/04.webp", "width": 1200, "height": 720 },
+      { "source": "local", "path": "/bikes/tvs-xl100-hd-alloy-red-v1/05.webp", "width": 1200, "height": 720 },
+      { "source": "local", "path": "/bikes/tvs-xl100-hd-alloy-red-v1/06.webp", "width": 1200, "height": 720 },
+      { "source": "local", "path": "/bikes/tvs-xl100-hd-alloy-red-v1/07.webp", "width": 1200, "height": 720 }
+    ]
+  },
+  {
+    "id": "honda-navi", "brand": "Honda", "model": "Navi", "cc": 109,
+    "character": "Mini street", "colorName": "Yellow", "glow": "#c9ce43", "dir": -1,
+    "facing": "right", "status": "draft",
+    "frames": [
+      { "source": "local", "path": "/bikes/honda-navi-yellow-v1/00.webp", "width": 1200, "height": 720 },
+      { "source": "local", "path": "/bikes/honda-navi-yellow-v1/01.webp", "width": 1200, "height": 720 },
+      { "source": "local", "path": "/bikes/honda-navi-yellow-v1/02.webp", "width": 1200, "height": 720 },
+      { "source": "local", "path": "/bikes/honda-navi-yellow-v1/03.webp", "width": 1200, "height": 720 },
+      { "source": "local", "path": "/bikes/honda-navi-yellow-v1/04.webp", "width": 1200, "height": 720 },
+      { "source": "local", "path": "/bikes/honda-navi-yellow-v1/05.webp", "width": 1200, "height": 720 },
+      { "source": "local", "path": "/bikes/honda-navi-yellow-v1/06.webp", "width": 1200, "height": 720 },
+      { "source": "local", "path": "/bikes/honda-navi-yellow-v1/07.webp", "width": 1200, "height": 720 }
+    ]
+  },
+  {
+    "id": "honda-monkey", "brand": "Honda", "model": "Monkey 125", "cc": 124,
+    "character": "Minibike · rotation pending", "colorName": "", "glow": "#d3ae4d",
+    "dir": 1, "facing": "right", "status": "draft", "frames": []
+  }
+]

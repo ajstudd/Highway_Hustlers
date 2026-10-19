@@ -29,16 +29,21 @@ configuration uses the optional `VITE_CLOUDINARY_CLOUD_NAME` / `VITE_CONTENT_SNA
    Set sensitive variables as **Sensitive** in Vercel. Do not paste them in chat,
    source code, screenshots, or a browser console. The Cloudinary cloud name is
    public; the API secret and DB connection string must remain server-only.
-4. **Before deploying the snapshot-based public frontend**, bootstrap its first
-   publication from the current database. In a private local shell with the existing
-   server credentials securely configured, run `node scripts/publish-current-content.mjs`
-   for a dry-run, review the environment, then run it with `--publish` only when rollout
-   is approved. It preserves saved content, seeds the 10 existing members / 11 bikes
-   only if no catalogue exists,
-   and publishes the current content to Cloudinary. It does not upload bike images or
-   deploy code. Original `/bikes/` paths work until the separate migration finishes.
-   Verify the public JSON, then deploy. This prevents a first-deployment empty-content
-   window. This guide does not itself authorize publishing, pushing or deploying.
+4. **Deploy normally. The first content publication is automatic.** The configured
+   build command runs Vite first, then `scripts/ensure-production-content.mjs`.
+   Only a Vercel Production build can perform automatic setup. It uses the existing
+   Production credentials, preserves the saved gallery and seeds the 10 members /
+   11 bikes only if no catalogue exists. If no prior publication exists and the CDN
+   file is missing, it publishes the eligible saved content and verifies the exact
+   delivery URL before the build succeeds. No local environment file or manual
+   terminal publishing is required. Local and Preview builds skip this step.
+   Existing content is verified without querying Neon; subsequent deployments never
+   publish newer drafts. A failed check blocks the build. If a previously published
+   file is missing, restore it or explicitly publish in the dashboard; the build
+   will not use that failure as permission to publish drafts. Original bike paths
+   continue working until the separate migration finishes. The manual
+   `scripts/publish-current-content.mjs` tool is retained for deliberate recovery,
+   not routine setup. This guide does not itself authorize deploying or publishing.
 5. Open `https://YOUR-DOMAIN/admin`, sign in, and choose a place. Use **Choose from
    Cloudinary** to select the four existing uploads. New uploads go directly from
    the browser to Cloudinary using a signature from the authenticated API.

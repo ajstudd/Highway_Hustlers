@@ -1,27 +1,12 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { cleanGarage, publicRiders, bikeFrameUrl, type PublicRider } from '../../shared/garage.mjs';
-import { cleanPlaces } from '../../server/content.mjs';
-import seed from '../data/garage-seed.json';
-import type { Place } from './gallery';
+import { bikeFrameUrl, type PublicRider } from '../../shared/garage.mjs';
+import { validateSnapshot, type PublicSnapshot } from '../../shared/public-snapshot.mjs';
+export { validateSnapshot, type PublicSnapshot } from '../../shared/public-snapshot.mjs';
 
-export type PublicSnapshot = { schemaVersion: 1; revision: string; publishedAt: string; cloudName: string; places: Place[]; riders: PublicRider[] };
 const cloud = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'jr5po5s7';
 const id = import.meta.env.VITE_CONTENT_SNAPSHOT_ID || 'hh-site/published.json';
 export const publicContentUrl = import.meta.env.DEV ? '/content.json' : `https://res.cloudinary.com/${encodeURIComponent(cloud)}/raw/upload/${id.split('/').map(encodeURIComponent).join('/')}`;
-const paths = new Set(seed.bikes.flatMap(b => b.frames.map(f => f.path)));
 const Content = createContext<{ snapshot: PublicSnapshot | null; status: 'loading' | 'ready' | 'offline' }>({ snapshot: null, status: 'loading' });
-
-export function validateSnapshot(input: unknown): PublicSnapshot {
-  const s = input as PublicSnapshot;
-  if (!s || s.schemaVersion !== 1 || typeof s.revision !== 'string' || s.revision.length > 100 || typeof s.publishedAt !== 'string' || !Number.isFinite(Date.parse(s.publishedAt)) || !/^[a-zA-Z0-9_-]+$/.test(s.cloudName) || !Array.isArray(s.riders) || s.riders.length > 200) throw Error('Invalid published content.');
-  if (new Set(s.riders.map(r => r.id)).size !== s.riders.length) throw Error('Duplicate published entry.');
-  const riders = s.riders.flatMap(r => publicRiders(cleanGarage({
-    members: [{ id: r.id, name: r.name, active: true, role: r.role || '', line: r.line || '' }],
-    bikes: [{ ...r, id: r.id, status: 'published', frames: r.frameAssets }],
-    lineup: [{ id: r.id, memberId: r.id, bikeId: r.id, visible: true }],
-  }, paths)));
-  return { schemaVersion: 1, revision: s.revision, publishedAt: s.publishedAt, cloudName: s.cloudName, places: cleanPlaces(s.places).filter((p: Place) => p.published), riders };
-}
 
 export function PublicContentProvider({ children }: { children: ReactNode }) {
   const [value, setValue] = useState<{ snapshot: PublicSnapshot | null; status: 'loading' | 'ready' | 'offline' }>({ snapshot: null, status: 'loading' });

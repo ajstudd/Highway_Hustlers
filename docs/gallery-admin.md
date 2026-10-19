@@ -33,7 +33,7 @@ configuration uses the optional `VITE_CLOUDINARY_CLOUD_NAME` / `VITE_CONTENT_SNA
    build command runs Vite first, then `scripts/ensure-production-content.mjs`.
    Only a Vercel Production build can perform automatic setup. It uses the existing
    Production credentials, preserves the saved gallery and seeds the 10 members /
-   11 bikes only if no catalogue exists. If no prior publication exists and the CDN
+   11 member bikes plus unassigned draft presets only if no catalogue exists. If no prior publication exists and the CDN
    file is missing, it publishes the eligible saved content and verifies the exact
    delivery URL before the build succeeds. No local environment file or manual
    terminal publishing is required. Local and Preview builds skip this step.
@@ -129,6 +129,15 @@ and [free-plan limits](https://neon.com/docs/introduction/plans).
   dashboards. The app does not purchase or upgrade services automatically.
 
 ## Members, bike library and hero lineup
+
+The library includes unassigned draft presets for the TVS XL100 (Red), Honda Navi
+(Yellow) and Honda Monkey 125. XL100/Navi have eight factory rotation views each;
+Monkey remains image-less and pending until a genuine rotation is available.
+They do not appear in the public hero until explicitly prepared, assigned and
+published. Existing catalogues are offered missing draft presets without changing
+saved bikes or assignments; use Save draft to retain those additions. Their paths
+are validated alongside the original checked-in sets. Existing Cloudinary-hosted
+frames and admin changes are not overwritten.
 
 - **Members**: the initial catalogue deduplicates Junaid A's two entries into one
   member, while keeping Junaid K separate. Deactivating a member excludes all their

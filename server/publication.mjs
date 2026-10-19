@@ -1,13 +1,12 @@
 import { readFile, writeFile, rename, mkdir } from 'node:fs/promises';
 import { dirname } from 'node:path';
-import seedGarage from '../src/data/garage-seed.json' with { type: 'json' };
+import { seedGarage, localFramePaths } from '../shared/garage-seed.mjs';
 import seedPlaces from '../src/data/gallery-seed.json' with { type: 'json' };
 import { cleanGarage, publicRiders } from '../shared/garage.mjs';
 import { cleanPlaces } from './content.mjs';
 import { uploadSignature } from './uploads.mjs';
 
-export const localFramePaths = new Set(seedGarage.bikes.flatMap(b => b.frames.map(f => f.path)));
-export { seedGarage, seedPlaces };
+export { seedGarage, seedPlaces, localFramePaths };
 export function snapshotOf(places, garage, cloudName, revision, publishedAt = new Date().toISOString()) {
   return { schemaVersion: 1, revision, publishedAt, cloudName,
     places: cleanPlaces(places).filter(p => p.published), riders: publicRiders(cleanGarage(garage, localFramePaths)) };

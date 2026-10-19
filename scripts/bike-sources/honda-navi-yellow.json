@@ -1,0 +1,18 @@
+{
+  "imageSet": "honda-navi-yellow-v1",
+  "sourcePage": "https://motos.honda.com.ec/producto/navi-6",
+  "colour": "Yellow",
+  "startFrame": 7,
+  "lossless": true,
+  "curl": true,
+  "frames": [
+    "https://motos.honda.com.ec/uploads/galeria/NAVI_1.png",
+    "https://motos.honda.com.ec/uploads/galeria/NAVI_2.png",
+    "https://motos.honda.com.ec/uploads/galeria/NAVI_3.png",
+    "https://motos.honda.com.ec/uploads/galeria/NAVI_4.png",
+    "https://motos.honda.com.ec/uploads/galeria/NAVI_5.png",
+    "https://motos.honda.com.ec/uploads/galeria/NAVI_6.png",
+    "https://motos.honda.com.ec/uploads/galeria/NAVI_7.png",
+    "https://motos.honda.com.ec/uploads/galeria/NAVI_8.png"
+  ]
+}

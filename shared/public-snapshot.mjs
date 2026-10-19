@@ -1,8 +1,7 @@
 import { cleanGarage, publicRiders } from './garage.mjs';
 import { cleanPlaces } from '../server/content.mjs';
-import seed from '../src/data/garage-seed.json' with { type: 'json' };
+import { localFramePaths as paths } from './garage-seed.mjs';
 
-const paths = new Set(seed.bikes.flatMap(b => b.frames.map(f => f.path)));
 // Shared by the browser and deployment check: a successful HTTP response alone
 // must not enable a deployment with content the browser cannot read.
 export function validateSnapshot(s) {

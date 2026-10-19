@@ -9,6 +9,7 @@ export default defineConfig(({ mode }) => ({
   plugins: [react(), { name: 'hh-content-api', configureServer(server) {
     const handler = createCms({ ...process.env, ...loadEnv(mode, process.cwd(), '') });
     server.middlewares.use('/api/cms', (req, res) => { req.url = `/api/cms${req.url?.includes('?') ? req.url.slice(req.url.indexOf('?')) : ''}`; void handler(req, res); });
+    server.middlewares.use('/content.json', (req, res) => { req.url = '/api/cms?action=public'; void handler(req, res); });
   } }],
   optimizeDeps: { include: ['three', 'three/addons/loaders/GLTFLoader.js', 'three/addons/utils/SkeletonUtils.js'] },
   resolve: {

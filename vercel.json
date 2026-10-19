@@ -1,4 +1,5 @@
 {
+  "buildCommand": "npm run build",
   "rewrites": [{ "source": "/admin", "destination": "/index.html" }, { "source": "/admin/:path*", "destination": "/index.html" }],
   "headers": [
     { "source": "/admin/:path*", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }, { "key": "Cache-Control", "value": "no-store" }] },

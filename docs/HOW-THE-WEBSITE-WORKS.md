@@ -204,7 +204,11 @@ Local checks cover authentication, private APIs, draft/publication separation, i
 
 A key automated test makes repeated public content requests and asserts that they execute **zero database queries**. Builds and TypeScript checks help catch integration errors, but do not replace a live provider smoke test.
 
-Before rolling out the new frontend, publish and verify its first CDN snapshot using the existing saved content. Otherwise, a newly deployed page could point at a content file that has not been created yet. Local bike paths remain usable while the separate image migration is completed and reviewed.
+The first content publication is now automatic during a Vercel Production build, using the credentials already configured there. No private local environment file or manual publishing command is needed. After building the frontend, the build checks the public content file. If there has never been a publication and the file is missing, it creates the first snapshot from eligible saved content and verifies delivery before allowing the build to succeed. This avoids launching a site with a missing content feed.
+
+Later builds verify the existing file without querying Neon or publishing newer drafts. Local and Preview builds do not run automatic setup. If a previously published file disappears, deployment stops rather than silently publishing drafts; recovery or an explicit dashboard publication is required. A failed build check does not roll back an upload that has already reached Cloudinary, so a retry can reuse that first publication. Local bike paths remain usable while the separate image migration is completed and reviewed.
+
+For the owner, the simplified process is: **deploy once, then use `/admin` → Save draft → Publish website for future updates.** The separate Cloudinary bike-image migration remains a resumable dashboard action, not a prerequisite for the first deployment.
 
 Production and preview environments should use separate editorial data and content-snapshot paths. Never paste credentials into chat, documents or source control.
 

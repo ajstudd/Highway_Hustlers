@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowDownRight, ArrowLeft, ArrowRight, ArrowUpRight, Check, Images, Play, Shuffle, X } from 'lucide-react';
 import { DESTINATION_VISUALS } from '../data/destinationVisuals';
 import { usePrefersReducedMotion } from '../hooks/motion';
-import { cmsRequest, initialGallery, mediaUrl, type Gallery, type Place } from '../lib/gallery';
+import { mediaUrl, type Place } from '../lib/gallery';
+import { usePublicContent } from '../lib/public-content';
 import './gallery.css';
 
 const FILTERS = ['All escapes', 'Sunday morning', 'Further afield'] as const;
@@ -11,7 +12,9 @@ const matches = (p: Place, f: Filter) => f === 'All escapes' || (f === 'Sunday m
 
 export function RouteMap() {
   const reduced = usePrefersReducedMotion();
-  const [gallery, setGallery] = useState(initialGallery), [selectedId, setSelectedId] = useState<string>();
+  const { snapshot } = usePublicContent();
+  const gallery = snapshot || { places: [] as Place[], cloudName: 'jr5po5s7' };
+  const [selectedId, setSelectedId] = useState<string>();
   const [filter, setFilter] = useState<Filter>('All escapes'), [shuffle, setShuffle] = useState(0);
   const [mediaIndex, setMediaIndex] = useState(0), [lightbox, setLightbox] = useState(false), [failed, setFailed] = useState('');
   const rail = useRef<HTMLDivElement>(null);
@@ -21,14 +24,6 @@ export function RouteMap() {
   const visual = selected?.legacyId ? DESTINATION_VISUALS[selected.legacyId] : undefined;
   const media = selected?.media[Math.min(mediaIndex, selected.media.length - 1)];
   const source = selected && (media ? mediaUrl(media, gallery.cloudName, 1600, true) : selected.legacyId ? `/destinations/${selected.legacyId}.webp` : '');
-  useEffect(() => {
-    let active = true;
-    const refresh = () => { if (!document.hidden) cmsRequest<Gallery>('public').then(result => { if (active) setGallery(result); }).catch(() => { /* Keep the last loaded gallery while offline. */ }); };
-    refresh(); const timer = window.setInterval(refresh, 60000);
-    window.addEventListener('focus', refresh); document.addEventListener('visibilitychange', refresh);
-    const channel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('hh-gallery') : null; if (channel) channel.onmessage = refresh;
-    return () => { active = false; clearInterval(timer); window.removeEventListener('focus', refresh); document.removeEventListener('visibilitychange', refresh); channel?.close(); };
-  }, []);
   useEffect(() => { setMediaIndex(0); setFailed(''); setLightbox(false); }, [selected?.id]);
   useEffect(() => {
     const el = rail.current, button = el?.querySelector<HTMLButtonElement>('[aria-pressed="true"]');

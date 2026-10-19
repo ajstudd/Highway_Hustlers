@@ -1,6 +1,7 @@
 import { memo, useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { RIDERS, frameSrc } from '../../data/site';
+import { riderFrameSrc, usePublicContent } from '../../lib/public-content';
+import type { PublicRider } from '../../../shared/garage.mjs';
 import { usePrefersReducedMotion } from '../../hooks/motion';
 import { BikeSpinner } from './BikeSpinner';
 
@@ -11,11 +12,17 @@ const IN_MS = 760;
 const Spinner = memo(BikeSpinner);
 
 export function Hero() {
+  const { snapshot, status } = usePublicContent();
+  const riders = snapshot?.riders || [];
+  if (!riders.length) return <section id="top" className="relative flex min-h-[75svh] items-center px-4 pt-24 sm:px-8"><div className="mx-auto w-full max-w-[1336px]"><h1 className="font-display text-[clamp(44px,7vw,96px)] font-extrabold leading-[.95]">Highway <span className="font-serif font-normal italic text-marigold">Hustlers</span></h1><p className="mt-6 text-paper/70">Bhopal’s riding family. Sunday rides and chai stops.</p>{status === 'loading' && <div className="mt-12 h-48" aria-busy="true" aria-label="Loading riders"/>}</div></section>;
+  return <Showroom key={JSON.stringify(riders)} riders={riders} cloudName={snapshot!.cloudName}/>;
+}
+
+export function Showroom({ riders: RIDERS, cloudName }: { riders: PublicRider[]; cloudName: string }) {
   const reduced = usePrefersReducedMotion();
   const [active, setActive] = useState(0);
   const [shown, setShown] = useState(0);
   const [phase, setPhase] = useState<'idle' | 'out' | 'in'>('idle');
-  const [first, setFirst] = useState(true);
   const [auto, setAuto] = useState(!reduced);
 
   const rootRef = useRef<HTMLElement>(null);
@@ -33,14 +40,12 @@ export function Hero() {
       setActive(i);
       if (reduced) {
         setShown(i);
-        setFirst(false);
         return;
       }
       setPhase('out');
       timers.current.push(
         window.setTimeout(() => {
           setShown(i);
-          setFirst(false);
           setPhase('in');
         }, OUT_MS),
         window.setTimeout(() => setPhase('idle'), OUT_MS + IN_MS)
@@ -124,7 +129,7 @@ export function Hero() {
           <div className="floor-shadow pointer-events-none absolute bottom-[6%] left-1/2 h-[16%] w-[70%] -translate-x-1/2" />
           <div className={`absolute inset-0 ${rideClass}`}>
             <div className="mx-auto flex h-full max-w-[1000px] items-end">
-              <Spinner key={rider.id} rider={rider} intro={first} onInteract={stopAuto} />
+              <Spinner key={rider.id} rider={rider} cloudName={cloudName} onInteract={stopAuto} />
             </div>
           </div>
         </div>
@@ -215,8 +220,10 @@ export function Hero() {
                     )}
                   </span>
                   <img
-                    src={frameSrc(r.id, 0)}
+                    src={riderFrameSrc(r, 0, cloudName, 160)}
                     alt=""
+                    loading="lazy"
+                    decoding="async"
                     className={`h-9 w-[60px] shrink-0 object-contain transition ${on ? '' : 'opacity-60 grayscale group-hover:opacity-90 group-hover:grayscale-0'}`}
                   />
                   <span className="min-w-0">

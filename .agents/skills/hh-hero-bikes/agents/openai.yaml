@@ -1,0 +1,4 @@
+interface:
+  display_name: "Highway Hustlers Hero Bikes"
+  short_description: "Find, prepare and register accurate hero bike imagery"
+  default_prompt: "Use $hh-hero-bikes to add the requested bike or colour to the Highway Hustlers hero, preserving rotation and verifying every angle."

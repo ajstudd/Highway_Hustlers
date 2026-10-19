@@ -17,8 +17,10 @@ const expected = {
   'apache-rr310': ['Titanium Black', 24],
   'classic-350': ['Gun Grey', 36],
   'xpulse-210': ['Azure Blue', 12],
-  'tvs-raider-125': ['Black Panther', 8],
+  'tvs-raider-125': ['Blazing Blue', 8],
   'cb125-hornet': ['Pearl Igneous Black', 24],
+  'cb350rs': ['Mat Axis Grey Metallic', 24],
+  'speed-400': ['Lava Red Gloss / Storm Grey', 36],
 };
 for (const [id, [colour, frames]] of Object.entries(expected)) {
   const rider = RIDERS.find(r => r.id === id);
@@ -28,6 +30,33 @@ for (const [id, [colour, frames]] of Object.entries(expected)) {
   for (let i = 0; i < frames; i++) await access(new URL(`../public${frameSrc(id, i)}`, import.meta.url));
 }
 assert.equal(RIDERS.find(r => r.id === 'classic-350').model, 'Classic 350');
+const raider = RIDERS.find(r => r.id === 'tvs-raider-125');
+assert.equal(raider.name, 'Aryan');
+assert.equal(raider.imageSet, 'tvs-raider-125-blazing-blue-v1');
+assert.equal(raider.dir, -1); assert.equal(raider.facing, 'right');
+const raiderManifest = JSON.parse(await readFile(new URL('./bike-sources/tvs-raider-125-blazing-blue.json', import.meta.url), 'utf8'));
+assert.equal(raiderManifest.imageSet, raider.imageSet);
+assert.equal(raiderManifest.variant, 'Split Seat');
+assert.equal(raiderManifest.frames.length, raider.frames);
+for (const [i, url] of raiderManifest.frames.entries()) {
+  assert.equal(new URL(url).hostname, 'www.tvsmotor.com');
+  assert.ok(url.endsWith(`/Blazing-blue/Blue/Webp/${i + 1}.webp`));
+}
+const hondaRs = RIDERS.find(r => r.id === 'cb350rs');
+assert.equal(hondaRs.imageSet, 'cb350rs-mat-axis-grey-metallic-v1');
+assert.equal(hondaRs.dir, 1); assert.equal(hondaRs.facing, 'right');
+const hondaRsManifest = JSON.parse(await readFile(new URL('./bike-sources/cb350rs-mat-axis-grey-metallic.json', import.meta.url), 'utf8'));
+assert.equal(hondaRsManifest.imageSet, hondaRs.imageSet);
+assert.equal(hondaRsManifest.frames.length, hondaRs.frames);
+assert.equal(new Set(hondaRsManifest.frames).size, hondaRs.frames);
+for (const [i, url] of hondaRsManifest.frames.entries()) {
+  assert.equal(new URL(url).hostname, 'edge.sitecorecloud.io');
+  assert.ok(url.endsWith(`/Honda-Bigwing_RS_Mat-Axis-Gray-Metallic_360dgr/${i + 1}.png`));
+}
+const speed = RIDERS.find(r => r.id === 'speed-400');
+assert.equal(speed.colorName, 'Lava Red Gloss / Storm Grey');
+assert.equal(speed.frames, 36, 'Lava Red must retain the full rotation');
+assert.equal(frameSrc(speed.id, 0), '/bikes/speed-400-lava-red-storm-grey-v2/00.webp', 'Lava Red must load the corrected matte, not stale cached v1 edges');
 for (const id of ['hunter-350', 'classic-350']) {
   assert.ok(RIDERS.find(r => r.id === id).imageSet.endsWith('-v2'), 'corrected frames must not reuse the initial cached set');
 }
@@ -100,7 +129,7 @@ stripFactoryStage(anomaly, 120, 100, 'classic-350', 21);
 assert.equal(anomaly[(91 * 120 + 60) * 4 + 3], 0, 'frame 21 opaque floor between the tyres is removed');
 assert.equal(anomaly[(85 * 120 + 32) * 4 + 3], 255, 'frame 21 front tyre survives its traced contour');
 assert.equal(anomaly[(90 * 120 + 84) * 4 + 3], 255, 'frame 21 rear tyre survives its traced contour');
-console.log('Hero colours: six paint choices, 140 rotation frames, genuine TVS Mexico Apache manifest, cache revisions and legacy paint/floor regressions passed.');
+console.log('Hero colours: eight colour sets, 200 rotation frames, new Lava Red Speed assets, genuine Honda/TVS manifests, cache revisions and legacy paint/floor regressions passed.');
 
 // Optional full raster audit: pass a Node package directory containing Sharp.
 if (process.argv[2]) {
@@ -149,5 +178,5 @@ if (process.argv[2]) {
       if (actual[i + 3]) assert.deepEqual(actual.subarray(i, i + 3), expected.subarray(i, i + 3), `factory Apache/${frame}: source paint/decals changed`);
     }
   }
-  console.log('Raster audit: 140 canvases valid; 24 genuine Apache frames match the uniformly resized manufacturer source; 24 engineered Honda frames retain exact alpha and visible pixels.');
+  console.log('Raster audit: 200 canvases valid; 24 genuine Apache frames match the uniformly resized manufacturer source; 24 engineered CB125 frames retain exact alpha and visible pixels.');
 }

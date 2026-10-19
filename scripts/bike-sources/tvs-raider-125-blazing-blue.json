@@ -1,0 +1,20 @@
+{
+  "imageSet": "tvs-raider-125-blazing-blue-v1",
+  "sourcePage": "https://www.tvsmotor.com/tvs-raider/colours",
+  "variant": "Split Seat",
+  "colour": "Blazing Blue",
+  "sourceSequence": "SPLIT SEAT > BLAZING BLUE viewer: 1.webp–9.webp; 9.webp is byte-identical to 1.webp and omitted",
+  "startFrame": 0,
+  "lossless": true,
+  "curl": true,
+  "frames": [
+    "https://www.tvsmotor.com/tvs-raider/-/media/Brand-Pages-Webp/Raider/Color-New-images/Split-Seat/OneDrive_1_21-3-2025/Blazing-blue/Blue/Webp/1.webp",
+    "https://www.tvsmotor.com/tvs-raider/-/media/Brand-Pages-Webp/Raider/Color-New-images/Split-Seat/OneDrive_1_21-3-2025/Blazing-blue/Blue/Webp/2.webp",
+    "https://www.tvsmotor.com/tvs-raider/-/media/Brand-Pages-Webp/Raider/Color-New-images/Split-Seat/OneDrive_1_21-3-2025/Blazing-blue/Blue/Webp/3.webp",
+    "https://www.tvsmotor.com/tvs-raider/-/media/Brand-Pages-Webp/Raider/Color-New-images/Split-Seat/OneDrive_1_21-3-2025/Blazing-blue/Blue/Webp/4.webp",
+    "https://www.tvsmotor.com/tvs-raider/-/media/Brand-Pages-Webp/Raider/Color-New-images/Split-Seat/OneDrive_1_21-3-2025/Blazing-blue/Blue/Webp/5.webp",
+    "https://www.tvsmotor.com/tvs-raider/-/media/Brand-Pages-Webp/Raider/Color-New-images/Split-Seat/OneDrive_1_21-3-2025/Blazing-blue/Blue/Webp/6.webp",
+    "https://www.tvsmotor.com/tvs-raider/-/media/Brand-Pages-Webp/Raider/Color-New-images/Split-Seat/OneDrive_1_21-3-2025/Blazing-blue/Blue/Webp/7.webp",
+    "https://www.tvsmotor.com/tvs-raider/-/media/Brand-Pages-Webp/Raider/Color-New-images/Split-Seat/OneDrive_1_21-3-2025/Blazing-blue/Blue/Webp/8.webp"
+  ]
+}

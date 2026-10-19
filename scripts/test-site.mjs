@@ -18,7 +18,14 @@ for (const phrase of ['each other’s company', 'No ego, no jealousy', 'everyone
   assert.ok(MANIFESTO.includes(phrase), `Preserve the club culture: ${phrase}`);
 }
 assert.deepEqual(SUNDAY.map(s => s.time), ['05:30', '06:00', '06:30', '08:00', '10:00', '11:30']);
-for (const rider of RIDERS) await access(new URL(`../public${frameSrc(rider.id, 0)}`, import.meta.url));
+assert.equal(new Set(RIDERS.map(r => r.id)).size, RIDERS.length, 'each rider entry needs a unique id');
+for (const rider of RIDERS) {
+  assert.ok(Number.isInteger(rider.frames) && rider.frames > 0, `${rider.id}: positive integer frame count`);
+  assert.ok([1, -1].includes(rider.dir), `${rider.id}: valid rotation direction`);
+  assert.ok(['left', 'right'].includes(rider.facing), `${rider.id}: valid opening direction`);
+  assert.match(rider.imageSet ?? rider.id, /^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'frame directories cannot escape public/bikes');
+  for (let frame = 0; frame < rider.frames; frame++) await access(new URL(`../public${frameSrc(rider.id, frame)}`, import.meta.url));
+}
 const join = await readFile(new URL('../src/components/Join.tsx', import.meta.url), 'utf8');
 assert.equal(/whatsapp/i.test(join), false);
 assert.equal(join.includes("LINKS.instagram || '#join'"), false);

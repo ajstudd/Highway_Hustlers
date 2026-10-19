@@ -45,8 +45,8 @@ export const RIDERS: Rider[] = [
   },
   {
     id: 'speed-400', name: 'Akshad',
-    brand: 'Triumph', model: 'Speed 400', cc: 398, character: 'Modern classic', colorName: 'Racing Red',
-    glow: '#d9572c', frames: 36, dir: 1, facing: 'right',
+    brand: 'Triumph', model: 'Speed 400', cc: 398, character: 'Modern classic', colorName: 'Lava Red Gloss / Storm Grey', imageSet: 'speed-400-lava-red-storm-grey-v2',
+    glow: '#a72b32', frames: 36, dir: 1, facing: 'right',
   },
   {
     id: 'classic-350', name: 'Shivank',
@@ -55,8 +55,8 @@ export const RIDERS: Rider[] = [
   },
   {
     id: 'cb350rs', name: 'Enricquo',
-    brand: 'Honda', model: 'CB350RS', cc: 348, character: 'Neo-retro scrambler', colorName: 'Matte Black',
-    glow: '#9aa3b2', frames: 34, dir: 1, facing: 'right',
+    brand: 'Honda', model: 'CB350RS', cc: 348, character: 'Neo-retro scrambler', colorName: 'Mat Axis Grey Metallic', imageSet: 'cb350rs-mat-axis-grey-metallic-v1',
+    glow: '#b3c65c', frames: 24, dir: 1, facing: 'right',
   },
   {
     id: 'yamaha-r15m', name: 'Junaid A',
@@ -80,8 +80,8 @@ export const RIDERS: Rider[] = [
   },
   {
     id: 'tvs-raider-125', name: 'Aryan',
-    brand: 'TVS', model: 'Raider 125', cc: 124, character: 'Everyday street', colorName: 'Black Panther', imageSet: 'tvs-raider-125-black-panther',
-    glow: '#80629e', frames: 8, dir: -1, facing: 'right',
+    brand: 'TVS', model: 'Raider 125', cc: 124, character: 'Everyday street', colorName: 'Blazing Blue', imageSet: 'tvs-raider-125-blazing-blue-v1',
+    glow: '#5865cd', frames: 8, dir: -1, facing: 'right',
   },
   {
     id: 'cb125-hornet', name: 'Pawan',

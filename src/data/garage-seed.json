@@ -1,0 +1,1840 @@
+{
+  "members": [
+    {
+      "id": "anjali",
+      "name": "Anjali",
+      "active": true,
+      "role": "",
+      "line": ""
+    },
+    {
+      "id": "priyanshu",
+      "name": "Priyanshu",
+      "active": true,
+      "role": "",
+      "line": ""
+    },
+    {
+      "id": "akshad",
+      "name": "Akshad",
+      "active": true,
+      "role": "",
+      "line": ""
+    },
+    {
+      "id": "shivank",
+      "name": "Shivank",
+      "active": true,
+      "role": "",
+      "line": ""
+    },
+    {
+      "id": "enricquo",
+      "name": "Enricquo",
+      "active": true,
+      "role": "",
+      "line": ""
+    },
+    {
+      "id": "junaid-a",
+      "name": "Junaid A",
+      "active": true,
+      "role": "",
+      "line": ""
+    },
+    {
+      "id": "junaid-k",
+      "name": "Junaid K",
+      "active": true,
+      "role": "",
+      "line": ""
+    },
+    {
+      "id": "ashutosh",
+      "name": "Ashutosh",
+      "active": true,
+      "role": "",
+      "line": ""
+    },
+    {
+      "id": "aryan",
+      "name": "Aryan",
+      "active": true,
+      "role": "",
+      "line": ""
+    },
+    {
+      "id": "pawan",
+      "name": "Pawan",
+      "active": true,
+      "role": "",
+      "line": ""
+    }
+  ],
+  "bikes": [
+    {
+      "id": "hunter-350",
+      "brand": "Royal Enfield",
+      "model": "Hunter 350",
+      "cc": 349,
+      "character": "Retro roadster",
+      "colorName": "Tokyo Black",
+      "glow": "#788ea4",
+      "dir": 1,
+      "facing": "right",
+      "status": "published",
+      "frames": [
+        {
+          "source": "local",
+          "path": "/bikes/hunter-350-tokyo-black-v2/00.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/hunter-350-tokyo-black-v2/01.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/hunter-350-tokyo-black-v2/02.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/hunter-350-tokyo-black-v2/03.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/hunter-350-tokyo-black-v2/04.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/hunter-350-tokyo-black-v2/05.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/hunter-350-tokyo-black-v2/06.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/hunter-350-tokyo-black-v2/07.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/hunter-350-tokyo-black-v2/08.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/hunter-350-tokyo-black-v2/09.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/hunter-350-tokyo-black-v2/10.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/hunter-350-tokyo-black-v2/11.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/hunter-350-tokyo-black-v2/12.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/hunter-350-tokyo-black-v2/13.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/hunter-350-tokyo-black-v2/14.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/hunter-350-tokyo-black-v2/15.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/hunter-350-tokyo-black-v2/16.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/hunter-350-tokyo-black-v2/17.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/hunter-350-tokyo-black-v2/18.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/hunter-350-tokyo-black-v2/19.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/hunter-350-tokyo-black-v2/20.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/hunter-350-tokyo-black-v2/21.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/hunter-350-tokyo-black-v2/22.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/hunter-350-tokyo-black-v2/23.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/hunter-350-tokyo-black-v2/24.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/hunter-350-tokyo-black-v2/25.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/hunter-350-tokyo-black-v2/26.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/hunter-350-tokyo-black-v2/27.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/hunter-350-tokyo-black-v2/28.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/hunter-350-tokyo-black-v2/29.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/hunter-350-tokyo-black-v2/30.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/hunter-350-tokyo-black-v2/31.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/hunter-350-tokyo-black-v2/32.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/hunter-350-tokyo-black-v2/33.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/hunter-350-tokyo-black-v2/34.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/hunter-350-tokyo-black-v2/35.webp",
+          "width": 1200,
+          "height": 720
+        }
+      ]
+    },
+    {
+      "id": "apache-rr310",
+      "brand": "TVS",
+      "model": "Apache RR 310",
+      "cc": 312,
+      "character": "Sport tourer",
+      "colorName": "Titanium Black",
+      "glow": "#89939e",
+      "dir": 1,
+      "facing": "right",
+      "status": "published",
+      "frames": [
+        {
+          "source": "local",
+          "path": "/bikes/apache-rr310-titanium-black-factory-v3/00.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/apache-rr310-titanium-black-factory-v3/01.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/apache-rr310-titanium-black-factory-v3/02.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/apache-rr310-titanium-black-factory-v3/03.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/apache-rr310-titanium-black-factory-v3/04.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/apache-rr310-titanium-black-factory-v3/05.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/apache-rr310-titanium-black-factory-v3/06.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/apache-rr310-titanium-black-factory-v3/07.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/apache-rr310-titanium-black-factory-v3/08.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/apache-rr310-titanium-black-factory-v3/09.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/apache-rr310-titanium-black-factory-v3/10.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/apache-rr310-titanium-black-factory-v3/11.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/apache-rr310-titanium-black-factory-v3/12.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/apache-rr310-titanium-black-factory-v3/13.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/apache-rr310-titanium-black-factory-v3/14.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/apache-rr310-titanium-black-factory-v3/15.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/apache-rr310-titanium-black-factory-v3/16.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/apache-rr310-titanium-black-factory-v3/17.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/apache-rr310-titanium-black-factory-v3/18.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/apache-rr310-titanium-black-factory-v3/19.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/apache-rr310-titanium-black-factory-v3/20.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/apache-rr310-titanium-black-factory-v3/21.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/apache-rr310-titanium-black-factory-v3/22.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/apache-rr310-titanium-black-factory-v3/23.webp",
+          "width": 1200,
+          "height": 720
+        }
+      ]
+    },
+    {
+      "id": "speed-400",
+      "brand": "Triumph",
+      "model": "Speed 400",
+      "cc": 398,
+      "character": "Modern classic",
+      "colorName": "Lava Red Gloss / Storm Grey",
+      "glow": "#a72b32",
+      "dir": 1,
+      "facing": "right",
+      "status": "published",
+      "frames": [
+        {
+          "source": "local",
+          "path": "/bikes/speed-400-lava-red-storm-grey-v2/00.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/speed-400-lava-red-storm-grey-v2/01.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/speed-400-lava-red-storm-grey-v2/02.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/speed-400-lava-red-storm-grey-v2/03.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/speed-400-lava-red-storm-grey-v2/04.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/speed-400-lava-red-storm-grey-v2/05.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/speed-400-lava-red-storm-grey-v2/06.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/speed-400-lava-red-storm-grey-v2/07.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/speed-400-lava-red-storm-grey-v2/08.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/speed-400-lava-red-storm-grey-v2/09.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/speed-400-lava-red-storm-grey-v2/10.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/speed-400-lava-red-storm-grey-v2/11.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/speed-400-lava-red-storm-grey-v2/12.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/speed-400-lava-red-storm-grey-v2/13.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/speed-400-lava-red-storm-grey-v2/14.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/speed-400-lava-red-storm-grey-v2/15.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/speed-400-lava-red-storm-grey-v2/16.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/speed-400-lava-red-storm-grey-v2/17.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/speed-400-lava-red-storm-grey-v2/18.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/speed-400-lava-red-storm-grey-v2/19.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/speed-400-lava-red-storm-grey-v2/20.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/speed-400-lava-red-storm-grey-v2/21.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/speed-400-lava-red-storm-grey-v2/22.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/speed-400-lava-red-storm-grey-v2/23.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/speed-400-lava-red-storm-grey-v2/24.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/speed-400-lava-red-storm-grey-v2/25.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/speed-400-lava-red-storm-grey-v2/26.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/speed-400-lava-red-storm-grey-v2/27.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/speed-400-lava-red-storm-grey-v2/28.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/speed-400-lava-red-storm-grey-v2/29.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/speed-400-lava-red-storm-grey-v2/30.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/speed-400-lava-red-storm-grey-v2/31.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/speed-400-lava-red-storm-grey-v2/32.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/speed-400-lava-red-storm-grey-v2/33.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/speed-400-lava-red-storm-grey-v2/34.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/speed-400-lava-red-storm-grey-v2/35.webp",
+          "width": 1200,
+          "height": 720
+        }
+      ]
+    },
+    {
+      "id": "classic-350",
+      "brand": "Royal Enfield",
+      "model": "Classic 350",
+      "cc": 349,
+      "character": "Timeless classic",
+      "colorName": "Gun Grey",
+      "glow": "#8693a0",
+      "dir": -1,
+      "facing": "right",
+      "status": "published",
+      "frames": [
+        {
+          "source": "local",
+          "path": "/bikes/classic-350-gun-grey-v2/00.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/classic-350-gun-grey-v2/01.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/classic-350-gun-grey-v2/02.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/classic-350-gun-grey-v2/03.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/classic-350-gun-grey-v2/04.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/classic-350-gun-grey-v2/05.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/classic-350-gun-grey-v2/06.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/classic-350-gun-grey-v2/07.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/classic-350-gun-grey-v2/08.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/classic-350-gun-grey-v2/09.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/classic-350-gun-grey-v2/10.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/classic-350-gun-grey-v2/11.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/classic-350-gun-grey-v2/12.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/classic-350-gun-grey-v2/13.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/classic-350-gun-grey-v2/14.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/classic-350-gun-grey-v2/15.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/classic-350-gun-grey-v2/16.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/classic-350-gun-grey-v2/17.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/classic-350-gun-grey-v2/18.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/classic-350-gun-grey-v2/19.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/classic-350-gun-grey-v2/20.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/classic-350-gun-grey-v2/21.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/classic-350-gun-grey-v2/22.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/classic-350-gun-grey-v2/23.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/classic-350-gun-grey-v2/24.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/classic-350-gun-grey-v2/25.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/classic-350-gun-grey-v2/26.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/classic-350-gun-grey-v2/27.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/classic-350-gun-grey-v2/28.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/classic-350-gun-grey-v2/29.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/classic-350-gun-grey-v2/30.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/classic-350-gun-grey-v2/31.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/classic-350-gun-grey-v2/32.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/classic-350-gun-grey-v2/33.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/classic-350-gun-grey-v2/34.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/classic-350-gun-grey-v2/35.webp",
+          "width": 1200,
+          "height": 720
+        }
+      ]
+    },
+    {
+      "id": "cb350rs",
+      "brand": "Honda",
+      "model": "CB350RS",
+      "cc": 348,
+      "character": "Neo-retro scrambler",
+      "colorName": "Mat Axis Grey Metallic",
+      "glow": "#b3c65c",
+      "dir": 1,
+      "facing": "right",
+      "status": "published",
+      "frames": [
+        {
+          "source": "local",
+          "path": "/bikes/cb350rs-mat-axis-grey-metallic-v1/00.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb350rs-mat-axis-grey-metallic-v1/01.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb350rs-mat-axis-grey-metallic-v1/02.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb350rs-mat-axis-grey-metallic-v1/03.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb350rs-mat-axis-grey-metallic-v1/04.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb350rs-mat-axis-grey-metallic-v1/05.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb350rs-mat-axis-grey-metallic-v1/06.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb350rs-mat-axis-grey-metallic-v1/07.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb350rs-mat-axis-grey-metallic-v1/08.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb350rs-mat-axis-grey-metallic-v1/09.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb350rs-mat-axis-grey-metallic-v1/10.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb350rs-mat-axis-grey-metallic-v1/11.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb350rs-mat-axis-grey-metallic-v1/12.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb350rs-mat-axis-grey-metallic-v1/13.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb350rs-mat-axis-grey-metallic-v1/14.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb350rs-mat-axis-grey-metallic-v1/15.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb350rs-mat-axis-grey-metallic-v1/16.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb350rs-mat-axis-grey-metallic-v1/17.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb350rs-mat-axis-grey-metallic-v1/18.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb350rs-mat-axis-grey-metallic-v1/19.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb350rs-mat-axis-grey-metallic-v1/20.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb350rs-mat-axis-grey-metallic-v1/21.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb350rs-mat-axis-grey-metallic-v1/22.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb350rs-mat-axis-grey-metallic-v1/23.webp",
+          "width": 1200,
+          "height": 720
+        }
+      ]
+    },
+    {
+      "id": "yamaha-r15m",
+      "brand": "Yamaha",
+      "model": "R15M",
+      "cc": 155,
+      "character": "Sport",
+      "colorName": "Metallic Grey",
+      "glow": "#6f8bd6",
+      "dir": -1,
+      "facing": "right",
+      "status": "published",
+      "frames": [
+        {
+          "source": "local",
+          "path": "/bikes/yamaha-r15m/00.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/yamaha-r15m/01.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/yamaha-r15m/02.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/yamaha-r15m/03.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/yamaha-r15m/04.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/yamaha-r15m/05.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/yamaha-r15m/06.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/yamaha-r15m/07.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/yamaha-r15m/08.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/yamaha-r15m/09.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/yamaha-r15m/10.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/yamaha-r15m/11.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/yamaha-r15m/12.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/yamaha-r15m/13.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/yamaha-r15m/14.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/yamaha-r15m/15.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/yamaha-r15m/16.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/yamaha-r15m/17.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/yamaha-r15m/18.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/yamaha-r15m/19.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/yamaha-r15m/20.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/yamaha-r15m/21.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/yamaha-r15m/22.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/yamaha-r15m/23.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/yamaha-r15m/24.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/yamaha-r15m/25.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/yamaha-r15m/26.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/yamaha-r15m/27.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/yamaha-r15m/28.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/yamaha-r15m/29.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/yamaha-r15m/30.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/yamaha-r15m/31.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/yamaha-r15m/32.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/yamaha-r15m/33.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/yamaha-r15m/34.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/yamaha-r15m/35.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/yamaha-r15m/36.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/yamaha-r15m/37.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/yamaha-r15m/38.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/yamaha-r15m/39.webp",
+          "width": 1200,
+          "height": 720
+        }
+      ]
+    },
+    {
+      "id": "ninja-300",
+      "brand": "Kawasaki",
+      "model": "Ninja 300",
+      "cc": 296,
+      "character": "Twin-cylinder sport",
+      "colorName": "Lime Green",
+      "glow": "#5cc23a",
+      "dir": 1,
+      "facing": "right",
+      "status": "published",
+      "frames": [
+        {
+          "source": "local",
+          "path": "/bikes/ninja-300/00.webp",
+          "width": 1200,
+          "height": 720
+        }
+      ]
+    },
+    {
+      "id": "pulsar-n250",
+      "brand": "Bajaj",
+      "model": "Pulsar N250",
+      "cc": 249,
+      "character": "Street naked",
+      "colorName": "Black",
+      "glow": "#c9363b",
+      "dir": -1,
+      "facing": "right",
+      "status": "published",
+      "frames": [
+        {
+          "source": "local",
+          "path": "/bikes/pulsar-n250/00.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/pulsar-n250/01.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/pulsar-n250/02.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/pulsar-n250/03.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/pulsar-n250/04.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/pulsar-n250/05.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/pulsar-n250/06.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/pulsar-n250/07.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/pulsar-n250/08.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/pulsar-n250/09.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/pulsar-n250/10.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/pulsar-n250/11.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/pulsar-n250/12.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/pulsar-n250/13.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/pulsar-n250/14.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/pulsar-n250/15.webp",
+          "width": 1200,
+          "height": 720
+        }
+      ]
+    },
+    {
+      "id": "xpulse-210",
+      "brand": "Hero",
+      "model": "Xpulse 210",
+      "cc": 210,
+      "character": "Adventure",
+      "colorName": "Azure Blue",
+      "glow": "#3575d5",
+      "dir": -1,
+      "facing": "right",
+      "status": "published",
+      "frames": [
+        {
+          "source": "local",
+          "path": "/bikes/xpulse-210-azure-blue/00.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/xpulse-210-azure-blue/01.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/xpulse-210-azure-blue/02.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/xpulse-210-azure-blue/03.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/xpulse-210-azure-blue/04.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/xpulse-210-azure-blue/05.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/xpulse-210-azure-blue/06.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/xpulse-210-azure-blue/07.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/xpulse-210-azure-blue/08.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/xpulse-210-azure-blue/09.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/xpulse-210-azure-blue/10.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/xpulse-210-azure-blue/11.webp",
+          "width": 1200,
+          "height": 720
+        }
+      ]
+    },
+    {
+      "id": "tvs-raider-125",
+      "brand": "TVS",
+      "model": "Raider 125",
+      "cc": 124,
+      "character": "Everyday street",
+      "colorName": "Blazing Blue",
+      "glow": "#5865cd",
+      "dir": -1,
+      "facing": "right",
+      "status": "published",
+      "frames": [
+        {
+          "source": "local",
+          "path": "/bikes/tvs-raider-125-blazing-blue-v1/00.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/tvs-raider-125-blazing-blue-v1/01.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/tvs-raider-125-blazing-blue-v1/02.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/tvs-raider-125-blazing-blue-v1/03.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/tvs-raider-125-blazing-blue-v1/04.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/tvs-raider-125-blazing-blue-v1/05.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/tvs-raider-125-blazing-blue-v1/06.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/tvs-raider-125-blazing-blue-v1/07.webp",
+          "width": 1200,
+          "height": 720
+        }
+      ]
+    },
+    {
+      "id": "cb125-hornet",
+      "brand": "Honda",
+      "model": "CB125 Hornet",
+      "cc": 123,
+      "character": "Street naked",
+      "colorName": "Pearl Igneous Black",
+      "glow": "#a8997b",
+      "dir": 1,
+      "facing": "right",
+      "status": "published",
+      "frames": [
+        {
+          "source": "local",
+          "path": "/bikes/cb125-hornet-pearl-igneous-black/00.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb125-hornet-pearl-igneous-black/01.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb125-hornet-pearl-igneous-black/02.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb125-hornet-pearl-igneous-black/03.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb125-hornet-pearl-igneous-black/04.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb125-hornet-pearl-igneous-black/05.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb125-hornet-pearl-igneous-black/06.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb125-hornet-pearl-igneous-black/07.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb125-hornet-pearl-igneous-black/08.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb125-hornet-pearl-igneous-black/09.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb125-hornet-pearl-igneous-black/10.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb125-hornet-pearl-igneous-black/11.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb125-hornet-pearl-igneous-black/12.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb125-hornet-pearl-igneous-black/13.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb125-hornet-pearl-igneous-black/14.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb125-hornet-pearl-igneous-black/15.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb125-hornet-pearl-igneous-black/16.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb125-hornet-pearl-igneous-black/17.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb125-hornet-pearl-igneous-black/18.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb125-hornet-pearl-igneous-black/19.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb125-hornet-pearl-igneous-black/20.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb125-hornet-pearl-igneous-black/21.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb125-hornet-pearl-igneous-black/22.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/cb125-hornet-pearl-igneous-black/23.webp",
+          "width": 1200,
+          "height": 720
+        }
+      ]
+    }
+  ],
+  "lineup": [
+    {
+      "id": "hunter-350",
+      "memberId": "anjali",
+      "bikeId": "hunter-350",
+      "visible": true
+    },
+    {
+      "id": "apache-rr310",
+      "memberId": "priyanshu",
+      "bikeId": "apache-rr310",
+      "visible": true
+    },
+    {
+      "id": "speed-400",
+      "memberId": "akshad",
+      "bikeId": "speed-400",
+      "visible": true
+    },
+    {
+      "id": "classic-350",
+      "memberId": "shivank",
+      "bikeId": "classic-350",
+      "visible": true
+    },
+    {
+      "id": "cb350rs",
+      "memberId": "enricquo",
+      "bikeId": "cb350rs",
+      "visible": true
+    },
+    {
+      "id": "yamaha-r15m",
+      "memberId": "junaid-a",
+      "bikeId": "yamaha-r15m",
+      "visible": true
+    },
+    {
+      "id": "ninja-300",
+      "memberId": "junaid-k",
+      "bikeId": "ninja-300",
+      "visible": true
+    },
+    {
+      "id": "pulsar-n250",
+      "memberId": "junaid-a",
+      "bikeId": "pulsar-n250",
+      "visible": true
+    },
+    {
+      "id": "xpulse-210",
+      "memberId": "ashutosh",
+      "bikeId": "xpulse-210",
+      "visible": true
+    },
+    {
+      "id": "tvs-raider-125",
+      "memberId": "aryan",
+      "bikeId": "tvs-raider-125",
+      "visible": true
+    },
+    {
+      "id": "cb125-hornet",
+      "memberId": "pawan",
+      "bikeId": "cb125-hornet",
+      "visible": true
+    }
+  ]
+}

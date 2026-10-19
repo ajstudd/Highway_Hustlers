@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
-import { frameSrc, type Rider } from '../../data/site';
+import type { PublicRider } from '../../../shared/garage.mjs';
+import { FrameCache } from '../../../shared/frame-cache.mjs';
+import { riderFrameSrc } from '../../lib/public-content';
 import { usePrefersReducedMotion } from '../../hooks/motion';
 
 const CANVAS_W = 1200;
 const CANVAS_H = 720;
 
 type Props = {
-  rider: Rider;
-  /** spin once into the side profile when the frames are ready */
-  intro?: boolean;
+  rider: PublicRider;
+  cloudName: string;
   onInteract?: () => void;
 };
 
@@ -16,48 +17,50 @@ type Props = {
  * Real-photo turntable: draws one of N transparent frames to a canvas and maps
  * horizontal drag to rotation, with inertia. Single-frame bikes get a tilt instead.
  */
-export function BikeSpinner({ rider, intro = false, onInteract }: Props) {
+export function BikeSpinner({ rider, cloudName, onInteract }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const tiltRef = useRef<HTMLDivElement>(null);
-  const images = useRef<(HTMLImageElement | null)[]>([]);
+  const images = useRef<FrameCache | null>(null);
   const pos = useRef(0);
   const vel = useRef(0);
   const drawn = useRef(-1);
   const drag = useRef<{ x: number; t: number; startPos: number; lastX: number } | null>(null);
-  const introAnim = useRef<{ from: number; start: number; dur: number } | null>(null);
   const [hinted, setHinted] = useState(false);
+  const [unavailable, setUnavailable] = useState(false), [retry, setRetry] = useState(0);
+  const [visible, setVisible] = useState(!document.hidden);
   const reduced = usePrefersReducedMotion();
   const n = rider.frames;
   const spins = n > 1;
 
-  // load frames: 00 first so something shows immediately, the rest in order
+  // Decode only a small moving window, never all 36/40 frames at once.
+  // Large decorative intro spins no longer force a complete set download.
   useEffect(() => {
-    images.current = new Array(n).fill(null);
     drawn.current = -1;
-    let cancelled = false;
-    let loaded = 0;
-    const onAllLoaded = () => {
-      if (intro && spins && !reduced && !cancelled) {
-        pos.current = -n;
-        introAnim.current = { from: -n, start: performance.now(), dur: 1700 };
-      }
-    };
-    for (let i = 0; i < n; i++) {
-      const img = new Image();
-      img.decoding = 'async';
-      img.src = frameSrc(rider.id, i);
-      img.onload = () => {
-        if (cancelled) return;
-        images.current[i] = img;
-        if (i === 0) drawn.current = -1;
-        loaded++;
-        if (loaded === n) onAllLoaded();
-      };
-    }
-    return () => {
-      cancelled = true;
-    };
-  }, [rider.id, rider.imageSet, n, intro, spins, reduced]);
+    setUnavailable(false);
+    const width = window.matchMedia('(max-width: 640px)').matches ? 720 : 1200;
+    const pool = new FrameCache({ count: n, capacity: width === 720 ? 8 : 12, concurrency: 2,
+      load: async (i, signal) => {
+        const response = await fetch(riderFrameSrc(rider, i, cloudName, width), { signal, credentials: 'omit' });
+        if (!response.ok) throw Error('Bike image unavailable.');
+        const bitmap = await createImageBitmap(await response.blob(), { resizeWidth: width, resizeQuality: 'high' });
+        if (signal.aborted) { bitmap.close(); throw Error('Cancelled'); }
+        return bitmap;
+      },
+      onChange: () => { drawn.current = -1; setUnavailable(false); },
+      onError: () => { if (!pool.images.size) setUnavailable(true); },
+    });
+    images.current = pool; pool.window(0);
+    return () => { pool.close(); if (images.current === pool) images.current = null; };
+  }, [rider, cloudName, n, retry]);
+
+  useEffect(() => {
+    let onScreen = true;
+    const update = () => setVisible(onScreen && !document.hidden);
+    const io = new IntersectionObserver(([entry]) => { onScreen = entry.isIntersecting; update(); });
+    if (canvasRef.current) io.observe(canvasRef.current);
+    document.addEventListener('visibilitychange', update);
+    return () => { io.disconnect(); document.removeEventListener('visibilitychange', update); };
+  }, []);
 
   // render loop
   useEffect(() => {
@@ -65,6 +68,8 @@ export function BikeSpinner({ rider, intro = false, onInteract }: Props) {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+    images.current?.pause(!visible);
+    if (!visible) return;
     let raf = 0;
 
     const smooth = n > 1 && n <= 16 && !reduced;
@@ -74,28 +79,30 @@ export function BikeSpinner({ rider, intro = false, onInteract }: Props) {
     };
 
     const nearestLoaded = (i: number) => {
-      if (images.current[i]) return i;
+      if (images.current?.get(i)) return i;
       for (let d = 1; d < n; d++) {
-        if (images.current[(i + d) % n]) return (i + d) % n;
-        if (images.current[(i - d + n) % n]) return (i - d + n) % n;
+        if (images.current?.get((i + d) % n)) return (i + d) % n;
+        if (images.current?.get((i - d + n) % n)) return (i - d + n) % n;
       }
       return -1;
     };
 
     const paint = (i: number, alpha = 1) => {
       ctx.globalAlpha = alpha;
-      ctx.drawImage(images.current[i]!, 0, 0, CANVAS_W, CANVAS_H);
+      const image = images.current?.get(i); if (!image) return;
+      ctx.drawImage(image, 0, 0, CANVAS_W, CANVAS_H);
       ctx.globalAlpha = 1;
     };
 
     const draw = () => {
+      images.current?.window(frameAt(Math.round(pos.current)));
       if (smooth) {
         // few frames: blend the two neighbours so the turn doesn't stutter
         const base = Math.floor(pos.current);
         const f = Math.round((pos.current - base) * 20) / 20;
         const i0 = frameAt(base);
         const i1 = frameAt(base + 1);
-        if (images.current[i0] && images.current[i1]) {
+        if (images.current?.get(i0) && images.current?.get(i1)) {
           const key = i0 + f;
           if (key === drawn.current) return;
           ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
@@ -112,14 +119,8 @@ export function BikeSpinner({ rider, intro = false, onInteract }: Props) {
       drawn.current = i;
     };
 
-    const tick = (now: number) => {
-      const a = introAnim.current;
-      if (a) {
-        const t = Math.min(1, (now - a.start) / a.dur);
-        const ease = 1 - Math.pow(1 - t, 4);
-        pos.current = a.from * (1 - ease);
-        if (t >= 1) introAnim.current = null;
-      } else if (!drag.current && Math.abs(vel.current) > 0.002) {
+    const tick = () => {
+      if (!drag.current && Math.abs(vel.current) > 0.002) {
         pos.current += vel.current * 16;
         vel.current *= 0.9;
       } else if (!drag.current) {
@@ -134,7 +135,7 @@ export function BikeSpinner({ rider, intro = false, onInteract }: Props) {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [rider.dir, n, reduced]);
+  }, [rider.dir, n, reduced, visible, retry]);
 
   const pxPerFrame = () => {
     const w = canvasRef.current?.clientWidth ?? 800;
@@ -143,7 +144,6 @@ export function BikeSpinner({ rider, intro = false, onInteract }: Props) {
 
   const onPointerDown = (e: React.PointerEvent) => {
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-    introAnim.current = null;
     vel.current = 0;
     drag.current = { x: e.clientX, t: performance.now(), startPos: pos.current, lastX: e.clientX };
     setHinted(true);
@@ -211,6 +211,7 @@ export function BikeSpinner({ rider, intro = false, onInteract }: Props) {
           className="bike-canvas pointer-events-none mx-auto block h-auto max-h-full w-full object-contain"
         />
       </div>
+      {unavailable && <div className="absolute inset-0 flex flex-col items-center justify-center gap-3"><p className="text-sm text-paper/70">Bike image unavailable.</p><button type="button" className="rounded-full border border-paper/30 px-4 py-2 text-sm" onClick={() => setRetry(i => i+1)}>Try again</button></div>}
       <div
         className={`pointer-events-none absolute bottom-1 left-1/2 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap text-[11px] font-medium uppercase tracking-[0.2em] text-paper/45 transition-opacity duration-700 ${
           hinted ? 'opacity-0' : 'opacity-100'

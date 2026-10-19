@@ -6,6 +6,7 @@ import { RouteMap } from './components/RouteMap';
 import { Sunday } from './components/Sunday';
 import { useReveal } from './hooks/motion';
 import { lazy, Suspense } from 'react';
+import { PublicContentProvider } from './lib/public-content';
 
 const Admin = lazy(() => import('./admin/Admin'));
 
@@ -17,7 +18,7 @@ export function App() {
 function PublicSite() {
   useReveal();
   return (
-    <>
+    <PublicContentProvider>
       <Nav />
       <main>
         <Hero />
@@ -27,6 +28,6 @@ function PublicSite() {
         <Join />
       </main>
       <Footer />
-    </>
+    </PublicContentProvider>
   );
 }

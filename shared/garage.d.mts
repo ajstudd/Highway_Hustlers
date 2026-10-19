@@ -1,0 +1,10 @@
+export type BikeFrame = { source: 'local'; path: string; width: 1200; height: 720 } | { source: 'cloudinary'; publicId: string; version: number; format: 'webp' | 'png'; width: 1200; height: 720 };
+export type Member = { id: string; name: string; active: boolean; role: string; line: string };
+export type Bike = { id: string; brand: string; model: string; cc: number; character: string; colorName: string; glow: string; dir: 1 | -1; facing: 'left' | 'right'; status: 'draft' | 'published' | 'hidden'; frames: BikeFrame[] };
+export type LineupEntry = { id: string; memberId: string; bikeId: string; visible: boolean };
+export type Garage = { members: Member[]; bikes: Bike[]; lineup: LineupEntry[] };
+export type PublicRider = { id: string; name: string; role?: string; line?: string; brand: string; model: string; cc: number; character: string; colorName: string; glow: string; dir: 1 | -1; facing: 'left' | 'right'; frames: number; frameAssets: BikeFrame[] };
+export function cleanFrame(v: unknown, localPaths?: Set<string>): BikeFrame;
+export function cleanGarage(v: unknown, localPaths?: Set<string>): Garage;
+export function publicRiders(garage: Garage): PublicRider[];
+export function bikeFrameUrl(frame: BikeFrame, cloudName: string, width?: number): string;

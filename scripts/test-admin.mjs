@@ -21,7 +21,8 @@ assert.throws(()=>cleanPlaces([seed[0],seed[0]]),/unique/);
 const pg = new PGlite();
 const sql = async (strings,...values) => (await pg.query(strings.reduce((q,s,i)=>q+s+(i<values.length?`$${i+1}`:''),''),values)).rows;
 const store = await createPostgresStore('',sql);
-const env = { ADMIN_PASSWORD_HASH:hash,CLOUDINARY_CLOUD_NAME:'jr5po5s7',CLOUDINARY_API_KEY:'test-key',CLOUDINARY_API_SECRET:'test-secret' };
+const publicationDir = await mkdtemp(path.join(tmpdir(),'hh-admin-publication-'));
+const env = { ADMIN_PASSWORD_HASH:hash,CLOUDINARY_CLOUD_NAME:'jr5po5s7',CLOUDINARY_API_KEY:'test-key',CLOUDINARY_API_SECRET:'test-secret', CMS_LOCAL_FILE:path.join(publicationDir,'draft.json') };
 let cloudCalls = 0, storedBytes = 1000000, storedDimension = 2048;
 const cloud = async (url,options)=>{
   cloudCalls++; assert.match(url,/^https:\/\/api.cloudinary.com\/v1_1\/jr5po5s7\/resources\/image\/upload[?\/]/);
@@ -51,6 +52,9 @@ try {
   const draft = {...seed[0],id:'test-draft',legacyId:undefined,name:'Private draft',published:false,media:[media]};
   const updated = [{...seed[0],description:'Updated from the dashboard',media:[media]},draft,...seed.slice(1)];
   const saved = await request('places',{method:'PUT',cookie,body:{revision:original.revision,places:updated}}); assert.equal(saved.status,200);
+  assert.notEqual((await request('public')).data.places[0].description,'Updated from the dashboard','saving a draft must not change the live snapshot');
+  const editor = (await request('editor',{cookie})).data;
+  assert.equal((await request('publish',{method:'POST',cookie,body:{revision:saved.data.revision,garageRevision:editor.garageRevision}})).status,200);
   const publicData = (await request('public')).data;
   assert.equal(publicData.places[0].description,'Updated from the dashboard'); assert(!publicData.places.some(p=>p.id==='test-draft')); assert.equal(publicData.places[0].media[0].publicId,media.publicId);
   assert.equal((await request('places',{method:'PUT',cookie,body:{revision:original.revision,places:updated}})).status,409,'stale tabs cannot overwrite newer changes');
@@ -100,4 +104,4 @@ try {
     assert.equal((await createLocalStore(filename).get(seed)).places.length,8,'local development changes survive reloads');
   } finally { await rm(temp,{recursive:true}); }
   console.log('Admin: real Postgres schema, login, CSRF, private APIs, published-only feed, concurrent saves, upload signatures, library, logout, password rotation, persistent throttling and fail-closed setup passed.');
-} finally { await new Promise(resolve=>server.close(resolve)); await pg.close(); }
+} finally { await new Promise(resolve=>server.close(resolve)); await pg.close(); await rm(publicationDir,{recursive:true}); }

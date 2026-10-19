@@ -1,9 +1,12 @@
-# HH places and media dashboard
+# HH content dashboard
 
 The existing Vite site stays on Vercel. `/admin` is the content dashboard;
-`/api/cms` is its Vercel Node function. Neon stores places, sessions and rate limits.
-Cloudinary stores and delivers photos/videos. The public site never calls the
-Cloudinary Admin API, and no credentials use a `VITE_` prefix.
+`/api/cms` is its Vercel Node function. Neon stores draft content, publication status,
+verified bike references, sessions and rate limits.
+Cloudinary stores and delivers photos/videos, prepared bike frames and a published
+JSON content snapshot. Normal public visits query **neither Neon nor the Cloudinary
+Admin API**. Server secrets never use a `VITE_` prefix; only public delivery
+configuration uses the optional `VITE_CLOUDINARY_CLOUD_NAME` / `VITE_CONTENT_SNAPSHOT_ID`.
 
 ## One-time production setup
 
@@ -26,17 +29,29 @@ Cloudinary Admin API, and no credentials use a `VITE_` prefix.
    Set sensitive variables as **Sensitive** in Vercel. Do not paste them in chat,
    source code, screenshots, or a browser console. The Cloudinary cloud name is
    public; the API secret and DB connection string must remain server-only.
-4. Deploy these code changes, then redeploy after changing environment variables.
-   This guide does not itself authorize a push or deployment.
+4. **Before deploying the snapshot-based public frontend**, bootstrap its first
+   publication from the current database. In a private local shell with the existing
+   server credentials securely configured, run `node scripts/publish-current-content.mjs`
+   for a dry-run, review the environment, then run it with `--publish` only when rollout
+   is approved. It preserves saved content, seeds the 10 existing members / 11 bikes
+   only if no catalogue exists,
+   and publishes the current content to Cloudinary. It does not upload bike images or
+   deploy code. Original `/bikes/` paths work until the separate migration finishes.
+   Verify the public JSON, then deploy. This prevents a first-deployment empty-content
+   window. This guide does not itself authorize publishing, pushing or deploying.
 5. Open `https://YOUR-DOMAIN/admin`, sign in, and choose a place. Use **Choose from
    Cloudinary** to select the four existing uploads. New uploads go directly from
    the browser to Cloudinary using a signature from the authenticated API.
-6. Reorder media: the first item becomes the cover. Add captions, set coordinates,
-   choose Published/Draft, then **Save changes**. Refresh the public section to
-   check it. Open website tabs refresh on focus, after same-browser saves, and
-   every 60 seconds while visible. No redeploy is needed for subsequent edits.
+6. Reorder media: the first item becomes the cover. Add captions and coordinates,
+   choose **Include on publish**, then **Save draft**. This saves to Neon without
+   changing the live site. **Publish website** validates the saved content, writes an
+   immutable recovery snapshot, replaces the public JSON alias and requests CDN
+   invalidation. Other visitors get the publication on their next load; an already
+   open tab is not polled every minute. Same-browser publications notify open website
+   tabs once. CDN/browser caches can take a short time to refresh. No redeploy is
+   needed for subsequent editorial changes.
 
-Neon tables are created idempotently on the first configured request. The initial
+Neon tables are created idempotently on the first **private/admin** request. The initial
 seven destinations keep their existing images and attribution; adding club media
 replaces that place's legacy photo. New places start as drafts and need media to
 publish. No photo is assigned to an invented location automatically.
@@ -65,12 +80,14 @@ and [free-plan limits](https://neon.com/docs/introduction/plans).
   plus a global limit). Upload signing has an authenticated rate limit.
 - Cloudinary uploads use fixed folder/random public IDs/non-overwrite signatures.
   API secrets never reach the browser. Library browsing is authenticated and paged.
-- The public API filters out drafts; it contains no session or credential data.
+- Published snapshots filter out drafts; they contain no session or credential data.
+  The public API is only a database-free redirect for legacy clients. The new
+  public frontend reads the Cloudinary JSON directly, with no API/session request.
   Static admin UI code is public like any login screen; all private data/actions
   are protected at the API. `/admin` is excluded from search indexing.
 - Edits use optimistic revisions: stale tabs cannot silently overwrite a save.
   Removing media or places never deletes original files in Cloudinary. Removing
-  a place is confirmed in the UI and takes effect only after saving.
+  a place is confirmed in the UI and takes effect only after saving and publishing.
 - Draft means hidden from this website, **not private Cloudinary files**. The
   chosen Cloudinary upload type is public. Do not upload private/sensitive media.
 - New dashboard uploads accept **25 MB per source photo or video** (25,000,000
@@ -106,7 +123,85 @@ and [free-plan limits](https://neon.com/docs/introduction/plans).
 - Keep secure backups of the database. Free tiers have limits; monitor both
   dashboards. The app does not purchase or upgrade services automatically.
 
+## Members, bike library and hero lineup
+
+- **Members**: the initial catalogue deduplicates Junaid A's two entries into one
+  member, while keeping Junaid K separate. Deactivating a member excludes all their
+  hero entries from the next publication. It does not delete their bikes or images.
+- **Bike library**: metadata and image sets are separate from members. Draft and
+  hidden bikes are never exported. Published status means eligible for the hero;
+  a visible lineup assignment and an active member are still required.
+- **Hero lineup**: assign/reassign members and bikes, toggle individual entries,
+  change order and preview the actual hero before publishing. Multiple members may
+  reference the same image set without duplicating the files. An empty lineup is
+  intentional and shows the HH introduction without fetching fallback bikes.
+- **New images**: select an ordered set of 1–144 prepared transparent PNG/WebP
+  images, each 1200×720 and below 10 MB (the provider's image-file cap). Browser
+  validation checks the complete selection's dimensions, nonempty alpha and duplicate
+  raster endpoints before uploading. Files are uploaded unchanged, **not** through the
+  album JPEG compressor. Use one shared fit for the whole rotation; this uploader does
+  not create new camera angles or remove backgrounds. Fine cutout quality still needs
+  a human visual check. One photo uses tilt. Uploading a replacement sets the bike to
+  Draft until reviewed. Every confirmed asset's format, size and dimensions are checked
+  server-side and recorded in `hh_bike_assets`; unconfirmed references cannot be saved.
+  Transparency inspection is client-side in this trusted-admin workflow, not a claim
+  that an administrator cannot bypass it with an arbitrary API client.
+- Original uploads use immutable random IDs under `hh-bikes/`. Frame confirmations
+  are session-bound, time-limited, and cached in Neon to avoid repeated Admin API
+  lookups on retry. Completed files from a failed replacement selection can be reused
+  by selecting the same files again in that tab; refreshing the tab loses that memo.
+  Unattached files remain in Cloudinary, never automatically deleted.
+- **Migration**: save any edits first, then use “Move existing frames to Cloudinary”.
+  Only the current catalogue's original paths are imported, in batches of up to 12,
+  with two upload transfers at a time. Confirmed batches are saved as drafts. Missing
+  originals remain in their exact frame positions, allowing a failed migration to
+  resume without losing order. The migration never publishes or deletes local files.
+  Review previews and publish after completion. The initial 257 confirmations consume
+  Cloudinary Admin API allowance; pause and resume later if your account is rate-limited.
+- The Sunday game's motorcycles are separate and deliberately unchanged.
+
+## Publishing, outages and quotas
+
+The saved editorial data stays in Neon (`hh_gallery` + `hh_site`). The publication
+contains only whitelisted visible fields and media references. No draft catalogue,
+member activity flags, sessions, passwords or API credentials are included. A
+five-minute publication lock serializes publishers; optimistic revisions reject stale
+tabs. Cloudinary requests have shorter timeouts than that lock. If the function dies,
+the lock expires so the admin can retry. A lost response or failure after the public
+alias upload can make publication status uncertain; retrying safely republishes the
+saved draft. Ordinary upload failures leave the preceding public alias intact.
+
+Default public JSON: `https://res.cloudinary.com/jr5po5s7/raw/upload/hh-site/published.json`.
+To use another Cloudinary product environment or snapshot namespace, set the server's
+`CLOUDINARY_CLOUD_NAME` / `CONTENT_SNAPSHOT_ID` **and** matching public build variables
+`VITE_CLOUDINARY_CLOUD_NAME` / `VITE_CONTENT_SNAPSHOT_ID`. Only these public names/paths
+belong in `VITE_` variables. Preview deployments must have an explicit separate
+`CONTENT_SNAPSHOT_ID` or publishing is refused; use a separate development DB/branch
+and a matching preview public path as well.
+
+Public clients request the snapshot on load, then retain the last successfully
+validated copy in optional browser storage for outages. They never substitute the
+hard-coded rider catalogue after a missing/empty publication; cached content can be
+older while offline. Cloudinary public images are not private merely because their
+website entry is hidden. Admin edits cannot be made while Neon is suspended, but an
+already published site remains database-independent. Cloudinary/CDN outages and free
+transfer/storage/transformation limits still apply; this architecture is not an
+unlimited availability promise. No keep-alive or periodic public DB requests exist.
+
+The hero loads its opening view and a small moving neighbourhood, rather than decoding
+the full set. Transfers are limited to two per spinner; decoded images are limited to
+12 on desktop / 8 on phone, plus in-flight work. Offscreen/hidden-tab rendering pauses
+and releases all but the current cached view. Mobile delivery uses 720px frames,
+thumbnails use 160px Cloudinary derivatives, and originals remain untouched. Large
+decorative initial spins no longer force downloading the entire first bike.
+
 ## Local development
+
+`src/data/garage-seed.json` bootstraps **new** databases; it does not overwrite an
+existing saved catalogue. Keep it aligned with `src/data/site.ts` when changing
+checked-in bike assets (`scripts/seed-garage.mjs` prints a reviewable patch;
+`npm run test:site` catches drift). Once a database has a catalogue, make its
+member, bike and assignment changes in the dashboard and publish explicitly.
 
 Set `ADMIN_PASSWORD_HASH` and either a separate development `DATABASE_URL`, or
 explicitly set `CMS_LOCAL_FILE=.hh-local/content.json` in ignored `.env.local`.
@@ -116,7 +211,8 @@ There is no default password and no unauthenticated demo mode. Local filesystem
 storage is refused in production and on Vercel; production requires Postgres.
 
 Run `npm run test:admin`. It executes the Postgres schema/queries against an
-in-memory PostgreSQL engine and mocks Cloudinary network calls. Real provider
+in-memory PostgreSQL engine, mocks Cloudinary network calls, checks draft/publication
+isolation and migration retries, and tests bounded frame caching. Real provider
 credentials and a live Vercel deployment still need the production smoke test:
 unauthorized edits rejected, login, select an existing image, upload an image,
 save a draft, publish, check public feed, sign out, verify saved-session rejection.

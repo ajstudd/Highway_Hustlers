@@ -150,6 +150,15 @@ dialog.admin-library { color:#f2ebdd; background:#181613; border:1px solid #5148
 .admin-global-feedback { max-width:1500px; margin:auto; padding:16px 32px; min-height:58px; }
 .admin-editor-heading { position:static; }
 .admin-lineup-editor { max-width:1500px; margin:auto; }
+.admin-upcoming-editor { max-width:1240px; margin:auto; }
+.admin-upcoming-editor .admin-section-title h2 { font-size:18px; }
+.admin-ride-preview { margin:0 20px 40px; scroll-margin-top:145px; }
+.admin-ride-preview-heading { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; padding:14px 20px; color:var(--admin-muted); font-size:13px; }
+.hh-admin .admin-ride-preview :is(h2,h3,h4,p) { max-width:none; }
+.hh-admin .admin-ride-preview .upcoming-ride-heading h2 { font-family:'Bricolage Grotesque',sans-serif; font-size:clamp(32px,4vw,48px); font-weight:800; }
+.hh-admin .admin-ride-preview .upcoming-ride-copy h3 { font-family:'Bricolage Grotesque',sans-serif; font-size:clamp(36px,5vw,68px); font-weight:800; max-width:18ch; }
+.hh-admin .admin-ride-preview .upcoming-ride-plan h4 { font-family:inherit; font-size:14px; }
+.hh-admin .admin-ride-preview .upcoming-ride-photo-controls button { padding:0; width:44px; height:44px; border-radius:50%; background:transparent; }
 .admin-field-note { margin-block:18px; }
 .admin-assigned { margin-block:16px; padding-left:20px; }
 .admin-assigned li { margin-block:8px; }

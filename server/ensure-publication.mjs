@@ -32,7 +32,7 @@ export async function ensureProductionPublication(env, { fetcher = fetch, storeF
       const [places, garage] = await Promise.all([db.get(seedPlaces), db.getGarage(seedGarage)]);
       if (garage.published) throw Error('An earlier publication is missing from the CDN. Restore it or explicitly publish in the dashboard; deployment will not publish newer drafts automatically.');
       const revision = `${places.revision}-${garage.revision}-${lock.slice(0,12)}`;
-      const snapshot = snapshotOf(places.places, garage.garage, publisher.cloudName, revision);
+      const snapshot = snapshotOf(places.places, garage.garage, publisher.cloudName, revision, undefined, places.upcomingRide);
       const result = await publisher.publish(snapshot, revision);
       if (!await db.finishPublish(lock, { ...result, revision: places.revision, garageRevision: garage.revision, snapshotRevision: revision })) throw Error('First content upload completed but its status could not be saved. Retry the deployment.');
       // Check the exact URL the browser will use, allowing bounded propagation.

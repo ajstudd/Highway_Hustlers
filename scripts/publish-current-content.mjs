@@ -18,7 +18,7 @@ if (!process.argv.includes('--publish')) {
   try {
     const [latestPlaces, latestGarage] = await Promise.all([db.get(seedPlaces), db.getGarage(seedGarage)]);
     const revision = `${latestPlaces.revision}-${latestGarage.revision}-${lock.slice(0,12)}`;
-    const snapshot = snapshotOf(latestPlaces.places, latestGarage.garage, publisher.cloudName, revision);
+    const snapshot = snapshotOf(latestPlaces.places, latestGarage.garage, publisher.cloudName, revision, undefined, latestPlaces.upcomingRide);
     const result = await publisher.publish(snapshot, revision);
     const published = { ...result, revision: latestPlaces.revision, garageRevision: latestGarage.revision, snapshotRevision: revision };
     if (!await db.finishPublish(lock, published)) throw Error('The upload completed but its status could not be saved. Check before retrying.');

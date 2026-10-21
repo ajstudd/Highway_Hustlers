@@ -1,6 +1,7 @@
 import { cleanGarage, publicRiders } from './garage.mjs';
 import { cleanPlaces } from '../server/content.mjs';
 import { localFramePaths as paths } from './garage-seed.mjs';
+import { cleanUpcomingRide } from './upcoming-ride.mjs';
 
 // Shared by the browser and deployment check: a successful HTTP response alone
 // must not enable a deployment with content the browser cannot read.
@@ -12,5 +13,6 @@ export function validateSnapshot(s) {
     bikes: [{ ...r, id: r.id, status: 'published', frames: r.frameAssets }],
     lineup: [{ id: r.id, memberId: r.id, bikeId: r.id, visible: true }],
   }, paths)));
-  return { schemaVersion: 1, revision: s.revision, publishedAt: s.publishedAt, cloudName: s.cloudName, places: cleanPlaces(s.places).filter(p => p.published), riders };
+  const ride = cleanUpcomingRide(s.upcomingRide);
+  return { schemaVersion: 1, revision: s.revision, publishedAt: s.publishedAt, cloudName: s.cloudName, places: cleanPlaces(s.places).filter(p => p.published), riders, upcomingRide: ride?.published ? ride : null };
 }

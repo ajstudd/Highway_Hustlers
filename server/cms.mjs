@@ -6,6 +6,7 @@ import { validateUploadSize, uploadParameters, uploadSignature, uploadTicket, ve
 import { cleanGarage } from '../shared/garage.mjs';
 import { createPublisher, snapshotOf, seedGarage, localFramePaths } from './publication.mjs';
 import { signBikeBatch, verifyBikeBatch, confirmedBikeFrame } from './bike-uploads.mjs';
+import { cleanUpcomingRide } from '../shared/upcoming-ride.mjs';
 
 class HttpError extends Error { constructor(status, message) { super(message); this.status = status; } }
 const fail = (status, message) => { throw new HttpError(status, message); };
@@ -78,7 +79,15 @@ export function createCms(env = process.env, injectedStore, fetcher = fetch) {
       if (!authenticated) fail(401, 'Your session has ended. Sign in again; unsaved work is still in this tab.');
       if (action === 'editor' && req.method === 'GET') {
         const [places, garage] = await Promise.all([db.get(seed), db.getGarage(seedGarage)]);
-        return send(200, { places: places.places, revision: places.revision, garage: garage.garage, garageRevision: garage.revision, published: garage.published, cloudName, cloudReady, publishReady: publisher.ready, localPreview: publisher.local, snapshotUrl: publisher.snapshotUrl });
+        return send(200, { places: places.places, upcomingRide: places.upcomingRide ?? null, revision: places.revision, garage: garage.garage, garageRevision: garage.revision, published: garage.published, cloudName, cloudReady, publishReady: publisher.ready, localPreview: publisher.local, snapshotUrl: publisher.snapshotUrl });
+      }
+      if (action === 'upcoming-ride' && req.method === 'PUT') {
+        if (!Number.isInteger(body.revision) || body.revision < 0) fail(400, 'Invalid content revision. Reload the dashboard.');
+        let ride; try { ride = cleanUpcomingRide(body.upcomingRide); } catch (e) { fail(400, e.message); }
+        await db.get(seed);
+        const saved = await db.saveUpcomingRide(ride, body.revision);
+        if (!saved) fail(409, 'Another tab changed the content. Your edits are still here; reload before saving.');
+        return send(200, saved);
       }
       if (action === 'garage' && req.method === 'PUT') {
         if (!Number.isInteger(body.revision) || body.revision < 0) fail(400, 'Invalid garage revision. Reload the dashboard.');
@@ -101,7 +110,7 @@ export function createCms(env = process.env, injectedStore, fetcher = fetch) {
           const [places, garage] = await Promise.all([db.get(seed), db.getGarage(seedGarage)]);
           if (places.revision !== body.revision || garage.revision !== body.garageRevision) fail(409, 'Another tab saved newer content. Reload before publishing.');
           const revision = `${places.revision}-${garage.revision}-${lock.slice(0,12)}`;
-          const snapshot = snapshotOf(places.places, garage.garage, cloudName, revision);
+          const snapshot = snapshotOf(places.places, garage.garage, cloudName, revision, undefined, places.upcomingRide);
           let published;
           try { published = await publisher.publish(snapshot, revision); } catch { fail(502, 'Publishing could not be confirmed. Your saved draft is safe. The previous publication remains available if the upload failed; retry publishing.'); }
           const state = { ...published, revision: places.revision, garageRevision: garage.revision, snapshotRevision: revision };

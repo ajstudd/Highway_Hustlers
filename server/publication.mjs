@@ -5,11 +5,13 @@ import seedPlaces from '../src/data/gallery-seed.json' with { type: 'json' };
 import { cleanGarage, publicRiders } from '../shared/garage.mjs';
 import { cleanPlaces } from './content.mjs';
 import { uploadSignature } from './uploads.mjs';
+import { cleanUpcomingRide } from '../shared/upcoming-ride.mjs';
 
 export { seedGarage, seedPlaces, localFramePaths };
-export function snapshotOf(places, garage, cloudName, revision, publishedAt = new Date().toISOString()) {
+export function snapshotOf(places, garage, cloudName, revision, publishedAt = new Date().toISOString(), upcomingRide = null) {
+  const ride = cleanUpcomingRide(upcomingRide);
   return { schemaVersion: 1, revision, publishedAt, cloudName,
-    places: cleanPlaces(places).filter(p => p.published), riders: publicRiders(cleanGarage(garage, localFramePaths)) };
+    places: cleanPlaces(places).filter(p => p.published), riders: publicRiders(cleanGarage(garage, localFramePaths)), upcomingRide: ride?.published ? ride : null };
 }
 export function createPublisher(env, fetcher = fetch) {
   const local = env.VERCEL !== '1' && env.NODE_ENV !== 'production' && env.CMS_LOCAL_FILE;

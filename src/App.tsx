@@ -7,6 +7,7 @@ import { Sunday } from './components/Sunday';
 import { useReveal } from './hooks/motion';
 import { lazy, Suspense } from 'react';
 import { PublicContentProvider } from './lib/public-content';
+import { UpcomingRide } from './components/UpcomingRide';
 
 const Admin = lazy(() => import('./admin/Admin'));
 
@@ -25,6 +26,7 @@ function PublicSite() {
         <Manifesto />
         <Sunday />
         <RouteMap />
+        <UpcomingRide />
         <Join />
       </main>
       <Footer />

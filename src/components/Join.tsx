@@ -15,7 +15,7 @@ export function Join() {
             <span className="font-serif font-normal italic tracking-normal text-marigold">You’re in.</span>
           </h2>
           <p className="mx-auto mt-8 max-w-md text-[17px] leading-relaxed text-paper/65">
-            Find the next ride on Instagram.
+            Ride moments, familiar faces, and the bits in between.
           </p>
 
           <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">

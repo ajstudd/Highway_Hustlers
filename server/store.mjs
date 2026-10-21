@@ -5,6 +5,7 @@ import path from 'node:path';
 export async function createPostgresStore(connection, injectedSql) {
   const sql = injectedSql || neon(connection);
   await sql`CREATE TABLE IF NOT EXISTS hh_gallery (id INTEGER PRIMARY KEY CHECK (id=1), revision INTEGER NOT NULL DEFAULT 0, places JSONB NOT NULL DEFAULT '[]')`;
+  await sql`ALTER TABLE hh_gallery ADD COLUMN IF NOT EXISTS upcoming_ride JSONB`;
   await sql`CREATE TABLE IF NOT EXISTS hh_sessions (token TEXT PRIMARY KEY, credential TEXT NOT NULL, expires BIGINT NOT NULL)`;
   await sql`CREATE TABLE IF NOT EXISTS hh_login_limits (bucket TEXT PRIMARY KEY, attempts INTEGER NOT NULL, expires BIGINT NOT NULL)`;
   await sql`CREATE TABLE IF NOT EXISTS hh_site (id INTEGER PRIMARY KEY CHECK (id=1), revision INTEGER NOT NULL DEFAULT 0, garage JSONB NOT NULL, published JSONB, publish_token TEXT, publish_expires BIGINT NOT NULL DEFAULT 0)`;
@@ -12,10 +13,14 @@ export async function createPostgresStore(connection, injectedSql) {
   return {
     async get(seed) {
       await sql`INSERT INTO hh_gallery (id,places) VALUES (1,${JSON.stringify(seed)}::jsonb) ON CONFLICT (id) DO NOTHING`;
-      const [row] = await sql`SELECT revision,places FROM hh_gallery WHERE id=1`; return row;
+      const [row] = await sql`SELECT revision,places,upcoming_ride AS "upcomingRide" FROM hh_gallery WHERE id=1`; return row;
     },
     async save(places, revision) {
       const [row] = await sql`UPDATE hh_gallery SET places=${JSON.stringify(places)}::jsonb, revision=revision+1 WHERE id=1 AND revision=${revision} RETURNING revision,places`;
+      return row || null;
+    },
+    async saveUpcomingRide(upcomingRide, revision) {
+      const [row] = await sql`UPDATE hh_gallery SET upcoming_ride=${JSON.stringify(upcomingRide)}::jsonb, revision=revision+1 WHERE id=1 AND revision=${revision} RETURNING revision,upcoming_ride AS "upcomingRide"`;
       return row || null;
     },
     async getGarage(seed) {
@@ -64,7 +69,8 @@ export function createLocalStore(filename) {
   }
   return {
     get: seed => transaction(d => { d.content ??= { revision: 0, places: seed }; return d.content; }),
-    save: (places, revision) => transaction(d => { if (d.content?.revision !== revision) return null; d.content = { revision: revision+1, places }; return d.content; }),
+    save: (places, revision) => transaction(d => { if (d.content?.revision !== revision) return null; d.content = { ...d.content, revision: revision+1, places }; return d.content; }),
+    saveUpcomingRide: (upcomingRide, revision) => transaction(d => { if (d.content?.revision !== revision) return null; d.content = { ...d.content, revision: revision+1, upcomingRide }; return { revision: d.content.revision, upcomingRide }; }),
     getGarage: seed => transaction(d => { d.site ??= { revision: 0, garage: seed, published: null }; return d.site; }),
     saveGarage: (garage, revision) => transaction(d => { if (d.site?.revision !== revision) return null; d.site = { ...d.site, revision: revision+1, garage }; return d.site; }),
     acquirePublish: (token, now) => transaction(d => { if (!d.site || (d.site.publishToken && d.site.publishExpires >= now)) return false; d.site.publishToken = token; d.site.publishExpires = now+300000; return true; }),

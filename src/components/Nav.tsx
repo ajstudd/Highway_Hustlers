@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { usePublicContent } from '../lib/public-content';
 
 export function Logo({ className = '' }: { className?: string }) {
   return (
@@ -17,6 +18,7 @@ const LINKS = [
 ] as const;
 
 export function Nav() {
+  const { snapshot } = usePublicContent();
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 24);
@@ -47,7 +49,7 @@ export function Nav() {
             </a>
           ))}
           <a
-            href="#join"
+            href={snapshot?.upcomingRide ? '#upcoming-ride' : '#join'}
             className="ml-2 rounded-full bg-paper px-4 py-2 text-sm font-semibold text-ink transition hover:bg-marigold"
           >
             Ride with us

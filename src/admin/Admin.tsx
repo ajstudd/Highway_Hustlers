@@ -8,6 +8,8 @@ import { inspectBikeFrame, uploadBikeBatch, uploadPreparedSet } from './bike-upl
 import { publicRiders, type BikeFrame, type Garage } from '../../shared/garage.mjs';
 import type { EditorDocument, Publication, Section } from './types';
 import { offerDraftBikes } from '../../shared/garage-seed.mjs';
+import { emptyUpcomingRide, type UpcomingRide } from '../../shared/upcoming-ride.mjs';
+import UpcomingRideEditor from './UpcomingRideEditor';
 
 type Library = { media: Media[]; cursor: string; cloudName: string };
 const messageOf = (e: unknown) => e instanceof Error ? e.message : 'Something went wrong. Try again.';
@@ -17,6 +19,7 @@ export default function Admin() {
   const [data, setData] = useState<EditorDocument | null>(null);
   const [places, setPlaces] = useState<Place[]>([]), [baseline, setBaseline] = useState('');
   const [garage, setGarage] = useState<Garage>({ members: [], bikes: [], lineup: [] }), [garageBaseline, setGarageBaseline] = useState('');
+  const [upcomingRide, setUpcomingRide] = useState<UpcomingRide>(emptyUpcomingRide), [rideBaseline, setRideBaseline] = useState('');
   const [section, setSection] = useState<Section>('places');
   const uploadedFrames = useRef(new Map<string, BikeFrame>());
   const [selected, setSelected] = useState(''), [password, setPassword] = useState('');
@@ -24,7 +27,8 @@ export default function Admin() {
   const [confirmRemove, setConfirmRemove] = useState(false), [showLibrary, setShowLibrary] = useState(false);
   const placesDirty = !!data && JSON.stringify(places) !== baseline;
   const garageDirty = !!data && JSON.stringify(garage) !== garageBaseline;
-  const dirty = placesDirty || garageDirty;
+  const rideDirty = !!data && JSON.stringify(upcomingRide) !== rideBaseline;
+  const dirty = placesDirty || garageDirty || rideDirty;
   const needsPublish = !!data && (!data.published || data.revision !== data.published.revision || data.garageRevision !== data.published.garageRevision);
   const place = places.find(p => p.id === selected);
   const editor = useRef<HTMLHeadingElement>(null);
@@ -42,6 +46,7 @@ export default function Admin() {
     const doc = await cmsRequest<EditorDocument>('editor');
     const offered = offerDraftBikes(doc.garage);
     setData(doc); setPlaces(doc.places); setBaseline(JSON.stringify(doc.places)); setGarage(offered); setGarageBaseline(JSON.stringify(doc.garage)); setSelected(doc.places[0]?.id || ''); setPhase('editor');
+    const ride = doc.upcomingRide ?? emptyUpcomingRide(); setUpcomingRide(ride); setRideBaseline(JSON.stringify(ride));
     if (offered !== doc.garage) setNotice('New bike drafts are ready in Bike library. Save draft to keep them; the public lineup is unchanged.');
   }
   useEffect(() => {
@@ -82,6 +87,10 @@ export default function Admin() {
       if (garageDirty) {
         const saved = await cmsRequest<{ revision: number; garage: Garage }>('garage', { method: 'PUT', body: JSON.stringify({ revision: doc.garageRevision, garage }) });
         doc = { ...doc, garage: saved.garage, garageRevision: saved.revision }; setData(doc); setGarage(saved.garage); setGarageBaseline(JSON.stringify(saved.garage));
+      }
+      if (rideDirty) {
+        const saved = await cmsRequest<{ revision: number; upcomingRide: UpcomingRide }>('upcoming-ride', { method: 'PUT', body: JSON.stringify({ revision: doc.revision, upcomingRide }) });
+        doc = { ...doc, ...saved }; setData(doc); setUpcomingRide(saved.upcomingRide); setRideBaseline(JSON.stringify(saved.upcomingRide));
       }
       setNotice('Draft saved. Publish when you want these changes on the website.');
     } catch (e) { failure(e); } finally { setBusy(false); }
@@ -146,13 +155,16 @@ export default function Admin() {
     if (!place) return; const media = [...place.media], next = index + direction;
     if (next < 0 || next >= media.length) return; [media[index], media[next]] = [media[next], media[index]]; update({ media });
   }
-  async function upload(files: FileList | null) {
-    if (!files?.length || !place || !data) return;
-    if (files.length + place.media.length > 40) { setError('Use up to 40 photos/videos per place.'); return; }
+  async function upload(files: FileList | null, target: 'place' | 'ride' = 'place') {
+    if (!files?.length || !data || (target === 'place' && !place)) return;
+    const current = target === 'ride' ? upcomingRide.images : place!.media;
+    const maximum = target === 'ride' ? 6 : 40;
+    if (files.length + current.length > maximum) { setError(target === 'ride' ? 'Use up to six ride photos.' : 'Use up to 40 photos/videos per place.'); return; }
+    const destination = place?.id;
     setBusy(true); setError(''); const uploaded: Media[] = []; let sourceBytes = 0, sentBytes = 0;
     try {
       // Validate the whole selection before decoding or uploading any of it.
-      Array.from(files).forEach(validateUpload);
+      Array.from(files).forEach(file => { if (target === 'ride' && validateUpload(file) !== 'image') throw Error('Choose photos for the upcoming ride, not videos.'); validateUpload(file); });
       for (const file of Array.from(files)) {
         const type = validateUpload(file);
         setNotice(`Preparing ${uploaded.length + 1} of ${files.length}…`);
@@ -167,8 +179,14 @@ export default function Admin() {
         uploaded.push(confirmed.media); sourceBytes += file.size; sentBytes += prepared.size;
       }
       setNotice(`Upload complete.${sentBytes < sourceBytes ? ` Photos reduced the upload by ${fileSize(sourceBytes-sentBytes)}.` : ''} Add captions, then save your changes.`);
-    } catch (e) { failure(e); setNotice(uploaded.length ? `${uploaded.length} file(s) uploaded. Save to keep them in this place.` : ''); }
-    finally { if (uploaded.length) setPlaces(items => items.map(p => p.id === place.id ? { ...p, media: [...p.media, ...uploaded] } : p)); setBusy(false); }
+    } catch (e) { failure(e); setNotice(uploaded.length ? `${uploaded.length} file(s) uploaded. Save your draft to keep them.` : ''); }
+    finally {
+      if (uploaded.length) {
+        if (target === 'ride') setUpcomingRide(ride => ({ ...ride, images: [...ride.images, ...uploaded] }));
+        else setPlaces(items => items.map(p => p.id === destination ? { ...p, media: [...p.media, ...uploaded] } : p));
+      }
+      setBusy(false);
+    }
   }
   if (phase !== 'editor') return <main className="hh-admin admin-auth">
     <a className="admin-brand" href="/">Highway Hustlers<span>Bhopal</span></a>
@@ -184,7 +202,7 @@ export default function Admin() {
   </main>;
   return <main className="hh-admin">
     <header className="admin-top"><a className="admin-brand" href="/">Highway Hustlers<span>Content dashboard{data?.localPreview ? ' · Local preview' : ''}</span></a><div><a href="/" target="_blank" rel="noreferrer" aria-label="View website"><span>View website</span> <ExternalLink size={15}/></a><button onClick={logout} disabled={busy}><LogOut size={15}/> Sign out</button></div></header>
-    <nav className="admin-sections" aria-label="Dashboard sections">{(['places','members','bikes','lineup'] as Section[]).map(id => <button key={id} type="button" aria-current={section === id ? 'page' : undefined} disabled={busy} onClick={() => { setSection(id); setShowLibrary(false); }}>{({ places: 'Places & media', members: 'Members', bikes: 'Bike library', lineup: 'Hero lineup' })[id]}</button>)}</nav>
+    <nav className="admin-sections" aria-label="Dashboard sections">{(['upcoming','places','members','bikes','lineup'] as Section[]).map(id => <button key={id} type="button" aria-current={section === id ? 'page' : undefined} disabled={busy} onClick={() => { setSection(id); setShowLibrary(false); }}>{({ upcoming: 'Upcoming ride', places: 'Places & media', members: 'Members', bikes: 'Bike library', lineup: 'Hero lineup' })[id]}</button>)}</nav>
     <div className="admin-publishing"><div><strong>{dirty ? 'Unsaved changes' : needsPublish ? 'Saved draft · not published' : 'Published'}</strong><p className="admin-muted admin-small">{data?.published ? `Last published ${new Date(data.published.publishedAt).toLocaleString()}` : 'No publication yet. Save drafts without changing the public website.'}</p></div><div className="admin-publishing-actions"><button className={dirty ? 'admin-primary' : ''} type="button" disabled={busy || !dirty} onClick={() => void save()}><Save size={16}/> Save draft</button><button className={!dirty && needsPublish ? 'admin-primary' : ''} type="button" disabled={busy || dirty || !needsPublish || !data?.publishReady} onClick={() => void publish()}><Send size={16}/> {data?.localPreview ? 'Publish preview' : 'Publish website'}</button></div></div>
     <div className="admin-feedback admin-global-feedback" aria-live="polite">{error ? <p className="admin-error" role="alert">{error}</p> : notice ? <p className="admin-success"><Check size={16}/>{notice}</p> : <p className="admin-muted">{dirty ? 'Changes across all sections are saved together. Publish only when you’re ready.' : needsPublish ? 'Review the saved draft, then publish it to update the website.' : 'The public website reads the published copy, not the database.'}</p>}{!data?.publishReady && <p className="admin-warning">Publishing needs Cloudinary credentials. Preview deployments also need their own content snapshot ID.</p>}</div>
     {section === 'places' && <div className="admin-layout">
@@ -220,12 +238,13 @@ export default function Admin() {
         </fieldset>}
       </form>
     </div>}
+    {data && section === 'upcoming' && <UpcomingRideEditor ride={upcomingRide} change={ride => { setUpcomingRide(ride); setNotice(''); }} cloudName={data.cloudName} cloudReady={data.cloudReady} busy={busy} upload={files => void upload(files, 'ride')} library={() => setShowLibrary(true)}/>}
     {data && <GarageEditor section={section} garage={garage} cloudName={data.cloudName} cloudReady={data.cloudReady} busy={busy} dirty={dirty} change={changeGarage} upload={uploadBike} migrate={migrate}/>}
-    {showLibrary && data && place && <MediaLibrary cloudName={data.cloudName} current={place.media} close={() => setShowLibrary(false)} add={media => { update({ media: [...place.media, ...media] }); setShowLibrary(false); }} onError={failure}/>}
+    {showLibrary && data && (section === 'upcoming' || place) && <MediaLibrary cloudName={data.cloudName} current={section === 'upcoming' ? upcomingRide.images : place!.media} imagesOnly={section === 'upcoming'} maximum={section === 'upcoming' ? 6 : 40} close={() => setShowLibrary(false)} add={media => { if (section === 'upcoming') setUpcomingRide(ride => ({ ...ride, images: [...ride.images, ...media] })); else update({ media: [...place!.media, ...media] }); setShowLibrary(false); }} onError={failure}/>}
   </main>;
 }
 
-function MediaLibrary({ cloudName, current, close, add, onError }: { cloudName: string; current: Media[]; close: () => void; add: (media: Media[]) => void; onError: (e: unknown) => void }) {
+function MediaLibrary({ cloudName, current, imagesOnly = false, maximum = 40, close, add, onError }: { cloudName: string; current: Media[]; imagesOnly?: boolean; maximum?: number; close: () => void; add: (media: Media[]) => void; onError: (e: unknown) => void }) {
   const dialog = useRef<HTMLDialogElement>(null), cache = useRef(new Map<string,Library>());
   const [type, setType] = useState<'image' | 'video'>('image'), [library,setLibrary] = useState<Library>({media:[],cursor:'',cloudName});
   const [picked,setPicked] = useState<Media[]>([]), [busy,setBusy] = useState(true), [error,setError] = useState(''), [query,setQuery] = useState('');
@@ -239,11 +258,11 @@ function MediaLibrary({ cloudName, current, close, add, onError }: { cloudName: 
   }
   useEffect(() => { void load('image'); }, []);
   const chosen = new Set([...current, ...picked].map(m=>m.id));
-  return <dialog className="hh-admin admin-library" ref={dialog} onCancel={close} aria-labelledby="library-title"><header><div><h2 id="library-title">Cloudinary library</h2><p className="admin-muted">Choose moments for this place.</p></div><button onClick={close} aria-label="Close media library"><X size={22}/></button></header>
-    <div className="admin-library-toolbar"><div role="group" aria-label="Media type"><button aria-pressed={type === 'image'} disabled={busy} onClick={() => load('image')}>Photos</button><button aria-pressed={type === 'video'} disabled={busy} onClick={() => load('video')}>Videos</button></div><input type="search" aria-label="Filter loaded media" placeholder="Filter filenames…" value={query} onChange={e=>setQuery(e.target.value)}/><button disabled={busy} onClick={()=>load(type,'',true)}>Refresh</button></div>
+  return <dialog className="hh-admin admin-library" ref={dialog} onCancel={close} aria-labelledby="library-title"><header><div><h2 id="library-title">Cloudinary library</h2><p className="admin-muted">{imagesOnly ? 'Choose photos for the upcoming ride.' : 'Choose moments for this place.'}</p></div><button onClick={close} aria-label="Close media library"><X size={22}/></button></header>
+    <div className="admin-library-toolbar"><div role="group" aria-label="Media type"><button aria-pressed={type === 'image'} disabled={busy} onClick={() => load('image')}>Photos</button>{!imagesOnly && <button aria-pressed={type === 'video'} disabled={busy} onClick={() => load('video')}>Videos</button>}</div><input type="search" aria-label="Filter loaded media" placeholder="Filter filenames…" value={query} onChange={e=>setQuery(e.target.value)}/><button disabled={busy} onClick={()=>load(type,'',true)}>Refresh</button></div>
     {error && <p className="admin-error" role="alert">{error}</p>}
-    <div className="admin-library-grid" aria-busy={busy}>{library.media.filter(m=>m.type === type && m.publicId.toLowerCase().includes(query.toLowerCase())).map(media=><button className={chosen.has(media.id)?'is-picked':''} key={media.id} aria-pressed={chosen.has(media.id)} disabled={current.some(m=>m.id===media.id) || (current.length+picked.length>=40 && !chosen.has(media.id))} onClick={()=>setPicked(items=>items.some(m=>m.id===media.id)?items.filter(m=>m.id!==media.id):[...items,media])}><img src={mediaUrl(media,cloudName,280,true)} alt={media.publicId} loading="lazy"/>{chosen.has(media.id)&&<Check size={18}/>}<span>{media.publicId.split('/').pop()}</span></button>)}</div>
+    <div className="admin-library-grid" aria-busy={busy}>{library.media.filter(m=>m.type === type && m.publicId.toLowerCase().includes(query.toLowerCase())).map(media=><button className={chosen.has(media.id)?'is-picked':''} key={media.id} aria-pressed={chosen.has(media.id)} disabled={current.some(m=>m.id===media.id) || (current.length+picked.length>=maximum && !chosen.has(media.id))} onClick={()=>setPicked(items=>items.some(m=>m.id===media.id)?items.filter(m=>m.id!==media.id):[...items,media])}><img src={mediaUrl(media,cloudName,280,true)} alt={media.publicId} loading="lazy"/>{chosen.has(media.id)&&<Check size={18}/>}<span>{media.publicId.split('/').pop()}</span></button>)}</div>
     {busy && <p role="status">Loading media…</p>}{!busy && !library.media.length && !error && <p className="admin-empty">No {type === 'image' ? 'photos' : 'videos'} in this Cloudinary account yet.</p>}
-    <footer>{library.cursor && <button disabled={busy} onClick={()=>load(type,library.cursor)}>Load more</button>}<span className="admin-muted">{picked.length} selected</span><button className="admin-primary" disabled={!picked.length || busy} onClick={()=>add(picked)}>Add to album <Plus size={16}/></button></footer>
+    <footer>{library.cursor && <button disabled={busy} onClick={()=>load(type,library.cursor)}>Load more</button>}<span className="admin-muted">{picked.length} selected</span><button className="admin-primary" disabled={!picked.length || busy} onClick={()=>add(picked)}>{imagesOnly ? 'Add to ride' : 'Add to album'} <Plus size={16}/></button></footer>
   </dialog>;
 }

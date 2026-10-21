@@ -9,7 +9,7 @@
     "test:site": "node scripts/test-site.mjs && node scripts/test-prank-bikes.mjs",
     "test:bike-colours": "node scripts/test-bike-colours.mjs",
     "test:ride-bikes": "node scripts/test-ride-bikes.mjs",
-    "test:admin": "node scripts/test-admin.mjs && node scripts/test-photo-compression.mjs && node scripts/test-content-publishing.mjs && node scripts/test-frame-cache.mjs && node scripts/test-production-bootstrap.mjs",
+    "test:admin": "node scripts/test-admin.mjs && node scripts/test-photo-compression.mjs && node scripts/test-content-publishing.mjs && node scripts/test-frame-cache.mjs && node scripts/test-production-bootstrap.mjs && node scripts/test-upcoming-ride.mjs",
     "admin:password": "node scripts/admin-password.mjs",
     "build": "vite build && node scripts/ensure-production-content.mjs",
     "preview": "vite preview"

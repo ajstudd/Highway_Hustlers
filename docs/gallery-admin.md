@@ -8,6 +8,33 @@ JSON content snapshot. Normal public visits query **neither Neon nor the Cloudin
 Admin API**. Server secrets never use a `VITE_` prefix; only public delivery
 configuration uses the optional `VITE_CLOUDINARY_CLOUD_NAME` / `VITE_CONTENT_SNAPSHOT_ID`.
 
+## Upcoming ride
+
+`/admin` → **Upcoming ride** manages one next ride, displayed between the favourite
+mornings and the closing Instagram invitation. No sample ride is seeded in production.
+
+- Set the location, description and meeting point. These are required when **Include
+  on publish** is enabled. You can save an incomplete draft with that switch off.
+- Date and meeting time are optional; meeting time is in India Standard Time (IST).
+- Notes, an HTTPS Google Maps link and up to six photos are optional. Use the existing
+  compressed uploader (25 MB source limit) or pick photos from the Cloudinary library.
+  Change captions/order or remove references without deleting originals.
+- **Preview section** shows the current draft without publishing. **Save draft** then
+  **Publish website** makes the announcement live, like other content sections.
+- After a ride, turn off **Include on publish**, save and publish to hide it. Dates do
+  not automatically expire announcements. With no published ride, the entire section
+  is omitted, including its space. The main Ride with us link targets the announcement
+  when present, and the Instagram invitation otherwise.
+
+Storage adds a nullable `upcoming_ride` JSONB column to `hh_gallery` through an
+idempotent, non-destructive migration. Ride edits share the gallery's optimistic
+revision counter, so stale saves/publications conflict rather than overwrite newer
+work. Saving places preserves the ride and vice versa. The public JSON adds an
+optional `upcomingRide`; older publications and last-good browser caches remain
+valid. All publication paths (dashboard, first-build bootstrap, recovery script)
+include only the eligible saved ride. Public delivery still makes zero Neon queries.
+Hidden content is not private media; do not put sensitive details into a public ride.
+
 ## One-time production setup
 
 1. In the existing **Vercel project → Storage**, connect a **Neon Postgres** database.

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile, mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { createHash } from 'node:crypto';
-import { seedGarage, localFramePaths, offerDraftBikes } from '../shared/garage-seed.mjs';
+import { seedGarage, localFramePaths, offerDraftBikes, offerNewRiders } from '../shared/garage-seed.mjs';
 import { cleanGarage, publicRiders } from '../shared/garage.mjs';
 import { loadSharp } from './prepare-bike-turntable.mjs';
 
@@ -14,6 +14,18 @@ assert.deepEqual(publicRiders(offered),publicRiders(base),'adding draft bikes mu
 assert.equal(offerDraftBikes(offered),offered,'reopening must not duplicate catalogue entries');
 const edited = structuredClone(offered); edited.bikes.find(b => b.id === 'honda-navi').status = 'hidden';
 assert.equal(offerDraftBikes(edited).bikes.find(b => b.id === 'honda-navi').status,'hidden','preserve saved edits');
+// A catalogue saved before Jasmine was added is offered her member, bike and hero entry.
+const before = structuredClone(base);
+before.members = before.members.filter(m => m.id !== 'jasmine'); before.bikes = before.bikes.filter(b => b.id !== 'jawa-42-bobber'); before.lineup = before.lineup.filter(e => e.id !== 'jawa-42-bobber');
+const withJasmine = offerNewRiders(before);
+assert.deepEqual(cleanGarage(withJasmine,localFramePaths),cleanGarage(base,localFramePaths));
+assert.equal(publicRiders(withJasmine).at(-1).name,'Jasmine');
+assert.equal(offerNewRiders(withJasmine),withJasmine,'reopening must not duplicate new riders');
+assert.equal(offerNewRiders(base),base);
+const renamed = structuredClone(base); renamed.bikes.find(b => b.id === 'jawa-42-bobber').colorName = 'Edited'; renamed.lineup = renamed.lineup.filter(e => e.id !== 'jawa-42-bobber');
+assert.equal(offerNewRiders(renamed),renamed,'an existing bike is never replaced or re-entered');
+const reassigned = structuredClone(before); reassigned.members.push({ ...seedGarage.members.find(m => m.id === 'jasmine'), role: 'Saved role' });
+assert.equal(offerNewRiders(reassigned).members.find(m => m.id === 'jasmine').role,'Saved role','preserve a saved member');
 const presets = seedGarage.bikes.filter(b => ['tvs-xl100','honda-navi','honda-monkey'].includes(b.id));
 assert.equal(presets.length,3); assert(presets.every(b => b.status === 'draft'));
 assert.equal(presets.find(b => b.id === 'honda-monkey').frames.length,0,'Monkey stays pending, never fake 360 or unapproved tilt');

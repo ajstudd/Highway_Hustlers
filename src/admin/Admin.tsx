@@ -7,7 +7,7 @@ import GarageEditor from './GarageEditor';
 import { inspectBikeFrame, uploadBikeBatch, uploadPreparedSet } from './bike-uploads';
 import { publicRiders, type BikeFrame, type Garage } from '../../shared/garage.mjs';
 import type { EditorDocument, Publication, Section } from './types';
-import { offerDraftBikes } from '../../shared/garage-seed.mjs';
+import { offerDraftBikes, offerNewRiders } from '../../shared/garage-seed.mjs';
 import { emptyUpcomingRide, type UpcomingRide } from '../../shared/upcoming-ride.mjs';
 import UpcomingRideEditor from './UpcomingRideEditor';
 
@@ -44,10 +44,11 @@ export default function Admin() {
   function failure(e: unknown) { const text = messageOf(e); setError(text); if (text.startsWith('Your session has ended')) setPhase('login'); }
   async function load() {
     const doc = await cmsRequest<EditorDocument>('editor');
-    const offered = offerDraftBikes(doc.garage);
+    const riders = offerNewRiders(doc.garage), offered = offerDraftBikes(riders);
     setData(doc); setPlaces(doc.places); setBaseline(JSON.stringify(doc.places)); setGarage(offered); setGarageBaseline(JSON.stringify(doc.garage)); setSelected(doc.places[0]?.id || ''); setPhase('editor');
     const ride = doc.upcomingRide ?? emptyUpcomingRide(); setUpcomingRide(ride); setRideBaseline(JSON.stringify(ride));
-    if (offered !== doc.garage) setNotice('New bike drafts are ready in Bike library. Save draft to keep them; the public lineup is unchanged.');
+    if (riders !== doc.garage) setNotice('New riders are ready in Members and Hero lineup. Save draft, then Publish to show them on the website.');
+    else if (offered !== doc.garage) setNotice('New bike drafts are ready in Bike library. Save draft to keep them; the public lineup is unchanged.');
   }
   useEffect(() => {
     let active = true;

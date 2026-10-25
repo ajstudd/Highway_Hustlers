@@ -58,8 +58,8 @@ export function Footer() {
         <details className="max-w-md text-xs leading-relaxed text-paper/65 md:text-right">
           <summary className="cursor-pointer underline underline-offset-4">Image credits</summary>
           <p className="mt-3">
-            Bike imagery © Royal Enfield, TVS, Triumph, Yamaha, Honda, Hero and Bajaj. Ninja 300 photo © Kawasaki (background removed).
-            <br />RR 310 Titanium Black rotation © TVS Mexico; Raider Split Seat Blazing Blue rotation © TVS (studio floor removed); CB350RS matte/lime rotation © Honda. Speed 400 rotation via West Coast Triumph (background removed). CB125 Hornet paint colour digitally adapted for the 360° view.
+            Bike imagery © Royal Enfield, TVS, Triumph, Yamaha, Honda, Hero, Bajaj and Jawa. Ninja 300 photo © Kawasaki (background removed).
+            <br />RR 310 Titanium Black rotation © TVS Mexico; Raider Split Seat Blazing Blue rotation © TVS (studio floor removed); CB350RS matte/lime rotation © Honda; 42 Bobber Black Mirror rotation © Jawa Yezdi Motorcycles (studio floor removed). Speed 400 rotation via West Coast Triumph (background removed). CB125 Hornet paint colour digitally adapted for the 360° view.
             <br />Actors adapted from Mixamo. Head scan © <a className="underline underline-offset-2" href="https://www.triplegangers.com/">Lee Perry-Smith</a>, adapted under <a className="underline underline-offset-2" href="https://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.
           </p>
         </details>

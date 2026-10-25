@@ -1,0 +1,28 @@
+{
+  "imageSet": "jawa-42-bobber-black-mirror-v1",
+  "sourcePage": "https://www.jawayezdimotorcycles.com/products/jawa-42-bobber?variant=49488743694630",
+  "variant": "Jawa All Stars 42 Bobber",
+  "colour": "All Stars Black Mirror",
+  "sourceSequence": "Black Mirror product-360-view data-image-list-x lists 8\u201316 then 1\u20135 and 7 (15 files) and skips 6. 42_Black_Mirror_-_360_Angles_6.png is in the same set on the CDN and is the angle between 5 (front) and 7, so all 16 files are kept in numeric order. Numeric 1 is the right-facing profile.",
+  "startFrame": 0,
+  "lossless": true,
+  "curl": true,
+  "frames": [
+    "https://www.jawayezdimotorcycles.com/cdn/shop/files/42_Black_Mirror_-_360_Angles_1.png",
+    "https://www.jawayezdimotorcycles.com/cdn/shop/files/42_Black_Mirror_-_360_Angles_2.png",
+    "https://www.jawayezdimotorcycles.com/cdn/shop/files/42_Black_Mirror_-_360_Angles_3.png",
+    "https://www.jawayezdimotorcycles.com/cdn/shop/files/42_Black_Mirror_-_360_Angles_4.png",
+    "https://www.jawayezdimotorcycles.com/cdn/shop/files/42_Black_Mirror_-_360_Angles_5.png",
+    "https://www.jawayezdimotorcycles.com/cdn/shop/files/42_Black_Mirror_-_360_Angles_6.png",
+    "https://www.jawayezdimotorcycles.com/cdn/shop/files/42_Black_Mirror_-_360_Angles_7.png",
+    "https://www.jawayezdimotorcycles.com/cdn/shop/files/42_Black_Mirror_-_360_Angles_8.png",
+    "https://www.jawayezdimotorcycles.com/cdn/shop/files/42_Black_Mirror_-_360_Angles_9.png",
+    "https://www.jawayezdimotorcycles.com/cdn/shop/files/42_Black_Mirror_-_360_Angles_10.png",
+    "https://www.jawayezdimotorcycles.com/cdn/shop/files/42_Black_Mirror_-_360_Angles_11.png",
+    "https://www.jawayezdimotorcycles.com/cdn/shop/files/42_Black_Mirror_-_360_Angles_12.png",
+    "https://www.jawayezdimotorcycles.com/cdn/shop/files/42_Black_Mirror_-_360_Angles_13.png",
+    "https://www.jawayezdimotorcycles.com/cdn/shop/files/42_Black_Mirror_-_360_Angles_14.png",
+    "https://www.jawayezdimotorcycles.com/cdn/shop/files/42_Black_Mirror_-_360_Angles_15.png",
+    "https://www.jawayezdimotorcycles.com/cdn/shop/files/42_Black_Mirror_-_360_Angles_16.png"
+  ]
+}

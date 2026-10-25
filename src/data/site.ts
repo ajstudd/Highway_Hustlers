@@ -88,6 +88,11 @@ export const RIDERS: Rider[] = [
     brand: 'Honda', model: 'CB125 Hornet', cc: 123, character: 'Street naked', colorName: 'Pearl Igneous Black', imageSet: 'cb125-hornet-pearl-igneous-black',
     glow: '#a8997b', frames: 24, dir: 1, facing: 'right',
   },
+  {
+    id: 'jawa-42-bobber', name: 'Jasmine',
+    brand: 'Jawa', model: '42 Bobber', cc: 334, character: 'Bobber', colorName: 'Black Mirror', imageSet: 'jawa-42-bobber-black-mirror-v1',
+    glow: '#9aa0a8', frames: 16, dir: -1, facing: 'right',
+  },
 ];
 
 export const frameSrc = (riderId: string, i: number) =>

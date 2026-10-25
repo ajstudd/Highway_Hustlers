@@ -41,14 +41,14 @@ try {
   failUpload = false; staleReads = 2;
   assert.equal(await ensureProductionPublication(env, options), 'created');
   const published = assets.get(alias), state = await db.getGarage(seedGarage);
-  assert.equal(published.riders.length, 11); assert.equal(state.published.snapshotRevision, published.revision);
+  assert.equal(published.riders.length, 12); assert.equal(state.published.snapshotRevision, published.revision);
   const changed = structuredClone(state.garage); changed.members[0].active = false;
   await db.saveGarage(changed, state.revision);
   const savedCalls = dbCalls, savedUploads = uploads;
   assert.equal(await ensureProductionPublication(env, options), 'existing');
   assert.equal(dbCalls, savedCalls, 'subsequent builds need no database query');
   assert.equal(uploads, savedUploads, 'redeploying must never publish saved drafts');
-  assert.equal(assets.get(alias).riders.length, 11);
+  assert.equal(assets.get(alias).riders.length, 12);
   assets.delete(alias);
   await assert.rejects(ensureProductionPublication(env, options), /An earlier publication/);
   assert.equal(uploads, savedUploads, 'missing CDN file is not permission to publish newer drafts');

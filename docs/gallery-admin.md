@@ -59,8 +59,8 @@ Hidden content is not private media; do not put sensitive details into a public 
 4. **Deploy normally. The first content publication is automatic.** The configured
    build command runs Vite first, then `scripts/ensure-production-content.mjs`.
    Only a Vercel Production build can perform automatic setup. It uses the existing
-   Production credentials, preserves the saved gallery and seeds the 10 members /
-   11 member bikes plus unassigned draft presets only if no catalogue exists. If no prior publication exists and the CDN
+   Production credentials, preserves the saved gallery and seeds the 11 members /
+   12 member bikes plus unassigned draft presets only if no catalogue exists. If no prior publication exists and the CDN
    file is missing, it publishes the eligible saved content and verifies the exact
    delivery URL before the build succeeds. No local environment file or manual
    terminal publishing is required. Local and Preview builds skip this step.

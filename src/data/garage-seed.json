@@ -69,6 +69,13 @@
       "active": true,
       "role": "",
       "line": ""
+    },
+    {
+      "id": "jasmine",
+      "name": "Jasmine",
+      "active": true,
+      "role": "",
+      "line": ""
     }
   ],
   "bikes": [
@@ -1767,6 +1774,116 @@
           "height": 720
         }
       ]
+    },
+    {
+      "id": "jawa-42-bobber",
+      "brand": "Jawa",
+      "model": "42 Bobber",
+      "cc": 334,
+      "character": "Bobber",
+      "colorName": "Black Mirror",
+      "glow": "#9aa0a8",
+      "dir": -1,
+      "facing": "right",
+      "status": "published",
+      "frames": [
+        {
+          "source": "local",
+          "path": "/bikes/jawa-42-bobber-black-mirror-v1/00.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/jawa-42-bobber-black-mirror-v1/01.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/jawa-42-bobber-black-mirror-v1/02.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/jawa-42-bobber-black-mirror-v1/03.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/jawa-42-bobber-black-mirror-v1/04.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/jawa-42-bobber-black-mirror-v1/05.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/jawa-42-bobber-black-mirror-v1/06.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/jawa-42-bobber-black-mirror-v1/07.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/jawa-42-bobber-black-mirror-v1/08.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/jawa-42-bobber-black-mirror-v1/09.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/jawa-42-bobber-black-mirror-v1/10.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/jawa-42-bobber-black-mirror-v1/11.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/jawa-42-bobber-black-mirror-v1/12.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/jawa-42-bobber-black-mirror-v1/13.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/jawa-42-bobber-black-mirror-v1/14.webp",
+          "width": 1200,
+          "height": 720
+        },
+        {
+          "source": "local",
+          "path": "/bikes/jawa-42-bobber-black-mirror-v1/15.webp",
+          "width": 1200,
+          "height": 720
+        }
+      ]
     }
   ],
   "lineup": [
@@ -1834,6 +1951,12 @@
       "id": "cb125-hornet",
       "memberId": "pawan",
       "bikeId": "cb125-hornet",
+      "visible": true
+    },
+    {
+      "id": "jawa-42-bobber",
+      "memberId": "jasmine",
+      "bikeId": "jawa-42-bobber",
       "visible": true
     }
   ]

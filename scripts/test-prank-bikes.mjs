@@ -8,7 +8,7 @@ import { loadSharp } from './prepare-bike-turntable.mjs';
 
 const base = JSON.parse(await readFile(new URL('../src/data/garage-seed.json', import.meta.url),'utf8'));
 const offered = offerDraftBikes(base);
-assert.equal(base.bikes.length,11); assert.equal(offered.bikes.length,14);
+assert.equal(base.bikes.length,12); assert.equal(offered.bikes.length,15);
 assert.deepEqual(offered.members,base.members); assert.deepEqual(offered.lineup,base.lineup);
 assert.deepEqual(publicRiders(offered),publicRiders(base),'adding draft bikes must not change the public hero');
 assert.equal(offerDraftBikes(offered),offered,'reopening must not duplicate catalogue entries');

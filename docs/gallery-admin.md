@@ -243,6 +243,10 @@ existing saved catalogue. Keep it aligned with `src/data/site.ts` when changing
 checked-in bike assets (`scripts/seed-garage.mjs` prints a reviewable patch;
 `npm run test:site` catches drift). Once a database has a catalogue, make its
 member, bike and assignment changes in the dashboard and publish explicitly.
+A rider added to the seed later is also listed by hero-entry ID in
+`src/data/garage-additions.json`; the dashboard then offers that member, bike and
+hero entry to an existing catalogue when it is missing (never replacing a saved
+bike or entry). Save draft, then Publish, to show them on the website.
 
 Set `ADMIN_PASSWORD_HASH` and either a separate development `DATABASE_URL`, or
 explicitly set `CMS_LOCAL_FILE=.hh-local/content.json` in ignored `.env.local`.

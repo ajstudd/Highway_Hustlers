@@ -103,6 +103,9 @@ If adding two riders with the same bike model, give each entry a unique ID and u
   blend neighbours. A single frame uses tilt. Preserve reduced-motion behavior.
 - Do not edit `BikeSpinner.tsx` or `Hero.tsx` for ordinary asset registration. They are
   already data-driven and load using `imageSet`.
+- For a new rider, regenerate `src/data/garage-seed.json` (`node scripts/seed-garage.mjs`) and
+  add the entry ID to `src/data/garage-additions.json`. The seed only bootstraps new databases;
+  the additions list makes the dashboard offer the rider to an existing one (Save draft, Publish).
 - If the **first** rider's frame-00 path changes, update its preload in `index.html`.
 - Update `public/bikes/COLOURS.md` with provenance/count/method and footer image credits
   in `src/components/Join.tsx`. Disclose adaptations without verbose marketing copy.

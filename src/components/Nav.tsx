@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { usePublicContent } from '../lib/public-content';
+import { UserRound } from 'lucide-react';
 
 export function Logo({ className = '' }: { className?: string }) {
   return (
@@ -19,6 +20,8 @@ const LINKS = [
 
 export function Nav() {
   const { snapshot } = usePublicContent();
+  const ride=snapshot?.upcomingRide;
+  const hasUpcoming=!!ride&&(!ride.date||ride.date>=new Date(Date.now()+19800000).toISOString().slice(0,10));
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 24);
@@ -39,6 +42,7 @@ export function Nav() {
           <span className="font-display text-[15px] font-bold tracking-tight">Highway Hustlers</span>
         </a>
         <nav className="flex items-center gap-1 sm:gap-2">
+          <a href="/member" aria-label="HHR member login" title="HHR member" className="inline-flex h-11 w-11 items-center justify-center rounded-full text-paper/80 transition hover:bg-paper/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-marigold"><UserRound size={19}/></a>
           {LINKS.map(([href, label]) => (
             <a
               key={href}
@@ -49,7 +53,7 @@ export function Nav() {
             </a>
           ))}
           <a
-            href={snapshot?.upcomingRide ? '#upcoming-ride' : '#join'}
+            href={hasUpcoming ? '#upcoming-ride' : '#join'}
             className="ml-2 rounded-full bg-paper px-4 py-2 text-sm font-semibold text-ink transition hover:bg-marigold"
           >
             Ride with us

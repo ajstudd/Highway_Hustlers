@@ -4,10 +4,18 @@ import path from "path"
 // Server-only middleware: the same API runs locally and as a Vercel Function.
 // @ts-ignore Node module intentionally lives outside the browser source tree.
 import { createCms } from './server/cms.mjs'
+// @ts-ignore Server-only member API.
+import { createMembers } from './server/members.mjs'
+// @ts-ignore Server-only bounded binary image uploader.
+import { createMemberPhotos } from './server/member-photos.mjs'
 
 export default defineConfig(({ mode }) => ({
   plugins: [react(), { name: 'hh-content-api', configureServer(server) {
     const handler = createCms({ ...process.env, ...loadEnv(mode, process.cwd(), '') });
+    const memberHandler = createMembers({ ...process.env, ...loadEnv(mode, process.cwd(), '') });
+    const photoHandler=createMemberPhotos({...process.env,...loadEnv(mode,process.cwd(),'')});
+    server.middlewares.use('/api/member-photo',(req,res)=>{req.url=`/api/member-photo${req.url?.includes('?')?req.url.slice(req.url.indexOf('?')):''}`;void photoHandler(req,res);});
+    server.middlewares.use('/api/member', (req,res) => {req.url=`/api/member${req.url?.includes('?')?req.url.slice(req.url.indexOf('?')):''}`;void memberHandler(req,res);});
     server.middlewares.use('/api/cms', (req, res) => { req.url = `/api/cms${req.url?.includes('?') ? req.url.slice(req.url.indexOf('?')) : ''}`; void handler(req, res); });
     server.middlewares.use('/content.json', (req, res) => { req.url = '/api/cms?action=public'; void handler(req, res); });
   } }],

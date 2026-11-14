@@ -2,6 +2,7 @@ import { createPostgresStore } from './store.mjs';
 import { createPublisher, seedGarage, seedPlaces, snapshotOf } from './publication.mjs';
 import { sessionToken } from './security.mjs';
 import { validateSnapshot } from '../shared/public-snapshot.mjs';
+import { syncPublishedRide } from './member-state.mjs';
 
 // Runs during the production BUILD, never from a visitor request. Existing
 // publications are checked without querying Neon or publishing newer drafts.
@@ -34,7 +35,8 @@ export async function ensureProductionPublication(env, { fetcher = fetch, storeF
       const revision = `${places.revision}-${garage.revision}-${lock.slice(0,12)}`;
       const snapshot = snapshotOf(places.places, garage.garage, publisher.cloudName, revision, undefined, places.upcomingRide);
       const result = await publisher.publish(snapshot, revision);
-      if (!await db.finishPublish(lock, { ...result, revision: places.revision, garageRevision: garage.revision, snapshotRevision: revision })) throw Error('First content upload completed but its status could not be saved. Retry the deployment.');
+      if (!await db.finishPublish(lock, { ...result, revision: places.revision, garageRevision: garage.revision, snapshotRevision: revision, upcomingRide:snapshot.upcomingRide })) throw Error('First content upload completed but its status could not be saved. Retry the deployment.');
+      await syncPublishedRide(db,snapshot.upcomingRide,revision);
       // Check the exact URL the browser will use, allowing bounded propagation.
       for (let attempt = 0; attempt < 4; attempt++) {
         try { if ((await read())?.revision === revision) return 'created'; } catch { /* Retry briefly; never replace content again here. */ }

@@ -7,6 +7,9 @@ import { cleanGarage } from '../shared/garage.mjs';
 import { createPublisher, snapshotOf, seedGarage, localFramePaths } from './publication.mjs';
 import { signBikeBatch, verifyBikeBatch, confirmedBikeFrame } from './bike-uploads.mjs';
 import { cleanUpcomingRide } from '../shared/upcoming-ride.mjs';
+import { archiveExpiredRide, identifiedRide, rideExpired } from './ride-lifecycle.mjs';
+import { approved, completeProfile, emailOf, mutateMembers, notice, publicAccount, syncPublishedRide } from './member-state.mjs';
+import { profileBikeDetails } from './profile-bikes.mjs';
 
 class HttpError extends Error { constructor(status, message) { super(message); this.status = status; } }
 const fail = (status, message) => { throw new HttpError(status, message); };
@@ -77,17 +80,106 @@ export function createCms(env = process.env, injectedStore, fetcher = fetch) {
         res.setHeader('Set-Cookie', sessionCookie('', production, true)); return send(200, { authenticated: false });
       }
       if (!authenticated) fail(401, 'Your session has ended. Sign in again; unsaved work is still in this tab.');
+      if(action==='ride-photos'&&req.method==='GET'){
+        const status=url.searchParams.get('status')||'';if(!['','pending','approved','rejected'].includes(status))fail(400,'Invalid photo status.');
+        const offset=Number(url.searchParams.get('offset')||0);if(!Number.isSafeInteger(offset)||offset<0||offset>100000)fail(400,'Invalid catalogue page.');
+        const [photos,{state}]=await Promise.all([db.reviewPhotos(status,offset),db.getMemberState()]);
+        return send(200,{photos:photos.slice(0,50).map(p=>({...p,name:state.accounts.find(a=>a.id===p.accountId)?.name||'Former member',ride:state.rides.find(r=>r.id===p.rideId)?.details.location||p.rideId})),more:photos.length>50});
+      }
+      if(action==='moderate-ride-photo'&&req.method==='POST'){
+        if(!['pending','approved','rejected'].includes(body.expected)||!['approved','rejected'].includes(body.status))fail(400,'Choose a review decision.');
+        if(!await db.moderatePhoto(body.id,body.status,body.expected))fail(409,'This photo changed. Refresh the catalogue.');return send(200,{ok:true});
+      }
+      if(action==='add-ride-photo'&&req.method==='POST'){
+        const photo=await db.photoById(body.id);if(photo?.purpose!=='ride'||photo.status!=='approved'||!photo.media)fail(400,'Approve the photo before adding it to an album.');
+        const current=await db.get(seed);if(current.revision!==body.revision)fail(409,'Content changed. Reload before adding a photo.');
+        const place=current.places.find(p=>p.id===body.placeId);if(!place)fail(400,'Choose an album.');
+        if(!place.media.some(m=>m.id===photo.media.id)){if(place.media.length>=40)fail(400,'This album already has 40 items.');place.media.push(photo.media);}
+        const saved=await db.save(cleanPlaces(current.places),body.revision);if(!saved)fail(409,'Content changed. Reload before adding a photo.');return send(200,saved);
+      }
       if (action === 'editor' && req.method === 'GET') {
-        const [places, garage] = await Promise.all([db.get(seed), db.getGarage(seedGarage)]);
+        await archiveExpiredRide(db,seed);
+        let [places, garage] = await Promise.all([db.get(seed), db.getGarage(seedGarage)]);
+        if(places.upcomingRide&&!places.upcomingRide.id){
+          const assigned=await db.saveUpcomingRide(identifiedRide(places.upcomingRide),places.revision);
+          places=assigned?{...places,...assigned}:await db.get(seed);
+        }
         return send(200, { places: places.places, upcomingRide: places.upcomingRide ?? null, revision: places.revision, garage: garage.garage, garageRevision: garage.revision, published: garage.published, cloudName, cloudReady, publishReady: publisher.ready, localPreview: publisher.local, snapshotUrl: publisher.snapshotUrl });
       }
       if (action === 'upcoming-ride' && req.method === 'PUT') {
         if (!Number.isInteger(body.revision) || body.revision < 0) fail(400, 'Invalid content revision. Reload the dashboard.');
-        let ride; try { ride = cleanUpcomingRide(body.upcomingRide); } catch (e) { fail(400, e.message); }
-        await db.get(seed);
+        const current = await db.get(seed);
+        let ride; try { ride = identifiedRide(body.upcomingRide,current.upcomingRide); } catch (e) { fail(400, e.message); }
+        if (ride?.published && rideExpired(ride)) fail(400,'Choose a future ride date before including it on publish.');
         const saved = await db.saveUpcomingRide(ride, body.revision);
         if (!saved) fail(409, 'Another tab changed the content. Your edits are still here; reload before saving.');
         return send(200, saved);
+      }
+      if(action==='membership'&&req.method==='GET') {
+        const {state,revision}=await db.getMemberState();
+        const {garage}=await db.getGarage(seedGarage);
+        const accountView=a=>publicAccount({...a,...profileBikeDetails(a,garage)});
+        const rides=state.rides.map(r=>({...r,participants:r.participants.map(id=>state.accounts.find(a=>a.id===id)).filter(Boolean).map(accountView)}));
+        const bikes=garage.bikes.filter(b=>b.frames.length&&b.brand&&b.model&&b.colorName).map(b=>({id:b.id,brand:b.brand,model:b.model,colorName:b.colorName,frames:b.frames.length,status:b.status}));
+        return send(200,{revision,accounts:state.accounts.map(accountView),allowed:state.allowed,rides,bikes});
+      }
+      if(action==='assign-profile-bike'&&req.method==='POST') {
+        const {garage}=await db.getGarage(seedGarage);
+        if(typeof body.bikeId!=='string')fail(400,'Choose a bike or None.');
+        const bike=body.bikeId?garage.bikes.find(b=>b.id===body.bikeId):null;
+        if(body.bikeId&&(!bike?.frames.length||!bike.brand||!bike.model||!bike.colorName))fail(400,'Choose a prepared bike from the library.');
+        await mutateMembers(db,state=>{
+          const a=state.accounts.find(a=>a.id===body.accountId);if(!a)fail(404,'Profile not found.');
+          if((a.bikeId||'')===(bike?.id||''))return;
+          a.bikeId=bike?.id||null;if(bike){a.bikeName=`${bike.brand} ${bike.model}`;a.bikeColour=bike.colorName;}
+          notice(state,'Your garage updated',bike?`${bike.brand} ${bike.model} is now linked to your profile.`:'Your bike-library link was removed. You can edit your bike details in your profile.',a.id);
+        });return send(200,{ok:true});
+      }
+      if(action==='sync-member-ride'&&req.method==='POST') {
+        const garage=await db.getGarage(seedGarage);
+        if(!garage.published?.snapshotRevision)fail(409,'Publish the saved ride first.');
+        await syncPublishedRide(db,garage.published.upcomingRide||null,garage.published.snapshotRevision);return send(200,{ok:true});
+      }
+      if(action==='membership'&&req.method==='POST') {
+        try { await mutateMembers(db,state=>{
+          if(body.operation==='allow') {
+            const email=emailOf(body.email);if(state.allowed.length>=500&&!state.allowed.includes(email))fail(400,'Use up to 500 approved emails.');
+            if(!state.allowed.includes(email))state.allowed.push(email);
+            for(const a of state.accounts.filter(a=>a.email===email)){a.status='approved';notice(state,'Welcome to HHR','Your membership is approved. Complete your profile to join a ride.',a.id);}
+          } else if(body.operation==='remove-allow') {
+            const email=emailOf(body.email);state.allowed=state.allowed.filter(e=>e!==email);
+            for(const a of state.accounts.filter(a=>a.email===email)){a.status='suspended';for(const r of state.rides.filter(r=>r.status==='open'))r.participants=r.participants.filter(id=>id!==a.id);notice(state,'Membership updated','Your ride access has been paused. Contact an HHR administrator.',a.id);}
+          } else if(['approve','reject'].includes(body.operation)) {
+            const a=state.accounts.find(a=>a.id===body.accountId);if(!a)fail(404,'Profile not found.');
+            if(body.operation==='approve'){if(!state.allowed.includes(a.email)){if(state.allowed.length>=500)fail(400,'Use up to 500 approved emails.');state.allowed.push(a.email);}a.status='approved';notice(state,'Welcome to HHR','Your membership request has been approved.',a.id);}
+            else{a.status='rejected';state.allowed=state.allowed.filter(e=>e!==a.email);for(const r of state.rides.filter(r=>r.status==='open'))r.participants=r.participants.filter(id=>id!==a.id);notice(state,'Membership request reviewed','Your request was not approved. Contact HHR if you have a question.',a.id);}
+          } else fail(400,'Choose a membership action.');
+        }); } catch(e){if(e.status)throw e;fail(400,e.message);}
+        return send(200,{ok:true});
+      }
+      if(action==='ride-participant'&&req.method==='POST') {
+        await mutateMembers(db,state=>{
+          const ride=state.rides.find(r=>r.id===body.rideId),a=state.accounts.find(a=>a.id===body.accountId);
+          if(!ride||ride.status!=='open'||rideExpired(ride.details))fail(409,'This ride is no longer open.');
+          if(!a)fail(404,'Profile not found.');
+          if(body.operation==='add'){if(!approved(state,a)||!completeProfile(a))fail(400,'Choose an approved member with a complete profile.');if(!ride.participants.includes(a.id))ride.participants.push(a.id);notice(state,'You’re on the ride',`An administrator added you to ${ride.details.location}.`,a.id);}
+          else if(body.operation==='remove'){ride.participants=ride.participants.filter(id=>id!==a.id);notice(state,'Ride enrolment updated',`An administrator removed your entry for ${ride.details.location}.`,a.id);}
+          else fail(400,'Choose Add or Remove.');
+        });return send(200,{ok:true});
+      }
+      if(action==='cancel-ride'&&req.method==='POST') {
+        const content=await db.get(seed);
+        if(content.revision!==body.revision||!content.upcomingRide?.id)fail(409,'Reload the saved ride before cancelling.');
+        const id=content.upcomingRide.id;
+        const saved=await db.saveUpcomingRide({...content.upcomingRide,published:false},content.revision);
+        if(!saved)fail(409,'Another editor changed the ride. Reload first.');
+        await mutateMembers(db,state=>{const r=state.rides.find(r=>r.id===id);if(r&&r.status!=='cancelled'){r.status='cancelled';notice(state,'Ride cancelled',`${r.details.location} has been cancelled. Please do not travel to the meeting point.`);}});
+        return send(200,{...saved,notice:'Cancelled for members immediately. Publish the saved draft to remove the public announcement.'});
+      }
+      if(action==='new-ride'&&req.method==='POST') {
+        const content=await db.get(seed);if(content.revision!==body.revision)fail(409,'Reload before starting a new ride.');
+        if(content.upcomingRide?.published)fail(409,'Cancel or finish the current ride before starting another.');
+        const saved=await db.saveUpcomingRide(null,content.revision);if(!saved)fail(409,'Content changed. Reload first.');return send(200,saved);
       }
       if (action === 'garage' && req.method === 'PUT') {
         if (!Number.isInteger(body.revision) || body.revision < 0) fail(400, 'Invalid garage revision. Reload the dashboard.');
@@ -111,12 +203,15 @@ export function createCms(env = process.env, injectedStore, fetcher = fetch) {
           if (places.revision !== body.revision || garage.revision !== body.garageRevision) fail(409, 'Another tab saved newer content. Reload before publishing.');
           const revision = `${places.revision}-${garage.revision}-${lock.slice(0,12)}`;
           const snapshot = snapshotOf(places.places, garage.garage, cloudName, revision, undefined, places.upcomingRide);
+          if(snapshot.upcomingRide&&rideExpired(snapshot.upcomingRide))fail(409,'This ride date has passed. Reload to archive it before publishing.');
+          if(snapshot.upcomingRide?.id){const memberState=await db.getMemberState();if(memberState.state.rides.some(r=>r.id===snapshot.upcomingRide.id&&['cancelled','completed'].includes(r.status)))fail(409,'This ride is closed. Start a new ride instead.');}
           let published;
           try { published = await publisher.publish(snapshot, revision); } catch { fail(502, 'Publishing could not be confirmed. Your saved draft is safe. The previous publication remains available if the upload failed; retry publishing.'); }
-          const state = { ...published, revision: places.revision, garageRevision: garage.revision, snapshotRevision: revision };
+          const state = { ...published, revision: places.revision, garageRevision: garage.revision, snapshotRevision: revision, upcomingRide:snapshot.upcomingRide };
           if (!await db.finishPublish(lock, state)) fail(503, 'Content was uploaded but its status could not be saved. Refresh and retry publishing.');
+          try {await syncPublishedRide(db,snapshot.upcomingRide,revision);} catch {return send(200,{published:state,warning:'The website was published, but member ride updates need a retry. Open Membership and sync the published ride.'});}
           return send(200, { published: state });
-        } finally { await db.releasePublish(lock); }
+        } finally { try { await db.releasePublish(lock); } catch { /* The bounded lock expires if the database is unavailable. */ } }
       }
       if (action === 'places' && req.method === 'GET') return send(200, { ...await db.get(seed), cloudName, cloudReady });
       if (action === 'places' && req.method === 'PUT') {
@@ -132,7 +227,7 @@ export function createCms(env = process.env, injectedStore, fetcher = fetch) {
         if (cursor.length > 512) fail(400, 'Invalid library page.');
         const params = new URLSearchParams({ max_results: '30', ...(cursor ? { next_cursor: cursor } : {}) });
         const result = await cloud(`resources/${type}/upload?${params}`);
-        const media = result.resources.filter(r => !r.public_id.startsWith('hh-bikes/')).map(r => { try { return cleanMedia({ id: r.asset_id, type, publicId: r.public_id, version: r.version, width: r.width, height: r.height, caption: '' }); } catch { return null; } }).filter(Boolean);
+        const media = result.resources.filter(r => !['hh-bikes/','hh-profiles/','hh-ride-contributions/'].some(prefix=>r.public_id.startsWith(prefix))).map(r => { try { return cleanMedia({ id: r.asset_id, type, publicId: r.public_id, version: r.version, width: r.width, height: r.height, caption: '' }); } catch { return null; } }).filter(Boolean);
         return send(200, { media, cursor: result.next_cursor || '', cloudName });
       }
       if (action === 'sign-bike-upload' && req.method === 'POST') {

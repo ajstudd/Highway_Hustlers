@@ -12,7 +12,7 @@ import { validateSnapshot } from '../shared/public-snapshot.mjs';
 import { cleanUpcomingRide, emptyUpcomingRide } from '../shared/upcoming-ride.mjs';
 
 const image = { id: 'ride-photo', type: 'image', publicId: 'hh-mornings/test-ride', version: 1, width: 1600, height: 1000, caption: 'Test-only ride photograph' };
-const ride = { ...emptyUpcomingRide(), published: true, location: 'Test destination', description: 'Test-only announcement, not a scheduled HH ride.', meetingPoint: 'Test meeting point', date: '2026-11-01', meetingTime: '06:00' };
+const ride = { ...emptyUpcomingRide(), published: true, location: 'Test destination', description: 'Test-only announcement, not a scheduled HH ride.', meetingPoint: 'Test meeting point', date: '2099-11-01', meetingTime: '06:00' };
 assert.equal(cleanUpcomingRide(null), null);
 assert.deepEqual(cleanUpcomingRide(emptyUpcomingRide()), emptyUpcomingRide());
 assert.equal(cleanUpcomingRide(ride).images.length, 0, 'photos are optional');

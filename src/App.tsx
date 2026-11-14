@@ -10,8 +10,10 @@ import { PublicContentProvider } from './lib/public-content';
 import { UpcomingRide } from './components/UpcomingRide';
 
 const Admin = lazy(() => import('./admin/Admin'));
+const Member = lazy(() => import('./member/Member'));
 
 export function App() {
+  if (/^\/member\/?$/.test(window.location.pathname)) return <Suspense fallback={<main className="p-8" role="status">Opening your HHR profile…</main>}><Member /></Suspense>;
   if (/^\/admin(?:\/|$)/.test(window.location.pathname)) return <Suspense fallback={<main className="p-8" role="status">Loading dashboard…</main>}><Admin /></Suspense>;
   return <PublicSite />;
 }

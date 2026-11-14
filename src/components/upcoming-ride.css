@@ -31,6 +31,10 @@
 .upcoming-ride-photo-controls button { display:grid; place-items:center; width:44px; height:44px; border:1px solid rgb(var(--paper) / .25); border-radius:50%; transition:background 160ms,color 160ms; }
 .upcoming-ride-photo-controls button:hover { background:rgb(var(--paper)); color:rgb(var(--ink)); }
 .upcoming-ride-image-error { padding:30px 0; color:rgb(var(--paper) / .7); }
+.upcoming-ride-enroll { margin-top:26px; grid-column:1; }
+.upcoming-ride-window { margin-top:24px; font-size:13px; line-height:1.7; color:rgb(var(--paper) / .75); grid-column:1; }
+.upcoming-ride-enroll>a { display:inline-flex; align-items:center; gap:18px; min-height:44px; padding:12px 20px; border-radius:8px; background:rgb(var(--marigold)); color:rgb(var(--ink)); font-weight:600; }
+.upcoming-ride-enroll>p { font-size:13px; line-height:1.6; color:rgb(var(--paper) / .75); margin-top:12px; max-width:45ch; }
 @media(min-width:800px) { .upcoming-ride:not(.upcoming-ride-with-photo) .upcoming-ride-copy { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); gap:0 60px; } .upcoming-ride:not(.upcoming-ride-with-photo) .upcoming-ride-description { grid-column:1; } .upcoming-ride:not(.upcoming-ride-with-photo) .upcoming-ride-plan { grid-column:2; grid-row:1/4; margin-top:0; } .upcoming-ride:not(.upcoming-ride-with-photo) .upcoming-ride-map { justify-self:start; } }
 @media(max-width:799px) { .upcoming-ride-inner { padding:48px 20px 56px; } .upcoming-ride-heading { align-items:flex-start; flex-direction:column; gap:20px; padding-bottom:24px; } .upcoming-ride-with-photo .upcoming-ride-body { grid-template-columns:minmax(0,1fr); } .upcoming-ride-body { padding-top:28px; gap:32px; } .upcoming-ride-copy h3 { font-size:clamp(36px,8vw,54px); } .upcoming-ride-description { font-size:17px; } }
 @media(prefers-reduced-motion:reduce) { .upcoming-ride :is(a,button) { transition:none; } }

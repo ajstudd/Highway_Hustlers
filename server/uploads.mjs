@@ -14,13 +14,14 @@ export function uploadTicket(data,secret) {
   const payload = Buffer.from(JSON.stringify(data)).toString('base64url');
   return `${payload}.${createHmac('sha256',secret).update(payload).digest('hex')}`;
 }
-export function verifyUploadTicket(ticket,session,secret,now=Date.now()) {
+export function verifyUploadTicket(ticket,session,secret,now=Date.now(),profileAccountId=null) {
   if (typeof ticket !== 'string' || ticket.length > 2048) throw new Error('Invalid upload confirmation.');
   const [payload,signature,...extra] = ticket.split('.');
   if (extra.length || !/^[a-f0-9]{64}$/.test(signature || '')) throw new Error('Invalid upload confirmation.');
   const expected = createHmac('sha256',secret).update(payload).digest();
   if (!timingSafeEqual(expected,Buffer.from(signature,'hex'))) throw new Error('Invalid upload confirmation.');
   const data = JSON.parse(Buffer.from(payload,'base64url').toString());
-  if (data.session !== session || !Number.isFinite(data.expires) || data.expires < now || !['image','video'].includes(data.type) || !/^hh-mornings\/[a-f0-9]{24}$/.test(data.publicId)) throw new Error('This upload confirmation expired. Upload the file again.');
+  const allowed = profileAccountId && /^[a-f0-9]{24}$/.test(profileAccountId) ? new RegExp(`^hh-profiles/${profileAccountId}/[a-f0-9]{24}$`) : /^hh-mornings\/[a-f0-9]{24}$/;
+  if (data.session !== session || !Number.isFinite(data.expires) || data.expires < now || !['image','video'].includes(data.type) || !allowed.test(data.publicId)) throw new Error('This upload confirmation expired. Upload the file again.');
   return data;
 }

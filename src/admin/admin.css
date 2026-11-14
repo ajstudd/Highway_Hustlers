@@ -150,6 +150,16 @@ dialog.admin-library { color:#f2ebdd; background:#181613; border:1px solid #5148
 .admin-global-feedback { max-width:1500px; margin:auto; padding:16px 32px; min-height:58px; }
 .admin-editor-heading { position:static; }
 .admin-lineup-editor { max-width:1500px; margin:auto; }
+.admin-membership { max-width:1240px; margin:auto; }
+.admin-membership .admin-section>h2 { font-size:22px; }
+.admin-allow-form { display:flex; align-items:flex-end; gap:16px; margin-block:20px; flex-wrap:wrap; }
+.admin-allow-form>label { flex:1; min-width:200px; }
+.admin-requests article,.admin-allowed li,.admin-member-ride li { display:flex; align-items:center; justify-content:space-between; gap:20px; padding-block:18px; border-bottom:1px solid var(--admin-border); flex-wrap:wrap; }
+.admin-requests p,.admin-allowed span,.admin-member-ride p { overflow-wrap:anywhere; }
+.admin-member-ride { padding-block:28px; border-top:1px solid var(--admin-border); }
+.admin-member-ride:first-of-type { margin-top:28px; }
+.admin-profile-bike { display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; max-width:100%; }
+.admin-profile-bike>label { min-width:0; flex:1 1 260px; }
 .admin-upcoming-editor { max-width:1240px; margin:auto; }
 .admin-upcoming-editor .admin-section-title h2 { font-size:18px; }
 .admin-ride-preview { margin:0 20px 40px; scroll-margin-top:145px; }
@@ -206,3 +216,4 @@ dialog.hh-hero-preview { width:min(1360px,calc(100vw - 32px)); max-height:94dvh;
   .admin-lineup-row>.admin-lineup-tools { grid-column:2; justify-content:flex-start; }
   .admin-lineup-editor .admin-editor-heading { flex-wrap:wrap; }
 }
+.admin-contribution-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr));gap:24px;margin:24px 0}.admin-contribution-grid article{padding:16px;border:1px solid #d7cdbc;border-radius:14px}.admin-contribution-grid img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px}.admin-contribution-grid h3{margin-top:12px}.admin-contribution-grid button{font-size:12px}

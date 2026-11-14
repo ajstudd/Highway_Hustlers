@@ -1,0 +1,236 @@
+# HHR members and ride enrolment
+
+Implemented locally, November 2026. Do not treat this document as evidence of
+production deployment or a real Google sign-in test. No real member accounts or
+emails are seeded. The separate demo server and all demo identities live outside
+the repository.
+
+## What members see
+
+The public website keeps its existing layout, with a small person icon linking to
+`/member`. The upcoming ride has a **Join this ride** link carrying the ride ID to
+the profile. Member UI and photo-preparation code are lazy-loaded; merely visiting
+the public website does not request a member session or query Neon.
+
+Anyone with a supported Google account can sign in. Sign-in alone is not membership.
+
+1. An email on the dashboard's allowlist receives approved membership at sign-in.
+2. Everyone else completes their name and phone number. Saving submits a pending
+   membership request, visible under **Membership & enrolments**.
+3. An administrator approves or declines the request. Approval adds the exact email
+   to the allowlist. No automatic matching to a hero rider's name is performed.
+4. Only an approved, allowlisted account with a complete profile can join a ride.
+5. Members edit their own name, phone and photo; they cannot edit email, approval,
+   another profile or admin content. Email comes from verified Google claims.
+
+Hero members (public rider names and bikes) and member accounts (private contact
+details/access) are intentionally separate. Changing a profile does not silently
+rename the public hero. Existing public rider names do not grant login privileges.
+
+Google `sub` is the identity key, not the email. A verified email change requires
+approval for the new address and removes open enrolments. The initial implementation
+accepts Gmail and Google Workspace identities only: Google cannot authoritatively
+vouch for continued ownership of arbitrary third-party email addresses. See
+[Google's verification guidance](https://developers.google.com/identity/gsi/web/reference/js-reference).
+Adding a separate email ownership challenge for other domains is future work.
+
+## One-time setup before production use
+
+Keep existing Neon, Cloudinary and admin password settings. Add these **server-only**
+environment variables in the existing Vercel project's Production environment:
+
+| Variable | Value |
+| --- | --- |
+| `GOOGLE_CLIENT_ID` | Google OAuth Web application client ID |
+| `GOOGLE_CLIENT_SECRET` | The corresponding client secret |
+| `MEMBER_APP_ORIGIN` | Exact canonical site origin, e.g. `https://highway-hustlers.vercel.app`, with no trailing slash |
+| `CRON_SECRET` | A new cryptographically random secret used only to protect scheduled rollover |
+
+Never put these into `VITE_` variables, chat, Git or documentation. Enter secrets
+directly in Vercel. Existing database/media credentials remain server-side.
+
+In Google Cloud / Google Auth Platform:
+
+1. Create or select the project, set HHR branding/support contact and configure the
+   audience/consent screen for external sign-in. Supply accurate privacy/terms links
+   for the deployed service. This is owner configuration, not something deployment
+   can invent or accept on your behalf.
+2. Create an OAuth client of type **Web application**.
+3. Register the exact redirect URI:
+   `https://highway-hustlers.vercel.app/api/member?action=callback`
+   (replace the origin if using a custom domain).
+4. Configure test users while Google is in Testing mode; move to the appropriate
+   published audience before expecting arbitrary members to sign in.
+5. Put the client ID/secret and canonical origin into Vercel and deploy the code.
+6. In `/admin` → **Membership & enrolments**, add your existing members' exact Google
+   emails. Test one allowlisted account and one unlisted account end-to-end.
+
+Local OAuth testing needs a separately registered loopback callback such as
+`http://localhost:5174/api/member?action=callback` and a matching local origin.
+Preview authentication defaults to disabled; enabling it requires an explicitly
+configured separate origin/client and `MEMBER_PREVIEW_AUTH_ENABLED=1`. Preview
+must also use a separate database and content path, as with the existing CMS.
+
+Official setup/reference:
+[Google OpenID Connect](https://developers.google.com/identity/openid-connect/openid-connect).
+
+## Ride management and deadlines
+
+Save the upcoming ride as before, then **Publish website** to announce it to member
+profiles as well as the public site. A stable server-generated ride ID separates
+one outing from the next; editing a location or date never transfers attendance to
+a new ride accidentally.
+
+Optional **Enrolment opens** and **Enrolment closes** fields use IST. Members can
+join from the inclusive opening time up to, but not including, the closing time.
+Omitted boundaries are unbounded. A ride whose date has ended in IST is always
+closed. The server checks the current time, approved status and profile on every
+join; disabling a button is not the security boundary.
+
+Members can leave after enrolment closes. Admins can add approved, complete-profile
+members after the deadline, and remove entries. They cannot enrol members in an
+expired, completed or cancelled ride. Attendee names/emails/phones appear only in
+the authenticated admin participant list, never in public JSON or another member's
+API response. Removing an allowed email pauses access and removes open entries.
+
+**Cancel ride & notify members** takes effect immediately in member profiles and
+prevents further enrolment. It saves the announcement as excluded; use **Publish**
+to remove the public CDN announcement. The confirmation states this distinction.
+Cancellation does not turn a never-held ride into a favourite morning album.
+Use **Start a new ride** after cancellation/closure rather than reusing a closed ID.
+
+If member synchronisation fails after publishing, the dashboard reports a warning.
+**Sync published ride** retries from recorded published content, not newer drafts.
+Authenticated profile loading also reconciles recorded publication status. A
+cancelled/completed ride cannot be reopened by an older CDN publication.
+
+## Automatic upcoming ride → gallery draft
+
+Vercel's scheduled `/api/ride-rollover` endpoint is configured once daily at
+00:10 UTC (05:40 IST). Scheduling is not an exact midnight guarantee and requires
+the deployment's cron support and `CRON_SECRET`. Monitor failed jobs in Vercel and
+retry through its normal tooling. An unauthorised request cannot run the job.
+Vercel's Hobby scheduler has hourly rather than exact-minute precision; see the
+[official cron overview](https://vercel.com/i/event-driven-architecture).
+
+After a dated ride has ended:
+
+- Save one unpublished **Our favourite mornings** place draft, with the ride's
+  location, up to 400 characters of description, photos and ride date/provenance.
+- Require a human review of the album's actual distance and coordinates before it
+  can be published. We do not invent route distances or show a fake map location.
+- Mark the member ride completed, retain its attendees, and add a profile update.
+- Remove an expired announcement from the existing public JSON, without publishing
+  any other saved edits. The rest of that last publication stays unchanged.
+- Do not duplicate the album when a job is retried. Original media is never deleted.
+
+Opening the dashboard also catches up expired saved rides. The public component
+hides a past-date announcement on the next render even if the scheduled job is
+delayed. Undated rides need explicit admin management; there is no safe inferred
+expiry date. An intentionally empty album remains draft until real media is added.
+
+## Notifications and privacy
+
+New/updated/cancelled/completed rides create persistent profile notifications.
+Membership decisions and administrator enrolment changes create recipient-specific
+updates. There is a read marker and unread count. Profiles refresh on entry/actions;
+there is no minute polling, websocket, browser push, WhatsApp or email delivery.
+Notifications are stored once, not copied into every member's record. The most
+recent 200 are retained, with up to 60 relevant updates returned per profile load.
+
+Name, email, phone, Google subject, access status, sessions and attendees live only
+in Neon, not the Cloudinary JSON. Nothing private goes into public localStorage.
+Only Google's basic `openid email profile` scopes are requested, not Drive,
+contacts, Gmail or offline refresh access. Access/refresh/ID tokens are not saved.
+
+Profile uploads reuse browser compression and a separate signed `hh-profiles/`
+namespace, excluded from the album media picker. Source limit is 25 MB; processed
+photos must be under 1.5 MB and 2048 pixels. Upload tickets bind to the account.
+Changing a photo does not delete the original. **Photo files use public Cloudinary
+URLs**; API privacy is not private-file storage. Do not upload sensitive photos.
+
+Admins can see contact details to organise the ride. Publish an accurate privacy
+notice and establish an owner process for account/data deletion and retention
+before opening registration broadly. No marketing subscription is inferred.
+
+## Rider list and profile bikes
+
+Members can add a bike name, colour and nickname to their profile (all optional).
+Approved members see a **Who's riding** list on each ride with each rider's name,
+bike and nickname. Phone numbers and emails never appear in it. Pending, declined or
+removed accounts get an empty list and are not shown in it.
+
+Under **Membership & enrolments → Profiles & bikes**, an admin can choose a prepared
+bike from the library and press **Link bike**. Its 360° rotation then becomes the
+member's profile banner. The library bike's model and colour replace the
+self-reported ones and are read-only for the member; the nickname stays theirs.
+Linking a profile bike does not change hero members, the hero lineup or approval.
+**Unlink bike** removes the banner and makes the bike fields editable again.
+
+## Member ride photos
+
+An approved member who joined a ride can contribute up to **two photos per ride**,
+including after the ride is completed. They must confirm they have permission to
+share the photos. Photos are compressed in the browser with the same pipeline as the
+admin uploader, then sent to `/api/member-photo`. The server, not the browser, holds
+the Cloudinary credentials and uploads the file; members never receive an upload
+signature.
+
+Server-side limits (browser compression is not trusted):
+
+- Prepared JPEG under 1.5 MB, at most 2048 × 2048, single image; Sharp re-encodes
+  it with metadata (including GPS) removed and rejects undecodable files.
+- Two slots per member per ride, reserved transactionally. A rejected photo still
+  uses its slot, so deleting and retrying cannot get around the limit.
+- At most 4 upload attempts per member per day, 50 across the club per day, a
+  per-IP budget, 20 requests per minute per IP, and 4 uploads processed at once.
+
+Uploaded photos go to **Ride photos** in the dashboard as *Awaiting review*. An
+admin can approve a photo, leave it unselected, or add an approved photo to any
+album draft. Nothing appears on the public site until it is added to an album and
+**Publish website** is pressed. Unselected photos stay in the catalogue for later
+use. Like profile photos, uploaded files have unlisted but public Cloudinary URLs;
+they are not private storage.
+
+## Storage and security implementation
+
+- `/api/member` is separate from `/api/cms`. Member cookies cannot authenticate the
+  CMS, and admin cookies cannot impersonate member accounts.
+- OAuth uses server-side code exchange with PKCE, nonce, one-time stored state and
+  a browser-bound HTTP-only cookie. `jose` validates Google's RS256 signature,
+  issuer, audience, expiry, token age and nonce using Google's public keys.
+- Member sessions are random, last seven days and are stored as SHA-256 digests.
+  Cookies are Secure in production, HTTP-only and SameSite=Lax (OAuth redirect).
+- Mutating endpoints enforce the configured same origin, JSON and a custom header.
+  Uploads and writes are size/rate limited. Provider exceptions/secrets are not
+  returned to clients. The separate password-protected admin remains unchanged.
+- `hh_member_workspace` holds private account/access/ride/notification state.
+  Compare-and-swap revision updates retry conflicts, preventing duplicate joins
+  and lost concurrent changes. This is a deliberately bounded small-club design:
+  up to 500 accounts/allowed emails, 150 archived rides and 1.5 MB state. Growth
+  beyond these limits requires relational tables/pagination and an archive policy,
+  not silently dropping members. Profile requests never go through the CDN.
+- Separate `hh_member_sessions` and `hh_oauth_attempts` tables hold expiring hashes
+  and temporary OAuth attempts. Migrations are additive and idempotent.
+
+Public browsing still queries no Neon content or membership endpoints. Signing in,
+editing profiles, joining/leaving and viewing member updates necessarily use Neon.
+Cron/admin activity also uses compute. No claim is made of unlimited free usage.
+
+## Verification and rollout checklist
+
+Automated tests cover actual Postgres-compatible schema/CAS, signed Google tokens,
+wrong audience/nonce/unverified emails, OAuth replay, cookie separation, CSRF,
+pending/approved/revoked membership, upload ownership/limits, joining/leaving,
+duplicate/concurrent joins, server-side windows/admin override, cancellation,
+private snapshots and automatic idempotent IST rollover preserving unrelated drafts.
+
+Before production rollout, configure Google and cron, run a real Google sign-in for
+both approval paths, verify a profile photo upload with the real Cloudinary account,
+check one real enrolment and notification, and inspect a cron run. Local provider
+fixtures and JWT tests are not proof of real Google consent or provider setup.
+
+Existing development-tool dependency advisories were found for Vite/esbuild and
+PostCSS tooling. They predate the member feature; no automatic major-version
+upgrade is bundled into this change. Keep local dev servers private and plan a
+separate tested toolchain update. No production `jose` vulnerability was reported.

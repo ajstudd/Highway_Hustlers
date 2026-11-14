@@ -3,6 +3,7 @@
 import { createPostgresStore } from '../server/store.mjs';
 import { createPublisher, seedGarage, seedPlaces, snapshotOf } from '../server/publication.mjs';
 import { sessionToken } from '../server/security.mjs';
+import { syncPublishedRide } from '../server/member-state.mjs';
 
 if (!process.env.DATABASE_URL || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) throw Error('Set the existing DATABASE_URL and Cloudinary server credentials in this shell. Never paste them into chat or source control.');
 const publisher = createPublisher({ ...process.env, NODE_ENV: 'production', CMS_LOCAL_FILE: undefined });
@@ -20,8 +21,9 @@ if (!process.argv.includes('--publish')) {
     const revision = `${latestPlaces.revision}-${latestGarage.revision}-${lock.slice(0,12)}`;
     const snapshot = snapshotOf(latestPlaces.places, latestGarage.garage, publisher.cloudName, revision, undefined, latestPlaces.upcomingRide);
     const result = await publisher.publish(snapshot, revision);
-    const published = { ...result, revision: latestPlaces.revision, garageRevision: latestGarage.revision, snapshotRevision: revision };
+    const published = { ...result, revision: latestPlaces.revision, garageRevision: latestGarage.revision, snapshotRevision: revision, upcomingRide:snapshot.upcomingRide };
     if (!await db.finishPublish(lock, published)) throw Error('The upload completed but its status could not be saved. Check before retrying.');
+    await syncPublishedRide(db,snapshot.upcomingRide,revision);
     console.log('Published the current saved content snapshot. Verify it before deploying the new public frontend.');
   } finally { await db.releasePublish(lock); }
 }

@@ -10,6 +10,8 @@ import type { EditorDocument, Publication, Section } from './types';
 import { offerDraftBikes, offerNewRiders } from '../../shared/garage-seed.mjs';
 import { emptyUpcomingRide, type UpcomingRide } from '../../shared/upcoming-ride.mjs';
 import UpcomingRideEditor from './UpcomingRideEditor';
+import MembershipEditor from './MembershipEditor';
+import RidePhotoReview from './RidePhotoReview';
 
 type Library = { media: Media[]; cursor: string; cloudName: string };
 const messageOf = (e: unknown) => e instanceof Error ? e.message : 'Something went wrong. Try again.';
@@ -101,13 +103,18 @@ export default function Admin() {
     if (!publicRiders(garage).length && !window.confirm('Publish without any hero bikes? The HH introduction will remain visible.')) return;
     setBusy(true); setError(''); setNotice('Publishing the saved draft…');
     try {
-      const result = await cmsRequest<{ published: Publication }>('publish', { method: 'POST', body: JSON.stringify({ revision: data.revision, garageRevision: data.garageRevision }) });
+      const result = await cmsRequest<{ published: Publication; warning?:string }>('publish', { method: 'POST', body: JSON.stringify({ revision: data.revision, garageRevision: data.garageRevision }) });
       setData({ ...data, published: result.published });
-      setNotice(data.localPreview ? 'Published to this local preview only.' : 'Published. CDN updates can take a short time to appear everywhere.');
+      setNotice(result.warning || (data.localPreview ? 'Published to this local preview only.' : 'Published. CDN updates can take a short time to appear everywhere.'));
       if (typeof BroadcastChannel !== 'undefined') { const channel = new BroadcastChannel('hh-published'); channel.postMessage(result.published.snapshotRevision); channel.close(); }
     } catch (e) { failure(e); setNotice(''); } finally { setBusy(false); }
   }
   function changeGarage(next: Garage) { setGarage(next); setNotice(''); }
+  async function rideLifecycle(operation:'cancel-ride'|'new-ride') {
+    if(!data||dirty)return;
+    if(!window.confirm(operation==='cancel-ride'?'Cancel this ride for members immediately and notify them? Publish afterwards to remove the public announcement.':'Start a fresh ride draft? The previous saved details will be cleared.'))return;
+    setBusy(true);setError('');try{await cmsRequest(operation,{method:'POST',body:JSON.stringify({revision:data.revision})});await load();setNotice(operation==='cancel-ride'?'Ride cancelled and members notified. Publish to remove the public announcement.':'New ride draft ready.');}catch(e){failure(e);}finally{setBusy(false);}
+  }
   async function uploadBike(bikeId: string, files: File[]) {
     setBusy(true); setError('');
     try {
@@ -203,7 +210,7 @@ export default function Admin() {
   </main>;
   return <main className="hh-admin">
     <header className="admin-top"><a className="admin-brand" href="/">Highway Hustlers<span>Content dashboard{data?.localPreview ? ' · Local preview' : ''}</span></a><div><a href="/" target="_blank" rel="noreferrer" aria-label="View website"><span>View website</span> <ExternalLink size={15}/></a><button onClick={logout} disabled={busy}><LogOut size={15}/> Sign out</button></div></header>
-    <nav className="admin-sections" aria-label="Dashboard sections">{(['upcoming','places','members','bikes','lineup'] as Section[]).map(id => <button key={id} type="button" aria-current={section === id ? 'page' : undefined} disabled={busy} onClick={() => { setSection(id); setShowLibrary(false); }}>{({ upcoming: 'Upcoming ride', places: 'Places & media', members: 'Members', bikes: 'Bike library', lineup: 'Hero lineup' })[id]}</button>)}</nav>
+    <nav className="admin-sections" aria-label="Dashboard sections">{(['upcoming','membership','ridePhotos','places','members','bikes','lineup'] as Section[]).map(id => <button key={id} type="button" aria-current={section === id ? 'page' : undefined} disabled={busy} onClick={() => { setSection(id); setShowLibrary(false); }}>{({ upcoming: 'Upcoming ride', membership:'Membership & enrolments', ridePhotos:'Ride photos', places: 'Places & media', members: 'Hero members', bikes: 'Bike library', lineup: 'Hero lineup' })[id]}</button>)}</nav>
     <div className="admin-publishing"><div><strong>{dirty ? 'Unsaved changes' : needsPublish ? 'Saved draft · not published' : 'Published'}</strong><p className="admin-muted admin-small">{data?.published ? `Last published ${new Date(data.published.publishedAt).toLocaleString()}` : 'No publication yet. Save drafts without changing the public website.'}</p></div><div className="admin-publishing-actions"><button className={dirty ? 'admin-primary' : ''} type="button" disabled={busy || !dirty} onClick={() => void save()}><Save size={16}/> Save draft</button><button className={!dirty && needsPublish ? 'admin-primary' : ''} type="button" disabled={busy || dirty || !needsPublish || !data?.publishReady} onClick={() => void publish()}><Send size={16}/> {data?.localPreview ? 'Publish preview' : 'Publish website'}</button></div></div>
     <div className="admin-feedback admin-global-feedback" aria-live="polite">{error ? <p className="admin-error" role="alert">{error}</p> : notice ? <p className="admin-success"><Check size={16}/>{notice}</p> : <p className="admin-muted">{dirty ? 'Changes across all sections are saved together. Publish only when you’re ready.' : needsPublish ? 'Review the saved draft, then publish it to update the website.' : 'The public website reads the published copy, not the database.'}</p>}{!data?.publishReady && <p className="admin-warning">Publishing needs Cloudinary credentials. Preview deployments also need their own content snapshot ID.</p>}</div>
     {section === 'places' && <div className="admin-layout">
@@ -222,6 +229,7 @@ export default function Admin() {
           <section className="admin-section"><div className="admin-section-title"><h3>Place details</h3><label className="admin-publish"><input type="checkbox" checked={place.published} onChange={e => update({ published: e.target.checked })}/> Include on publish</label></div>
             <div className="admin-two"><label>Place name<input required maxLength={80} value={place.name} onChange={e => update({ name: e.target.value })}/></label><label>Ride type<select value={place.kind} onChange={e => update({ kind: e.target.value as Place['kind'] })}><option>Sunday morning</option><option>Full day</option><option>Weekend</option></select></label></div>
             <label>Short description<textarea maxLength={400} rows={2} value={place.description} onChange={e => update({ description: e.target.value })} placeholder="What makes this stop worth the ride?"/></label>
+            {place.needsLocationReview&&<div className="admin-warning"><p>This album was drafted automatically after the ride. Add the actual distance and map coordinates, review the description and photos, then confirm below before publishing.</p><label className="admin-publish"><input type="checkbox" onChange={e=>{if(e.target.checked)update({needsLocationReview:false});}}/>I’ve checked the location and distance</label></div>}
             <div className="admin-three"><label>Distance from Bhopal (km)<input type="number" required min="0" max="5000" step="any" value={Number.isNaN(place.km) ? '' : place.km} onChange={e => update({ km: e.target.value === '' ? NaN : Number(e.target.value) })}/></label><label>Latitude<input type="number" required min="-90" max="90" step="any" value={Number.isNaN(place.lat) ? '' : place.lat} onChange={e => update({ lat: e.target.value === '' ? NaN : Number(e.target.value) })}/></label><label>Longitude<input type="number" required min="-180" max="180" step="any" value={Number.isNaN(place.lon) ? '' : place.lon} onChange={e => update({ lon: e.target.value === '' ? NaN : Number(e.target.value) })}/></label></div>
           </section>
           <section className="admin-section"><div className="admin-section-title"><div><h3>Photos & videos</h3><p className="admin-muted">First in the album is the cover. Only add media you have permission to publish.</p></div></div>
@@ -239,7 +247,9 @@ export default function Admin() {
         </fieldset>}
       </form>
     </div>}
-    {data && section === 'upcoming' && <UpcomingRideEditor ride={upcomingRide} change={ride => { setUpcomingRide(ride); setNotice(''); }} cloudName={data.cloudName} cloudReady={data.cloudReady} busy={busy} upload={files => void upload(files, 'ride')} library={() => setShowLibrary(true)}/>}
+    {data && section === 'upcoming' && <><UpcomingRideEditor ride={upcomingRide} change={ride => { setUpcomingRide(ride); setNotice(''); }} cloudName={data.cloudName} cloudReady={data.cloudReady} busy={busy} upload={files => void upload(files, 'ride')} library={() => setShowLibrary(true)}/><div className="admin-editor admin-upcoming-editor"><p className="admin-muted admin-field-note">Dated rides become unpublished album drafts automatically after their date passes in IST. Save changes before managing the ride.</p><div className="admin-media-actions"><button disabled={busy||dirty||!upcomingRide.id} className="admin-danger" onClick={()=>void rideLifecycle('cancel-ride')}>Cancel ride & notify members</button><button disabled={busy||dirty||upcomingRide.published} onClick={()=>void rideLifecycle('new-ride')}>Start a new ride</button></div></div></>}
+    {section==='membership'&&<MembershipEditor/>}
+    {section==='ridePhotos'&&data&&<RidePhotoReview cloudName={data.cloudName} places={places} revision={data.revision} dirty={dirty} reload={load} activity={setBusy}/>}
     {data && <GarageEditor section={section} garage={garage} cloudName={data.cloudName} cloudReady={data.cloudReady} busy={busy} dirty={dirty} change={changeGarage} upload={uploadBike} migrate={migrate}/>}
     {showLibrary && data && (section === 'upcoming' || place) && <MediaLibrary cloudName={data.cloudName} current={section === 'upcoming' ? upcomingRide.images : place!.media} imagesOnly={section === 'upcoming'} maximum={section === 'upcoming' ? 6 : 40} close={() => setShowLibrary(false)} add={media => { if (section === 'upcoming') setUpcomingRide(ride => ({ ...ride, images: [...ride.images, ...media] })); else update({ media: [...place!.media, ...media] }); setShowLibrary(false); }} onError={failure}/>}
   </main>;

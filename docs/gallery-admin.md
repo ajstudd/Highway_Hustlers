@@ -1,5 +1,9 @@
 # HH content dashboard
 
+Member sign-in, approvals, enrolment windows, notifications and automatic ride
+rollover are documented in [Members and rides](MEMBERS-AND-RIDES.md), including the
+one-time Google/Vercel setup and production verification checklist.
+
 The existing Vite site stays on Vercel. `/admin` is the content dashboard;
 `/api/cms` is its Vercel Node function. Neon stores draft content, publication status,
 verified bike references, sessions and rate limits.
@@ -21,9 +25,10 @@ mornings and the closing Instagram invitation. No sample ride is seeded in produ
   Change captions/order or remove references without deleting originals.
 - **Preview section** shows the current draft without publishing. **Save draft** then
   **Publish website** makes the announcement live, like other content sections.
-- After a ride, turn off **Include on publish**, save and publish to hide it. Dates do
-  not automatically expire announcements. With no published ride, the entire section
-  is omitted, including its space. The main Ride with us link targets the announcement
+- To hide a ride manually, turn off **Include on publish**, save and publish. To cancel
+  it and notify members, use **Cancel ride & notify members**. With no published ride, the entire section
+  is omitted, including its space. Dated rides now roll over automatically as described
+  in the member guide. The main Ride with us link targets the announcement
   when present, and the Instagram invitation otherwise.
 
 Storage adds a nullable `upcoming_ride` JSONB column to `hh_gallery` through an

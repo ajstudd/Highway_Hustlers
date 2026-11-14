@@ -4,6 +4,7 @@ import { riderFrameSrc, usePublicContent } from '../../lib/public-content';
 import type { PublicRider } from '../../../shared/garage.mjs';
 import { usePrefersReducedMotion } from '../../hooks/motion';
 import { BikeSpinner } from './BikeSpinner';
+import { FittedModelName } from './FittedModelName';
 
 const AUTO_MS = 7000;
 const OUT_MS = 400;
@@ -103,13 +104,7 @@ export function Showroom({ riders: RIDERS, cloudName }: { riders: PublicRider[];
       <div className="stage-light pointer-events-none absolute inset-0" />
 
       {/* giant model name behind the bike */}
-      <div
-        key={target.id}
-        aria-hidden
-        className="ghost-text fade-up pointer-events-none absolute inset-x-0 top-[30%] select-none whitespace-nowrap text-center font-display text-[17vw] font-extrabold leading-none tracking-tight"
-      >
-        {target.model.toUpperCase()}
-      </div>
+      <FittedModelName key={target.id} model={target.model}/>
 
       <div className="relative mx-auto flex min-h-[100svh] max-w-[1400px] flex-col px-4 pb-6 pt-24 sm:px-8 md:pt-28">
         {/* title row */}

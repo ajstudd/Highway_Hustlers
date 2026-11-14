@@ -36,11 +36,11 @@ const cloud=async(url,options={})=>{
   if(url.startsWith('https://res.cloudinary.com/'))return assets.has('hh-site/published.json')?Response.json(assets.get('hh-site/published.json')):new Response('',{status:404});
   throw Error('Unexpected provider call');
 };
-const identities={first:{sub:'sub-first',email:'first@gmail.com',name:'First Rider'},second:{sub:'sub-second',email:'second@gmail.com',name:'Second Rider'}};
+const identities={first:{sub:'sub-first',email:'first@gmail.com',name:'First Rider'},second:{sub:'sub-second',email:'second@gmail.com',name:'Second Rider'},boss:{sub:'sub-boss',email:'boss@gmail.com',name:'Boss'}};
 let cms,member,cron;
 const server=createServer((req,res)=>req.url.startsWith('/api/cms')?cms(req,res):req.url.startsWith('/api/ride-rollover')?cron(req,res):member(req,res));await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const base=`http://127.0.0.1:${server.address().port}`;
-const env={VERCEL:'1',MEMBER_APP_ORIGIN:base,GOOGLE_CLIENT_ID:'test',GOOGLE_CLIENT_SECRET:'test-secret',ADMIN_PASSWORD_HASH:await hashPassword('Member-admin-test-only-password'),CLOUDINARY_API_KEY:'key',CLOUDINARY_API_SECRET:'secret',CLOUDINARY_CLOUD_NAME:'test-hh',CRON_SECRET:'cron-test-secret'};
+const env={VERCEL:'1',MEMBER_APP_ORIGIN:base,GOOGLE_CLIENT_ID:'test',GOOGLE_CLIENT_SECRET:'test-secret',ADMIN_PASSWORD_HASH:await hashPassword('Member-admin-test-only-password'),CLOUDINARY_API_KEY:'key',CLOUDINARY_API_SECRET:'secret',CLOUDINARY_CLOUD_NAME:'test-hh',CRON_SECRET:'cron-test-secret',ADMIN_EMAILS:' Boss@Gmail.com , not-an-email '};
 // HTTP loopback is test-only; factories see production cookies, while OAuth
 // configuration deliberately uses development to permit the loopback origin.
 const memberEnv={...env,VERCEL:'',NODE_ENV:'development'};
@@ -60,16 +60,32 @@ async function googleLogin(code){
   const replay=await request(`/api/member?action=callback&state=${state}&code=${code}`,'GET',undefined,oauthCookie);assert.equal(replay.headers.get('location'),'/member?error=google');
   return callback.headers.getSetCookie().find(c=>c.startsWith('hhr_member_dev=')).split(';')[0];
 }
+async function adminGoogle(code){
+  const start=await request('/api/member?action=google&purpose=admin');assert.equal(start.status,303);
+  const oauthCookie=start.headers.get('set-cookie').split(';')[0],state=new URL(start.headers.get('location')).searchParams.get('state');
+  const callback=await request(`/api/member?action=callback&state=${state}&code=${code}`,'GET',undefined,oauthCookie);assert.equal(callback.status,303);
+  const session=callback.headers.getSetCookie().find(c=>!c.startsWith('hhr_oauth')&&!c.startsWith('hhr_member'));
+  return {location:callback.headers.get('location'),cookie:session?.split(';')[0]||'',memberCookie:callback.headers.getSetCookie().some(c=>c.startsWith('hhr_member_dev='))};
+}
 try{
   const before=queries;assert.equal((await request('/api/member?action=session')).data.account,null);assert.equal(queries,before,'anonymous public pages do not wake Neon for sign-in status');
   const login=await request('/api/cms?action=login','POST',{password:'Member-admin-test-only-password'});adminCookie=login.headers.get('set-cookie').split(';')[0];
   const first=await googleLogin('first'),second=await googleLogin('second');
+  assert.equal((await request('/api/cms?action=session')).data.googleAdmin,true);
+  const refused=await adminGoogle('first');assert.equal(refused.location,'/admin?error=google-admin');assert.equal(refused.cookie,'','a non-admin Google account gets no dashboard session');
+  const boss=await adminGoogle('boss');assert.equal(boss.location,'/admin');assert(!boss.memberCookie,'administrator sign-in does not create a member session');
+  assert.equal((await request('/api/cms?action=membership','GET',undefined,boss.cookie)).status,200,'an ADMIN_EMAILS Google account can use the dashboard');
+  assert(!(await request('/api/cms?action=membership','GET',undefined,boss.cookie)).data.accounts.some(a=>a.email==='boss@gmail.com'),'administrator sign-in creates no member account');
+  assert.equal((await account(boss.cookie,'home')).status,401,'an admin session cannot act as a member');
+  const keepCms=cms;cms=createCms({...memberEnv,ADMIN_EMAILS:'someone-else@gmail.com'},db,cloud);
+  assert.equal((await request('/api/cms?action=membership','GET',undefined,boss.cookie)).status,401,'removing an email from ADMIN_EMAILS ends its sessions');
+  assert.equal((await request('/api/cms?action=membership','GET',undefined,adminCookie)).status,200,'the password login keeps working');cms=keepCms;
   assert.equal((await request('/api/cms?action=membership','GET',undefined,first)).status,401,'member cookie cannot authenticate an administrator');
   assert.equal((await account(adminCookie,'home')).status,401,'admin cookie cannot impersonate a member');
   assert.equal((await account(first,'profile','PUT',{name:'First',phone:'+91 99999 00000'},{Origin:'https://evil.example'})).status,403);
   assert.equal((await account(first,'profile','PUT',{name:'First Rider',phone:'+91 99999 00000',bikeName:'Yamaha R15',bikeColour:'Blue',bikeNickname:'Skyline-test-only',bikeId:'hunter-350',status:'approved',email:'admin@gmail.com'})).status,200);
   let home=(await account(first,'home')).data;assert.equal(home.account.status,'pending');assert.equal(home.account.email,'first@gmail.com');assert(!('sub'in home.account));
-  assert.equal(home.account.bikeName,'Yamaha R15');assert.equal(home.account.bikeColour,'Blue');assert.equal(home.account.bikeNickname,'Skyline-test-only');assert.equal(home.account.bikeId,null,'members cannot assign their own library assets');assert.equal(home.bannerBike,null);
+  assert.equal(home.account.bikeName,'Yamaha R15');assert.equal(home.account.bikeColour,'Blue');assert.equal(home.account.bikeNickname,'Skyline-test-only');assert.equal(home.account.bikeId,null,'members cannot assign their own library assets');assert.equal(home.bannerBikes.length,0);
   assert.equal((await account(first,'profile','PUT',{name:'First Rider',phone:'+91 99999 00000',bikeNickname:'a'.repeat(61)})).status,400);
   assert.equal((await account(first,'profile','PUT',{name:'First',phone:'-------'})).status,400);
   assert.equal((await account(first,'sign-photo','POST',{sourceBytes:200000,bytes:100000})).status,410,'members must not receive reusable provider signatures');
@@ -77,11 +93,11 @@ try{
   let workspace=(await admin('membership')).data;assert.equal(workspace.accounts.filter(a=>a.status==='pending').length,1);
   const firstId=home.account.id;
   const secondId=(await account(second,'home')).data.account.id;
-  assert.equal((await request('/api/cms?action=assign-profile-bike','POST',{accountId:firstId,bikeId:'hunter-350'},first)).status,401);
-  assert.equal((await admin('assign-profile-bike','POST',{accountId:firstId,bikeId:'honda-monkey'})).status,400,'pending empty image sets are not assignable');
-  assert.equal((await admin('assign-profile-bike','POST',{accountId:firstId,bikeId:'pulsar-ns125'})).status,200);
-  home=(await account(first,'home')).data;assert.equal(home.bannerBike.frames,16);assert.equal(home.bannerBike.model,'Pulsar NS125');assert.equal(home.account.bikeName,'Bajaj Pulsar NS125');assert.equal(home.account.bikeNickname,'Skyline-test-only');
-  assert.equal((await account(second,'home')).data.bannerBike,null,'another account cannot read the assigned banner');
+  assert.equal((await request('/api/cms?action=profile-bike','POST',{accountId:firstId,operation:'link',bikeId:'hunter-350'},first)).status,401);
+  assert.equal((await admin('profile-bike','POST',{accountId:firstId,operation:'link',bikeId:'honda-monkey'})).status,400,'pending empty image sets are not assignable');
+  assert.equal((await admin('profile-bike','POST',{accountId:firstId,operation:'link',bikeId:'pulsar-ns125'})).status,200);
+  home=(await account(first,'home')).data;assert.equal(home.bannerBikes[0].rider.frames,16);assert.equal(home.bannerBikes[0].rider.model,'Pulsar NS125');assert.equal(home.bannerBikes[0].nickname,'Skyline-test-only');assert.equal(home.account.bikeName,'Bajaj Pulsar NS125');assert.equal(home.account.bikeNickname,'Skyline-test-only');
+  assert.equal((await account(second,'home')).data.bannerBikes.length,0,'another account cannot read the assigned banner');
   await account(first,'profile','PUT',{name:'First Rider',phone:'+91 99999 00000',bikeId:'hunter-350',bikeName:'Forged model',bikeColour:'Forged colour',bikeNickname:'Skyline-test-only'});
   home=(await account(first,'home')).data;assert.equal(home.account.bikeId,'pulsar-ns125');assert.equal(home.account.bikeColour,'Black','members cannot overwrite a linked library bike');
   const doc=(await admin('editor')).data;
@@ -101,10 +117,28 @@ try{
   assert.equal((await account(second,'home')).data.rides[0].roster[0].name,'First Rider','approved members see names and bikes, not private profiles');
   const roster=JSON.stringify((await account(second,'home')).data.rides[0].roster);assert(!roster.includes('first@gmail.com')&&!roster.includes('99999')&&!roster.includes('frameAssets')&&!roster.includes(firstId));
   const live=assets.get('hh-site/published.json');validateSnapshot(live);const text=JSON.stringify(live);assert(!text.includes('first@gmail.com')&&!text.includes('99999')&&!text.includes('pending')&&!text.includes('Skyline-test-only'));
-  await admin('assign-profile-bike','POST',{accountId:firstId,bikeId:''});assert.equal((await account(first,'home')).data.bannerBike,null);
+  // Several library bikes on one profile, each with its own nickname, and a chosen ride bike.
+  assert.equal((await admin('profile-bike','POST',{accountId:firstId,operation:'link',bikeId:'hunter-350'})).status,200);
+  home=(await account(first,'home')).data;assert.deepEqual(home.account.bikeIds,['pulsar-ns125','hunter-350']);assert.equal(home.bannerBikes.length,2);
+  assert.equal((await account(first,'profile','PUT',{name:'First Rider',phone:'+91 99999 00000',bikeNicknames:{'hunter-350':'Thunder','speed-400':'Forged'}})).status,200);
+  home=(await account(first,'home')).data;assert.deepEqual(home.account.bikes.map(b=>b.bikeNickname),['Skyline-test-only','Thunder']);assert(!JSON.stringify(home.account).includes('Forged'),'nicknames only apply to linked bikes');
+  assert.equal((await account(first,'profile','PUT',{name:'First Rider',phone:'+91 99999 00000',bikeNicknames:{'hunter-350':'b'.repeat(61)}})).status,400);
+  assert.equal((await account(first,'enroll','POST',{operation:'join',rideId,bikeId:'speed-400'})).status,400,'members can only ride bikes on their profile');
+  assert.equal((await account(first,'enroll','POST',{operation:'join',rideId,bikeId:'hunter-350'})).status,200);
+  assert.equal((await account(first,'home')).data.rides[0].bikeId,'hunter-350');
+  assert.deepEqual((await account(second,'home')).data.rides[0].roster,[{name:'First Rider',bikeName:'Royal Enfield Hunter 350',bikeColour:'Tokyo Black',bikeNickname:'Thunder'}],'the rider list shows the chosen bike');
+  workspace=(await admin('membership')).data;assert.equal(workspace.rides[0].participants.length,1);assert.equal(workspace.rides[0].participants[0].bikeName,'Royal Enfield Hunter 350');
+  for(const bikeId of ['apache-rr310','speed-400','classic-350','cb350rs'])assert.equal((await admin('profile-bike','POST',{accountId:firstId,operation:'link',bikeId})).status,200);
+  assert.equal((await admin('profile-bike','POST',{accountId:firstId,operation:'link',bikeId:'yamaha-r15m'})).status,400,'at most six bikes per profile');
+  for(const bikeId of ['apache-rr310','speed-400','classic-350','cb350rs'])await admin('profile-bike','POST',{accountId:firstId,operation:'unlink',bikeId});
+  await admin('profile-bike','POST',{accountId:firstId,operation:'unlink',bikeId:'hunter-350'});
+  assert.equal((await account(first,'home')).data.rides[0].bikeId,null,'unlinking a bike clears it as the ride choice');
+  assert.equal((await account(second,'home')).data.rides[0].roster[0].bikeName,'Bajaj Pulsar NS125');
+  await account(first,'enroll','POST',{operation:'leave',rideId});await account(first,'enroll','POST',{operation:'join',rideId});
+  await admin('profile-bike','POST',{accountId:firstId,operation:'unlink',bikeId:'pulsar-ns125'});assert.equal((await account(first,'home')).data.bannerBikes.length,0);
   await account(first,'profile','PUT',{name:'First Rider',phone:'+91 99999 00000',bikeName:'Honda CB350RS',bikeColour:'Matte black',bikeNickname:'Skyline-test-only'});
   assert.equal((await account(second,'home')).data.rides[0].roster[0].bikeName,'Honda CB350RS','unlinked self-reported bike updates appear in the rider list');
-  await admin('assign-profile-bike','POST',{accountId:firstId,bikeId:'pulsar-ns125'});
+  await admin('profile-bike','POST',{accountId:firstId,operation:'link',bikeId:'pulsar-ns125'});
   let current=(await admin('editor')).data;
   const closed={...current.upcomingRide,enrollmentEnd:'2020-01-02T00:00:00+05:30'};
   saved=await admin('upcoming-ride','PUT',{revision:current.revision,upcomingRide:closed});assert.equal(saved.status,200);

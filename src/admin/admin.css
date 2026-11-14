@@ -158,8 +158,13 @@ dialog.admin-library { color:#f2ebdd; background:#181613; border:1px solid #5148
 .admin-requests p,.admin-allowed span,.admin-member-ride p { overflow-wrap:anywhere; }
 .admin-member-ride { padding-block:28px; border-top:1px solid var(--admin-border); }
 .admin-member-ride:first-of-type { margin-top:28px; }
-.admin-profile-bike { display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; max-width:100%; }
-.admin-profile-bike>label { min-width:0; flex:1 1 260px; }
+.admin-profile-bike { display:flex; flex-direction:column; gap:12px; max-width:100%; min-width:0; }
+.admin-profile-bike>form { display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; }
+.admin-profile-bike>form>label { min-width:0; flex:1 1 260px; }
+.admin-linked-bikes { list-style:none; padding:0; margin:0; display:grid; gap:8px; }
+.admin-linked-bikes li { display:flex; justify-content:space-between; align-items:center; gap:12px; min-width:0; }
+.admin-linked-bikes span { min-width:0; overflow-wrap:anywhere; font-size:14px; }
+.admin-linked-bikes em { font-style:normal; opacity:.7; }
 .admin-upcoming-editor { max-width:1240px; margin:auto; }
 .admin-upcoming-editor .admin-section-title h2 { font-size:18px; }
 .admin-ride-preview { margin:0 20px 40px; scroll-margin-top:145px; }
@@ -217,3 +222,7 @@ dialog.hh-hero-preview { width:min(1360px,calc(100vw - 32px)); max-height:94dvh;
   .admin-lineup-editor .admin-editor-heading { flex-wrap:wrap; }
 }
 .admin-contribution-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr));gap:24px;margin:24px 0}.admin-contribution-grid article{padding:16px;border:1px solid #d7cdbc;border-radius:14px}.admin-contribution-grid img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px}.admin-contribution-grid h3{margin-top:12px}.admin-contribution-grid button{font-size:12px}
+.admin-auth-box .admin-google { display:flex; width:100%; justify-content:space-between; align-items:center; min-height:44px; margin-top:35px; padding:8px 13px; border:1px solid var(--admin-border); border-radius:6px; background:#24211d; color:#f2ebdd; font-size:14px; font-weight:600; transition:background 150ms; }
+.admin-auth-box .admin-google:hover { background:#373029; }
+.admin-auth-box .admin-auth-divider { margin-top:28px; font-size:13px; }
+.admin-auth-box .admin-auth-divider + form { margin-top:12px; }

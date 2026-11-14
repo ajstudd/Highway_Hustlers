@@ -24,7 +24,7 @@ export function signInAccount(state, identity) {
   let account = state.accounts.find(a => a.sub === identity.sub);
   if (!account) {
     if (state.accounts.length >= 500) throw Error('Member registration is temporarily full. Please contact HHR.');
-    account = { id: sessionToken().slice(0,24), sub: identity.sub, email: identity.email, name: identity.name, phone: '', photo: identity.photo || '', bikeId:null,bikeName:'',bikeColour:'',bikeNickname:'',status: 'new', requestedAt: null, joinedAt: new Date().toISOString(), seenAt: '' };
+    account = { id: sessionToken().slice(0,24), sub: identity.sub, email: identity.email, name: identity.name, phone: '', photo: identity.photo || '', bikeIds:[],bikeNicknames:{},bikeName:'',bikeColour:'',bikeNickname:'',status: 'new', requestedAt: null, joinedAt: new Date().toISOString(), seenAt: '' };
     state.accounts.push(account);
   }
   // Email changes must be re-approved; Google subject, not email, is identity.
@@ -33,7 +33,7 @@ export function signInAccount(state, identity) {
   return account.id;
 }
 export function publicAccount(account) {
-  const { sub, ...safe } = account; return { bikeId:null,bikeName:'',bikeColour:'',bikeNickname:'',...safe, profileComplete: completeProfile(account) };
+  const { sub, ...safe } = account; return { bikeId:null,bikeIds:[],bikes:[],bikeName:'',bikeColour:'',bikeNickname:'',...safe, profileComplete: completeProfile(account) };
 }
 export async function syncPublishedRide(db, ride, revision) {
   const existing=await db.getMemberState();

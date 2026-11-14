@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { ArrowDown, ArrowLeft, ArrowUp, Check, ExternalLink, ImagePlus, LockKeyhole, LogOut, MapPin, Plus, Save, Trash2, Upload, X, Send } from 'lucide-react';
+import { ArrowDown, ArrowLeft, ArrowUp, ArrowUpRight, Check, ExternalLink, ImagePlus, LockKeyhole, LogOut, MapPin, Plus, Save, Trash2, Upload, X, Send } from 'lucide-react';
 import { cmsRequest, mediaUrl, type Media, type Place } from '../lib/gallery';
 import './admin.css';
 import { compressPhoto, fileSize, validateUpload } from './uploads';
@@ -24,7 +24,8 @@ export default function Admin() {
   const [upcomingRide, setUpcomingRide] = useState<UpcomingRide>(emptyUpcomingRide), [rideBaseline, setRideBaseline] = useState('');
   const [section, setSection] = useState<Section>('places');
   const uploadedFrames = useRef(new Map<string, BikeFrame>());
-  const [selected, setSelected] = useState(''), [password, setPassword] = useState('');
+  const [selected, setSelected] = useState(''), [password, setPassword] = useState(''), [googleAdmin, setGoogleAdmin] = useState(false);
+  const googleRefused = new URLSearchParams(window.location.search).get('error') === 'google-admin';
   const [busy, setBusy] = useState(false), [error, setError] = useState(''), [notice, setNotice] = useState('');
   const [confirmRemove, setConfirmRemove] = useState(false), [showLibrary, setShowLibrary] = useState(false);
   const placesDirty = !!data && JSON.stringify(places) !== baseline;
@@ -54,8 +55,9 @@ export default function Admin() {
   }
   useEffect(() => {
     let active = true;
-    cmsRequest<{ authenticated: boolean; setupRequired: boolean }>('session').then(async session => {
+    cmsRequest<{ authenticated: boolean; setupRequired: boolean; googleAdmin?: boolean }>('session').then(async session => {
       if (!active) return;
+      setGoogleAdmin(!!session.googleAdmin);
       if (session.authenticated) { try { await load(); } catch (e) { failure(e); setPhase('login'); } }
       else setPhase(session.setupRequired ? 'setup' : 'login');
     }).catch(e => { if (active) { failure(e); setPhase('login'); } });
@@ -200,10 +202,10 @@ export default function Admin() {
     <a className="admin-brand" href="/">Highway Hustlers<span>Bhopal</span></a>
     <div className="admin-auth-box">
       <LockKeyhole size={25} className="admin-accent" /><h1>Look after HH.</h1><p>Places, ride albums, members and the bikes they ride.</p>
-      {phase === 'checking' ? <p role="status">Checking your session…</p> : phase === 'setup' ? <div className="admin-setup"><h2>One-time server setup</h2><p>Connect Neon in Vercel Storage and set <code>ADMIN_PASSWORD_HASH</code>. Cloudinary credentials enable the media library and uploads.</p><p>Setup instructions: <code>docs/gallery-admin.md</code> in the repository.</p><button onClick={() => location.reload()}>Check setup again</button></div> : <form onSubmit={login}>
-        <label htmlFor="admin-password">Password</label><input id="admin-password" type="password" autoComplete="current-password" required maxLength={1024} value={password} onChange={e => setPassword(e.target.value)} autoFocus disabled={busy} />
+      {phase === 'checking' ? <p role="status">Checking your session…</p> : phase === 'setup' ? <div className="admin-setup"><h2>One-time server setup</h2><p>Connect Neon in Vercel Storage and set <code>ADMIN_PASSWORD_HASH</code>. Cloudinary credentials enable the media library and uploads.</p><p>Setup instructions: <code>docs/gallery-admin.md</code> in the repository.</p><button onClick={() => location.reload()}>Check setup again</button></div> : <>{googleAdmin && <><a className="admin-google" href="/api/member?action=google&purpose=admin">Continue with Google <ArrowUpRight size={16}/></a>{googleRefused && <p className="admin-error" role="alert">That Google account isn’t an HH administrator. Use an administrator account or the password.</p>}<p className="admin-muted admin-auth-divider">Or use the admin password</p></>}<form onSubmit={login}>
+        <label htmlFor="admin-password">Password</label><input id="admin-password" type="password" autoComplete="current-password" required maxLength={1024} value={password} onChange={e => setPassword(e.target.value)} autoFocus={!googleAdmin} disabled={busy} />
         <button className="admin-primary" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'} <ArrowUp size={16}/></button>
-      </form>}
+      </form></>}
       {error && <p className="admin-error" role="alert">{error}</p>}{notice && <p role="status">{notice}</p>}
       <a className="admin-back" href="/"><ArrowLeft size={15}/> Back to the website</a>
     </div>

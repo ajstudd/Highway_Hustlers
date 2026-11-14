@@ -9,7 +9,9 @@ import { signBikeBatch, verifyBikeBatch, confirmedBikeFrame } from './bike-uploa
 import { cleanUpcomingRide } from '../shared/upcoming-ride.mjs';
 import { archiveExpiredRide, identifiedRide, rideExpired } from './ride-lifecycle.mjs';
 import { approved, completeProfile, emailOf, mutateMembers, notice, publicAccount, syncPublishedRide } from './member-state.mjs';
-import { profileBikeDetails } from './profile-bikes.mjs';
+import { profileBikeDetails, linkedBikeIds, preparedBike, ridingBike, MAX_PROFILE_BIKES } from './profile-bikes.mjs';
+import { adminCredentials, adminEmails, passwordCredential } from './admin-access.mjs';
+import { authConfiguration } from './google-login.mjs';
 
 class HttpError extends Error { constructor(status, message) { super(message); this.status = status; } }
 const fail = (status, message) => { throw new HttpError(status, message); };
@@ -59,9 +61,10 @@ export function createCms(env = process.env, injectedStore, fetcher = fetch) {
         res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=3600');
         res.setHeader('Location', publisher.snapshotUrl); res.statusCode = 302; return res.end();
       }
-      if (action === 'session' && req.method === 'GET' && !configured) return send(200, { authenticated: false, setupRequired: true });
+      const googleAdmin = configured && adminEmails(env).size > 0 && !!authConfiguration(env);
+      if (action === 'session' && req.method === 'GET' && !configured) return send(200, { authenticated: false, setupRequired: true, googleAdmin: false });
       if (!configured) fail(503, 'Finish the server setup before signing in: database and admin password hash are required.');
-      const db = await store(), credential = digest(env.ADMIN_PASSWORD_HASH);
+      const db = await store(), credential = passwordCredential(env);
       if (action === 'login' && req.method === 'POST') {
         const ip = production ? String(req.headers['x-forwarded-for'] || 'unknown').split(',')[0].trim() : req.socket?.remoteAddress || 'local';
         const now = Date.now();
@@ -73,8 +76,8 @@ export function createCms(env = process.env, injectedStore, fetcher = fetch) {
         return send(200, { authenticated: true });
       }
       const token = readToken(req, production);
-      const authenticated = !!token && await db.session(digest(token), credential);
-      if (action === 'session' && req.method === 'GET') return send(200, { authenticated, setupRequired: false });
+      const authenticated = !!token && await db.session(digest(token), adminCredentials(env));
+      if (action === 'session' && req.method === 'GET') return send(200, { authenticated, setupRequired: false, googleAdmin });
       if (action === 'logout' && req.method === 'POST') {
         if (token) await db.logout(digest(token));
         res.setHeader('Set-Cookie', sessionCookie('', production, true)); return send(200, { authenticated: false });
@@ -119,20 +122,32 @@ export function createCms(env = process.env, injectedStore, fetcher = fetch) {
         const {state,revision}=await db.getMemberState();
         const {garage}=await db.getGarage(seedGarage);
         const accountView=a=>publicAccount({...a,...profileBikeDetails(a,garage)});
-        const rides=state.rides.map(r=>({...r,participants:r.participants.map(id=>state.accounts.find(a=>a.id===id)).filter(Boolean).map(accountView)}));
-        const bikes=garage.bikes.filter(b=>b.frames.length&&b.brand&&b.model&&b.colorName).map(b=>({id:b.id,brand:b.brand,model:b.model,colorName:b.colorName,frames:b.frames.length,status:b.status}));
+        const rides=state.rides.map(r=>({...r,participants:r.participants.map(id=>state.accounts.find(a=>a.id===id)).filter(Boolean).map(a=>({...accountView(a),...ridingBike(a,r,garage)}))}));
+        const bikes=garage.bikes.filter(preparedBike).map(b=>({id:b.id,brand:b.brand,model:b.model,colorName:b.colorName,frames:b.frames.length,status:b.status}));
         return send(200,{revision,accounts:state.accounts.map(accountView),allowed:state.allowed,rides,bikes});
       }
-      if(action==='assign-profile-bike'&&req.method==='POST') {
-        const {garage}=await db.getGarage(seedGarage);
-        if(typeof body.bikeId!=='string')fail(400,'Choose a bike or None.');
-        const bike=body.bikeId?garage.bikes.find(b=>b.id===body.bikeId):null;
-        if(body.bikeId&&(!bike?.frames.length||!bike.brand||!bike.model||!bike.colorName))fail(400,'Choose a prepared bike from the library.');
+      if(action==='profile-bike'&&req.method==='POST') {
+        if(!['link','unlink'].includes(body.operation)||typeof body.bikeId!=='string'||!body.bikeId)fail(400,'Choose a bike to link or unlink.');
+        const {garage}=await db.getGarage(seedGarage),bike=garage.bikes.find(b=>b.id===body.bikeId);
+        if(body.operation==='link'&&!preparedBike(bike))fail(400,'Choose a prepared bike from the library.');
         await mutateMembers(db,state=>{
           const a=state.accounts.find(a=>a.id===body.accountId);if(!a)fail(404,'Profile not found.');
-          if((a.bikeId||'')===(bike?.id||''))return;
-          a.bikeId=bike?.id||null;if(bike){a.bikeName=`${bike.brand} ${bike.model}`;a.bikeColour=bike.colorName;}
-          notice(state,'Your garage updated',bike?`${bike.brand} ${bike.model} is now linked to your profile.`:'Your bike-library link was removed. You can edit your bike details in your profile.',a.id);
+          const linked=linkedBikeIds(a);
+          if(body.operation==='link'){
+            if(linked.includes(bike.id))return;
+            if(linked.length>=MAX_PROFILE_BIKES)fail(400,`A profile can have up to ${MAX_PROFILE_BIKES} bikes.`);
+            // The first linked bike also fills the self-reported fields, which
+            // the member sees again if every library bike is later unlinked.
+            if(!linked.length){a.bikeName=`${bike.brand} ${bike.model}`;a.bikeColour=bike.colorName;}
+            a.bikeIds=[...linked,bike.id];delete a.bikeId;
+            notice(state,'Your garage updated',`${bike.brand} ${bike.model} is now linked to your profile.`,a.id);
+          } else {
+            if(!linked.includes(body.bikeId))return;
+            a.bikeIds=linked.filter(id=>id!==body.bikeId);delete a.bikeId;
+            if(a.bikeNicknames)delete a.bikeNicknames[body.bikeId];
+            for(const ride of state.rides)if(ride.bikeChoices?.[a.id]===body.bikeId)delete ride.bikeChoices[a.id];
+            notice(state,'Your garage updated',a.bikeIds.length?`${bike?`${bike.brand} ${bike.model}`:'A bike'} was removed from your profile.`:'Your bike-library links were removed. You can edit your bike details in your profile.',a.id);
+          }
         });return send(200,{ok:true});
       }
       if(action==='sync-member-ride'&&req.method==='POST') {
@@ -163,7 +178,7 @@ export function createCms(env = process.env, injectedStore, fetcher = fetch) {
           if(!ride||ride.status!=='open'||rideExpired(ride.details))fail(409,'This ride is no longer open.');
           if(!a)fail(404,'Profile not found.');
           if(body.operation==='add'){if(!approved(state,a)||!completeProfile(a))fail(400,'Choose an approved member with a complete profile.');if(!ride.participants.includes(a.id))ride.participants.push(a.id);notice(state,'You’re on the ride',`An administrator added you to ${ride.details.location}.`,a.id);}
-          else if(body.operation==='remove'){ride.participants=ride.participants.filter(id=>id!==a.id);notice(state,'Ride enrolment updated',`An administrator removed your entry for ${ride.details.location}.`,a.id);}
+          else if(body.operation==='remove'){ride.participants=ride.participants.filter(id=>id!==a.id);if(ride.bikeChoices)delete ride.bikeChoices[a.id];notice(state,'Ride enrolment updated',`An administrator removed your entry for ${ride.details.location}.`,a.id);}
           else fail(400,'Choose Add or Remove.');
         });return send(200,{ok:true});
       }

@@ -4,7 +4,9 @@ import { authConfiguration, beginGoogle, finishGoogle, cookieValue, memberCookie
 import { approved, completeProfile, mutateMembers, publicAccount, signInAccount, syncPublishedRide } from './member-state.mjs';
 import { seedGarage } from '../shared/garage-seed.mjs';
 import { enrollmentOpen, rideExpired } from './ride-lifecycle.mjs';
-import { profileBikeDetails,profileBannerBike,rideRoster } from './profile-bikes.mjs';
+import { profileBikeDetails,profileBannerBikes,rideRoster,linkedBikeIds } from './profile-bikes.mjs';
+import { adminEmails, googleAdminCredential } from './admin-access.mjs';
+import { validPasswordHash, sessionCookie } from './security.mjs';
 
 class MemberError extends Error { constructor(status,message){super(message);this.status=status;} }
 const fail = (status,message) => { throw new MemberError(status,message); };
@@ -31,13 +33,23 @@ export function createMembers(env = process.env, injectedStore, fetcher = fetch,
         if (req.headers['sec-fetch-site'] === 'cross-site') fail(403,'Start sign-in from the HHR website.');
         const ip=String(req.headers['x-forwarded-for']||req.socket?.remoteAddress||'unknown').split(',')[0].trim();
         if(await db.attempt(`google:${digest(ip)}`,Date.now())>20) fail(429,'Too many sign-in attempts. Try again in 15 minutes.');
-        const rawIntent=url.searchParams.get('ride');const intent=/^ride-[a-f0-9]{24}$/.test(rawIntent||'')?rawIntent:'';
+        const rawIntent=url.searchParams.get('ride'),adminSignIn=url.searchParams.get('purpose')==='admin';
+        if(adminSignIn&&(!adminEmails(env).size||!validPasswordHash(env.ADMIN_PASSWORD_HASH)))fail(503,'Administrator Google sign-in is not configured.');
+        const intent=adminSignIn?'admin':/^ride-[a-f0-9]{24}$/.test(rawIntent||'')?rawIntent:'';
         const result=await beginGoogle(db,config,intent);res.setHeader('Set-Cookie',result.cookie);return redirect(result.url);
       }
       if (action === 'callback' && req.method === 'GET') {
         if(!config) fail(503,'Google sign-in is not configured yet.');
         try {
           const result=await finishGoogle(db,config,req,url,fetcher,identityVerifier);
+          if(result.intent==='admin'){
+            // Administrator sign-in never creates a member account. Only an exact,
+            // verified Google email listed in ADMIN_EMAILS receives a dashboard session.
+            if(!adminEmails(env).has(result.identity.email)||!validPasswordHash(env.ADMIN_PASSWORD_HASH)){res.setHeader('Set-Cookie',privateCookie(oauthCookieName(production),'',production,0));return redirect('/admin?error=google-admin');}
+            const adminToken=sessionToken();await db.putSession(digest(adminToken),googleAdminCredential(env,result.identity.email),Date.now()+28800000);
+            res.setHeader('Set-Cookie',[sessionCookie(adminToken,production),privateCookie(oauthCookieName(production),'',production,0)]);
+            return redirect('/admin');
+          }
           const accountId=await mutateMembers(db,state=>signInAccount(state,result.identity));
           const token=sessionToken();await db.putMemberSession(digest(token),accountId,Date.now()+604800000);
           res.setHeader('Set-Cookie',[privateCookie(memberCookieName(production),token,production,604800),privateCookie(oauthCookieName(production),'',production,0)]);
@@ -67,29 +79,38 @@ export function createMembers(env = process.env, injectedStore, fetcher = fetch,
       if(action==='home'&&req.method==='GET') {
         const notifications=row.state.notifications.filter(n=>!n.recipient||n.recipient===account.id).slice(0,60);
         const photos=await db.accountPhotos(account.id);
-        const rideView=r=>({id:r.id,details:r.details,status:r.status,joined:r.participants.includes(account.id),enrollmentOpen:r.status==='open'&&enrollmentOpen(r.details),roster:rideRoster(row.state,r,account,memberGarage),photos:photos.filter(p=>p.rideId===r.id).map(p=>({id:p.id,status:p.status,media:p.media})),canUploadPhotos:approved(row.state,account)&&r.participants.includes(account.id)&&['open','closed','completed'].includes(r.status)});
+        const rideView=r=>({id:r.id,details:r.details,status:r.status,joined:r.participants.includes(account.id),enrollmentOpen:r.status==='open'&&enrollmentOpen(r.details),roster:rideRoster(row.state,r,account,memberGarage),bikeId:r.participants.includes(account.id)?r.bikeChoices?.[account.id]||null:null,photos:photos.filter(p=>p.rideId===r.id).map(p=>({id:p.id,status:p.status,media:p.media})),canUploadPhotos:approved(row.state,account)&&r.participants.includes(account.id)&&['open','closed','completed'].includes(r.status)});
         const rides=row.state.rides.filter(r=>r.status==='open'&&!rideExpired(r.details)).map(rideView);
         const pastRides=row.state.rides.filter(r=>r.participants.includes(account.id)&&(r.status==='completed'||r.status==='closed'||(r.status==='open'&&rideExpired(r.details)))).slice(-20).reverse().map(rideView);
-        return send(200,{account:publicAccount({...account,...profileBikeDetails(account,memberGarage),status:approved(row.state,account)?'approved':account.status==='approved'?'suspended':account.status}),bannerBike:profileBannerBike(account,memberGarage),rides,pastRides,notifications,cloudName,photoUploads:!!(env.CLOUDINARY_API_KEY&&env.CLOUDINARY_API_SECRET)});
+        return send(200,{account:publicAccount({...account,...profileBikeDetails(account,memberGarage),status:approved(row.state,account)?'approved':account.status==='approved'?'suspended':account.status}),bannerBikes:profileBannerBikes(account,memberGarage),rides,pastRides,notifications,cloudName,photoUploads:!!(env.CLOUDINARY_API_KEY&&env.CLOUDINARY_API_SECRET)});
       }
       if(action==='profile'&&req.method==='PUT') {
         const name=field(body.name,100),phone=field(body.phone,24);
         const bikeFields={};for(const [key,max]of [['bikeName',180],['bikeColour',100],['bikeNickname',60]])if(body[key]!==undefined)bikeFields[key]=field(body[key],max);
+        let nicknames=null;
+        if(body.bikeNicknames!==undefined){if(!body.bikeNicknames||typeof body.bikeNicknames!=='object'||Array.isArray(body.bikeNicknames)||Object.keys(body.bikeNicknames).length>6)fail(400,'Check your bike nicknames.');nicknames=Object.fromEntries(Object.entries(body.bikeNicknames).map(([id,value])=>[id,field(value,60)]));}
         const {garage}=await db.getGarage(seedGarage);
         if(!completeProfile({name,phone}))fail(400,'Enter your name and a valid phone number.');
-        await mutateMembers(db,state=>{const a=state.accounts.find(a=>a.id===accountId);a.name=name;a.phone=phone;if(a.bikeId&&!garage.bikes.some(b=>b.id===a.bikeId))a.bikeId=null;for(const [key,value]of Object.entries(bikeFields)){if(key==='bikeNickname'||!a.bikeId)a[key]=value;}if(a.status==='new'&&!state.allowed.includes(a.email)){a.status='pending';a.requestedAt=new Date().toISOString();}});
+        await mutateMembers(db,state=>{const a=state.accounts.find(a=>a.id===accountId);a.name=name;a.phone=phone;const linked=linkedBikeIds(a).filter(id=>garage.bikes.some(b=>b.id===id));a.bikeIds=linked;delete a.bikeId;
+          // Library-linked model and colour are admin-managed; only nicknames are the member's.
+          for(const [key,value]of Object.entries(bikeFields)){if(!linked.length)a[key]=value;}
+          if(nicknames){a.bikeNicknames={};for(const id of linked)if(nicknames[id]!==undefined)a.bikeNicknames[id]=nicknames[id];}if(a.status==='new'&&!state.allowed.includes(a.email)){a.status='pending';a.requestedAt=new Date().toISOString();}});
         return send(200,{ok:true});
       }
       if(action==='enroll'&&req.method==='POST') {
-        if(!['join','leave'].includes(body.operation)||typeof body.rideId!=='string')fail(400,'Choose a ride and an action.');
+        if(!['join','leave'].includes(body.operation)||typeof body.rideId!=='string'||(body.bikeId!==undefined&&typeof body.bikeId!=='string'))fail(400,'Choose a ride and an action.');
         await mutateMembers(db,state=>{
           const a=state.accounts.find(a=>a.id===accountId),ride=state.rides.find(r=>r.id===body.rideId);
           if(!ride||ride.status!=='open'||rideExpired(ride.details))fail(409,'This ride is no longer open.');
-          if(body.operation==='leave'){ride.participants=ride.participants.filter(id=>id!==accountId);return;}
+          if(body.operation==='leave'){ride.participants=ride.participants.filter(id=>id!==accountId);if(ride.bikeChoices)delete ride.bikeChoices[accountId];return;}
           if(!approved(state,a))fail(403,'Your HHR membership must be approved before joining a ride.');
+          if(body.bikeId&&!linkedBikeIds(a).includes(body.bikeId))fail(400,'Choose one of the bikes on your profile.');
+          const setBike=()=>{if(body.bikeId){ride.bikeChoices??={};ride.bikeChoices[accountId]=body.bikeId;}};
+          // Already riding: only the chosen bike changes, so it stays editable after enrolment closes.
+          if(ride.participants.includes(accountId)){setBike();return;}
           if(!completeProfile(a))fail(400,'Complete your name and phone number before joining.');
           if(!enrollmentOpen(ride.details))fail(409,'Enrolment is closed. Contact an HHR administrator.');
-          if(!ride.participants.includes(accountId))ride.participants.push(accountId);
+          ride.participants.push(accountId);setBike();
         });return send(200,{ok:true});
       }
       if(action==='read-notifications'&&req.method==='POST'){await mutateMembers(db,state=>{state.accounts.find(a=>a.id===accountId).seenAt=new Date().toISOString();});return send(200,{ok:true});}

@@ -45,6 +45,7 @@ environment variables in the existing Vercel project's Production environment:
 | `GOOGLE_CLIENT_SECRET` | The corresponding client secret |
 | `MEMBER_APP_ORIGIN` | Exact canonical site origin, e.g. `https://highway-hustlers.vercel.app`, with no trailing slash |
 | `CRON_SECRET` | A new cryptographically random secret used only to protect scheduled rollover |
+| `ADMIN_EMAILS` | Optional. Comma-separated Gmail/Google Workspace addresses allowed to sign in to `/admin` with Google |
 
 Never put these into `VITE_` variables, chat, Git or documentation. Enter secrets
 directly in Vercel. Existing database/media credentials remain server-side.
@@ -74,7 +75,27 @@ must also use a separate database and content path, as with the existing CMS.
 Official setup/reference:
 [Google OpenID Connect](https://developers.google.com/identity/openid-connect/openid-connect).
 
+## Administrator Google sign-in
+
+With `ADMIN_EMAILS` set (and the Google variables above), `/admin` shows
+**Continue with Google**. It reuses the member OAuth client and callback, so no
+extra redirect URI is needed. Only an exact, verified email in `ADMIN_EMAILS` gets
+a dashboard session; any other Google account is sent back to `/admin` with an
+error and gets no session. Administrator sign-in never creates a member account,
+and an admin session cannot act as a member, or the other way round.
+
+The list lives in the Vercel environment rather than the database on purpose:
+granting administrator access then requires Vercel access, so a stolen dashboard
+session or a database write cannot create new administrators. Removing an email
+(after redeploying) ends that person's sessions immediately. Rotating
+`ADMIN_PASSWORD_HASH` ends every administrator session. The password login stays
+available as a fallback, and `ADMIN_PASSWORD_HASH` is still required.
+
 ## Ride management and deadlines
+
+The public **Join this ride** link only appears for a ride that has a ride ID.
+Rides saved before the member feature have none: open `/admin` (which assigns one)
+and press **Publish website**.
 
 Save the upcoming ride as before, then **Publish website** to announce it to member
 profiles as well as the public site. A stable server-generated ride ID separates
@@ -160,12 +181,19 @@ Approved members see a **Who's riding** list on each ride with each rider's name
 bike and nickname. Phone numbers and emails never appear in it. Pending, declined or
 removed accounts get an empty list and are not shown in it.
 
-Under **Membership & enrolments → Profiles & bikes**, an admin can choose a prepared
-bike from the library and press **Link bike**. Its 360° rotation then becomes the
-member's profile banner. The library bike's model and colour replace the
-self-reported ones and are read-only for the member; the nickname stays theirs.
-Linking a profile bike does not change hero members, the hero lineup or approval.
-**Unlink bike** removes the banner and makes the bike fields editable again.
+Under **Membership & enrolments → Profiles & bikes**, an admin can link up to six
+prepared library bikes to a profile (**Link bike**) and remove them one at a time
+(**Unlink**). Each linked bike's 360° rotation appears in the member's profile
+banner, with a switcher when there is more than one. Model and colour come from the
+library and are read-only for the member; each bike has its own member-editable
+nickname. Linking bikes does not change hero members, the hero lineup or approval.
+When every bike is unlinked, the self-reported bike fields become editable again.
+
+A member with several linked bikes chooses which one they're **Riding** when they
+join a ride, and can change it while they're on the ride, even after enrolment
+closes. The rider list and the admin enrolment list show the chosen bike.
+Unlinking a bike clears it as a ride choice; the rider list then falls back to the
+member's first bike. Profiles saved before multiple bikes keep their single bike.
 
 ## Member ride photos
 

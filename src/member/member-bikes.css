@@ -26,3 +26,14 @@
   .member-ride-roster ul { grid-template-columns:minmax(0,1fr); }
 }
 .member-ride-photos{padding:24px 0;border-top:1px solid rgb(var(--paper)/.15)}.member-ride-photos h3{font-size:20px}.member-ride-photos h3 small{font-size:13px;font-weight:400;margin-left:12px}.member-photo-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;max-width:640px;margin:20px 0}.member-photo-grid figure{margin:0;min-width:0}.member-photo-grid img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:12px}.member-photo-grid figcaption{font-size:12px;margin-top:8px}.member-photo-consent{display:flex;gap:10px;align-items:start;max-width:620px;margin:18px 0;font-size:14px}.member-photo-consent input{margin-top:3px;flex:none}
+.member-bike-switch { display:flex; flex-wrap:wrap; gap:8px; margin-top:22px; }
+.hhr-member .member-bike-switch button { min-height:40px; padding:8px 14px; font-size:14px; border-radius:999px; }
+.hhr-member .member-bike-switch button[aria-pressed="true"] { background:rgb(var(--paper)); color:rgb(var(--ink)); border-color:transparent; }
+.member-linked-bikes { list-style:none; padding:0; margin:0 0 8px; }
+.member-linked-bikes li { padding:16px 0; border-top:1px solid rgb(var(--paper) / .15); }
+.member-linked-bikes li>strong { display:block; font-size:15px; font-weight:500; margin-bottom:12px; }
+.hhr-member .member-linked-bikes label { margin-bottom:0; }
+.member-enrolment-actions { display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:flex-end; gap:12px; flex-shrink:0; }
+.member-riding-choice { display:flex; flex-direction:column; gap:6px; font-size:13px; color:rgb(var(--paper) / .78); }
+.member-riding-choice select { min-height:44px; padding:10px 12px; border:1px solid rgb(var(--paper) / .3); border-radius:8px; background:rgb(var(--ink)); color:rgb(var(--paper)); font:inherit; font-size:15px; max-width:260px; }
+@media(max-width:700px) { .member-enrolment-actions { justify-content:flex-start; width:100%; } .member-riding-choice, .member-riding-choice select { width:100%; max-width:none; } }

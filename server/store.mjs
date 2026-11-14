@@ -64,7 +64,8 @@ export async function createPostgresStore(connection, injectedSql) {
     async knownBikeFrames(ids) { if (!ids.length) return []; const rows = await sql`SELECT frame FROM hh_bike_assets WHERE public_id=ANY(${ids}::text[])`; return rows.map(r => r.frame); },
     async rememberBikeFrame(frame) { await sql`INSERT INTO hh_bike_assets (public_id,frame) VALUES (${frame.publicId},${JSON.stringify(frame)}::jsonb) ON CONFLICT (public_id) DO NOTHING`; },
     async putSession(token, credential, expires) { await sql`DELETE FROM hh_sessions WHERE expires<${Date.now()}`; await sql`INSERT INTO hh_sessions (token,credential,expires) VALUES (${token},${credential},${expires})`; },
-    async session(token, credential) { const [row] = await sql`SELECT token FROM hh_sessions WHERE token=${token} AND credential=${credential} AND expires>${Date.now()}`; return !!row; },
+    // credential: one accepted credential digest or a list of them.
+    async session(token, credential) { const [row] = await sql`SELECT credential FROM hh_sessions WHERE token=${token} AND expires>${Date.now()}`; return !!row && [].concat(credential).includes(row.credential); },
     async logout(token) { await sql`DELETE FROM hh_sessions WHERE token=${token}`; },
     async attempt(bucket, now, windowMs=900000) {
       const expires = now + windowMs;
@@ -109,7 +110,7 @@ export function createLocalStore(filename) {
     knownBikeFrames: ids => transaction(d => ids.map(id => d.assets?.[id]).filter(Boolean)),
     rememberBikeFrame: frame => transaction(d => { d.assets ??= {}; d.assets[frame.publicId] ??= frame; }),
     putSession: (token, credential, expires) => transaction(d => { for (const [k,v] of Object.entries(d.sessions)) if (v.expires<Date.now()) delete d.sessions[k]; d.sessions[token] = { credential, expires }; }),
-    session: (token, credential) => transaction(d => d.sessions[token]?.credential === credential && d.sessions[token]?.expires > Date.now()),
+    session: (token, credential) => transaction(d => [].concat(credential).includes(d.sessions[token]?.credential) && d.sessions[token]?.expires > Date.now()),
     logout: token => transaction(d => { delete d.sessions[token]; }),
     attempt: (key, now,windowMs=900000) => transaction(d => { for (const [k,v] of Object.entries(d.limits)) if(v.expires<now) delete d.limits[k]; d.limits[key] ??= { attempts: 0, expires: now+windowMs }; return ++d.limits[key].attempts; }),
   };

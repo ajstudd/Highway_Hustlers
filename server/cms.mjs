@@ -9,7 +9,7 @@ import { signBikeBatch, verifyBikeBatch, confirmedBikeFrame } from './bike-uploa
 import { cleanUpcomingRide } from '../shared/upcoming-ride.mjs';
 import { archiveExpiredRide, identifiedRide, rideExpired } from './ride-lifecycle.mjs';
 import { approved, completeProfile, emailOf, mutateMembers, notice, publicAccount, syncPublishedRide } from './member-state.mjs';
-import { profileBikeDetails, linkedBikeIds, preparedBike, ridingBike, MAX_PROFILE_BIKES } from './profile-bikes.mjs';
+import { profileBikeDetails, linkedBikeIds, preparedBike, ridingBike, heroBikeIds, profileBikeIds, MAX_PROFILE_BIKES } from './profile-bikes.mjs';
 import { adminCredentials, adminEmails, passwordCredential } from './admin-access.mjs';
 import { authConfiguration } from './google-login.mjs';
 
@@ -124,7 +124,8 @@ export function createCms(env = process.env, injectedStore, fetcher = fetch) {
         const accountView=a=>publicAccount({...a,...profileBikeDetails(a,garage)});
         const rides=state.rides.map(r=>({...r,participants:r.participants.map(id=>state.accounts.find(a=>a.id===id)).filter(Boolean).map(a=>({...accountView(a),...ridingBike(a,r,garage)}))}));
         const bikes=garage.bikes.filter(preparedBike).map(b=>({id:b.id,brand:b.brand,model:b.model,colorName:b.colorName,frames:b.frames.length,status:b.status}));
-        return send(200,{revision,accounts:state.accounts.map(accountView),allowed:state.allowed,rides,bikes});
+        const heroMembers=garage.members.map(m=>({id:m.id,name:m.name,active:m.active,bikes:garage.lineup.filter(e=>e.memberId===m.id).length,accountId:state.accounts.find(a=>a.heroMemberId===m.id)?.id||null}));
+        return send(200,{revision,accounts:state.accounts.map(accountView),allowed:state.allowed,rides,bikes,heroMembers});
       }
       if(action==='profile-bike'&&req.method==='POST') {
         if(!['link','unlink'].includes(body.operation)||typeof body.bikeId!=='string'||!body.bikeId)fail(400,'Choose a bike to link or unlink.');
@@ -132,22 +133,39 @@ export function createCms(env = process.env, injectedStore, fetcher = fetch) {
         if(body.operation==='link'&&!preparedBike(bike))fail(400,'Choose a prepared bike from the library.');
         await mutateMembers(db,state=>{
           const a=state.accounts.find(a=>a.id===body.accountId);if(!a)fail(404,'Profile not found.');
-          const linked=linkedBikeIds(a);
+          const linked=linkedBikeIds(a),owned=profileBikeIds(a,garage);
           if(body.operation==='link'){
-            if(linked.includes(bike.id))return;
-            if(linked.length>=MAX_PROFILE_BIKES)fail(400,`A profile can have up to ${MAX_PROFILE_BIKES} bikes.`);
+            if(owned.includes(bike.id))return;
+            if(owned.length>=MAX_PROFILE_BIKES)fail(400,`A profile can have up to ${MAX_PROFILE_BIKES} bikes.`);
             // The first linked bike also fills the self-reported fields, which
             // the member sees again if every library bike is later unlinked.
-            if(!linked.length){a.bikeName=`${bike.brand} ${bike.model}`;a.bikeColour=bike.colorName;}
+            if(!owned.length){a.bikeName=`${bike.brand} ${bike.model}`;a.bikeColour=bike.colorName;}
             a.bikeIds=[...linked,bike.id];delete a.bikeId;
             notice(state,'Your garage updated',`${bike.brand} ${bike.model} is now linked to your profile.`,a.id);
           } else {
-            if(!linked.includes(body.bikeId))return;
+            if(!linked.includes(body.bikeId)){if(heroBikeIds(a,garage).includes(body.bikeId))fail(400,'This bike comes from the Hero lineup. Change it there, or disconnect the hero member.');return;}
             a.bikeIds=linked.filter(id=>id!==body.bikeId);delete a.bikeId;
             if(a.bikeNicknames)delete a.bikeNicknames[body.bikeId];
             for(const ride of state.rides)if(ride.bikeChoices?.[a.id]===body.bikeId)delete ride.bikeChoices[a.id];
-            notice(state,'Your garage updated',a.bikeIds.length?`${bike?`${bike.brand} ${bike.model}`:'A bike'} was removed from your profile.`:'Your bike-library links were removed. You can edit your bike details in your profile.',a.id);
+            notice(state,'Your garage updated',profileBikeIds(a,garage).length?`${bike?`${bike.brand} ${bike.model}`:'A bike'} was removed from your profile.`:'Your bike-library links were removed. You can edit your bike details in your profile.',a.id);
           }
+        });return send(200,{ok:true});
+      }
+      if(action==='hero-member'&&req.method==='POST') {
+        // Connects a signed-in profile to an existing hero member so the bikes
+        // assigned in Hero lineup become the profile's bikes. Always an explicit
+        // admin decision: names are never matched automatically.
+        if(typeof body.heroMemberId!=='string')fail(400,'Choose a hero member or Not connected.');
+        const {garage}=await db.getGarage(seedGarage),hero=body.heroMemberId?garage.members.find(m=>m.id===body.heroMemberId):null;
+        if(body.heroMemberId&&!hero)fail(400,'Choose a hero member from the saved Hero members list. Save draft first if you just added them.');
+        await mutateMembers(db,state=>{
+          const a=state.accounts.find(a=>a.id===body.accountId);if(!a)fail(404,'Profile not found.');
+          if(hero&&state.accounts.some(o=>o.id!==a.id&&o.heroMemberId===hero.id))fail(409,'That hero member is already connected to another profile.');
+          if((a.heroMemberId||null)===(hero?.id||null))return;
+          a.heroMemberId=hero?.id||null;
+          const owned=profileBikeIds(a,garage);
+          for(const ride of state.rides)if(ride.bikeChoices?.[a.id]&&!owned.includes(ride.bikeChoices[a.id]))delete ride.bikeChoices[a.id];
+          notice(state,'Your garage updated',hero?'Your profile is now connected to your HHR rider entry and its bikes.':'Your profile is no longer connected to an HHR rider entry.',a.id);
         });return send(200,{ok:true});
       }
       if(action==='sync-member-ride'&&req.method==='POST') {

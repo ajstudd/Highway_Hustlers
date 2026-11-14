@@ -4,7 +4,7 @@ import { authConfiguration, beginGoogle, finishGoogle, cookieValue, memberCookie
 import { approved, completeProfile, mutateMembers, publicAccount, signInAccount, syncPublishedRide } from './member-state.mjs';
 import { seedGarage } from '../shared/garage-seed.mjs';
 import { enrollmentOpen, rideExpired } from './ride-lifecycle.mjs';
-import { profileBikeDetails,profileBannerBikes,rideRoster,linkedBikeIds } from './profile-bikes.mjs';
+import { profileBikeDetails,profileBannerBikes,rideRoster,linkedBikeIds,profileBikeIds } from './profile-bikes.mjs';
 import { adminEmails, googleAdminCredential } from './admin-access.mjs';
 import { validPasswordHash, sessionCookie } from './security.mjs';
 
@@ -91,20 +91,21 @@ export function createMembers(env = process.env, injectedStore, fetcher = fetch,
         if(body.bikeNicknames!==undefined){if(!body.bikeNicknames||typeof body.bikeNicknames!=='object'||Array.isArray(body.bikeNicknames)||Object.keys(body.bikeNicknames).length>6)fail(400,'Check your bike nicknames.');nicknames=Object.fromEntries(Object.entries(body.bikeNicknames).map(([id,value])=>[id,field(value,60)]));}
         const {garage}=await db.getGarage(seedGarage);
         if(!completeProfile({name,phone}))fail(400,'Enter your name and a valid phone number.');
-        await mutateMembers(db,state=>{const a=state.accounts.find(a=>a.id===accountId);a.name=name;a.phone=phone;const linked=linkedBikeIds(a).filter(id=>garage.bikes.some(b=>b.id===id));a.bikeIds=linked;delete a.bikeId;
-          // Library-linked model and colour are admin-managed; only nicknames are the member's.
-          for(const [key,value]of Object.entries(bikeFields)){if(!linked.length)a[key]=value;}
-          if(nicknames){a.bikeNicknames={};for(const id of linked)if(nicknames[id]!==undefined)a.bikeNicknames[id]=nicknames[id];}if(a.status==='new'&&!state.allowed.includes(a.email)){a.status='pending';a.requestedAt=new Date().toISOString();}});
+        await mutateMembers(db,state=>{const a=state.accounts.find(a=>a.id===accountId);a.name=name;a.phone=phone;const linked=linkedBikeIds(a).filter(id=>garage.bikes.some(b=>b.id===id));a.bikeIds=linked;delete a.bikeId;const owned=profileBikeIds(a,garage);
+          // Library and hero-lineup model and colour are admin-managed; only nicknames are the member's.
+          for(const [key,value]of Object.entries(bikeFields)){if(!owned.length)a[key]=value;}
+          if(nicknames){a.bikeNicknames={};for(const id of owned)if(nicknames[id]!==undefined)a.bikeNicknames[id]=nicknames[id];}if(a.status==='new'&&!state.allowed.includes(a.email)){a.status='pending';a.requestedAt=new Date().toISOString();}});
         return send(200,{ok:true});
       }
       if(action==='enroll'&&req.method==='POST') {
         if(!['join','leave'].includes(body.operation)||typeof body.rideId!=='string'||(body.bikeId!==undefined&&typeof body.bikeId!=='string'))fail(400,'Choose a ride and an action.');
+        const {garage}=body.bikeId?await db.getGarage(seedGarage):{garage:null};
         await mutateMembers(db,state=>{
           const a=state.accounts.find(a=>a.id===accountId),ride=state.rides.find(r=>r.id===body.rideId);
           if(!ride||ride.status!=='open'||rideExpired(ride.details))fail(409,'This ride is no longer open.');
           if(body.operation==='leave'){ride.participants=ride.participants.filter(id=>id!==accountId);if(ride.bikeChoices)delete ride.bikeChoices[accountId];return;}
           if(!approved(state,a))fail(403,'Your HHR membership must be approved before joining a ride.');
-          if(body.bikeId&&!linkedBikeIds(a).includes(body.bikeId))fail(400,'Choose one of the bikes on your profile.');
+          if(body.bikeId&&!profileBikeIds(a,garage).includes(body.bikeId))fail(400,'Choose one of the bikes on your profile.');
           const setBike=()=>{if(body.bikeId){ride.bikeChoices??={};ride.bikeChoices[accountId]=body.bikeId;}};
           // Already riding: only the chosen bike changes, so it stays editable after enrolment closes.
           if(ride.participants.includes(accountId)){setBike();return;}

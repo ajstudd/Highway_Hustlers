@@ -189,6 +189,18 @@ library and are read-only for the member; each bike has its own member-editable
 nickname. Linking bikes does not change hero members, the hero lineup or approval.
 When every bike is unlinked, the self-reported bike fields become editable again.
 
+**Connecting a profile to a hero member.** When someone you already set up under
+Hero members signs in, choose them in the profile's **Hero member** list and press
+**Connect**. The bikes assigned to that hero member in **Hero lineup** become the
+profile's bikes, and later lineup changes follow automatically. These are marked
+*Hero lineup* and are changed in Hero lineup, not unlinked here. Extra library
+bikes can still be linked, up to six bikes in total. A hero member with the same
+name is listed first as a suggestion, but nothing connects automatically: name
+matching would let anyone claim a rider's entry by signing up with their name.
+Each hero member can be connected to one profile. Only saved hero members appear,
+so press **Save draft** after adding someone new. Connecting changes nothing on the
+public site; the hero still shows the published hero name and lineup.
+
 A member with several linked bikes chooses which one they're **Riding** when they
 join a ride, and can change it while they're on the ride, even after enrolment
 closes. The rider list and the admin enrolment list show the chosen bike.

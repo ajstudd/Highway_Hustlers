@@ -226,3 +226,4 @@ dialog.hh-hero-preview { width:min(1360px,calc(100vw - 32px)); max-height:94dvh;
 .admin-auth-box .admin-google:hover { background:#373029; }
 .admin-auth-box .admin-auth-divider { margin-top:28px; font-size:13px; }
 .admin-auth-box .admin-auth-divider + form { margin-top:12px; }
+.admin-bike-source { flex-shrink:0; font-size:13px; padding:0 4px; }

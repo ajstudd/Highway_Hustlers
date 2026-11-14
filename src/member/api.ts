@@ -2,8 +2,8 @@ import type { Media } from '../lib/gallery';
 import type { UpcomingRide } from '../../shared/upcoming-ride.mjs';
 import type { PublicRider } from '../../shared/garage.mjs';
 export type BikeDetails={bikeName:string;bikeColour:string;bikeNickname:string};
-export type ProfileBikeEntry=BikeDetails&{bikeId:string|null};
-export type MemberAccount=BikeDetails&{id:string;email:string;name:string;phone:string;photo:string|Media;bikeId:string|null;bikeIds:string[];bikes:ProfileBikeEntry[];bikeNicknames?:Record<string,string>;status:'new'|'pending'|'approved'|'rejected'|'suspended';profileComplete:boolean;requestedAt:string|null;seenAt:string;joinedAt:string};
+export type ProfileBikeEntry=BikeDetails&{bikeId:string|null;source?:'hero'|'linked'|'self'};
+export type MemberAccount=BikeDetails&{id:string;email:string;name:string;phone:string;photo:string|Media;bikeId:string|null;bikeIds:string[];bikes:ProfileBikeEntry[];bikeNicknames?:Record<string,string>;heroMemberId?:string|null;status:'new'|'pending'|'approved'|'rejected'|'suspended';profileComplete:boolean;requestedAt:string|null;seenAt:string;joinedAt:string};
 export type RideEntry={id:string;details:UpcomingRide;status:string;joined:boolean;enrollmentOpen:boolean;roster:(BikeDetails&{name:string})[];bikeId:string|null;photos:{id:string;status:string;media:Media|null}[];canUploadPhotos:boolean};
 export type MemberHome={account:MemberAccount;bannerBikes:{rider:PublicRider;nickname:string}[];rides:RideEntry[];pastRides:RideEntry[];notifications:{id:string;title:string;message:string;createdAt:string}[];cloudName:string;photoUploads:boolean};
 export async function memberRequest<T>(action:string,method='GET',body?:unknown):Promise<T>{

@@ -135,6 +135,22 @@ try{
   assert.equal((await account(first,'home')).data.rides[0].bikeId,null,'unlinking a bike clears it as the ride choice');
   assert.equal((await account(second,'home')).data.rides[0].roster[0].bikeName,'Bajaj Pulsar NS125');
   await account(first,'enroll','POST',{operation:'leave',rideId});await account(first,'enroll','POST',{operation:'join',rideId});
+  // Connecting a profile to an existing hero member brings in their Hero lineup bikes.
+  workspace=(await admin('membership')).data;assert.deepEqual(workspace.heroMembers.find(m=>m.id==='junaid-a'),{id:'junaid-a',name:'Junaid A',active:true,bikes:2,accountId:null});
+  assert.equal((await request('/api/cms?action=hero-member','POST',{accountId:firstId,heroMemberId:'junaid-a'},first)).status,401,'members cannot connect themselves to a hero rider');
+  assert.equal((await admin('hero-member','POST',{accountId:firstId,heroMemberId:'nobody'})).status,400);
+  assert.equal((await admin('hero-member','POST',{accountId:firstId,heroMemberId:'junaid-a'})).status,200);
+  home=(await account(first,'home')).data;assert.equal(home.account.heroMemberId,'junaid-a');
+  assert.deepEqual(home.account.bikes.map(b=>[b.bikeId,b.source]),[['yamaha-r15m','hero'],['pulsar-n250','hero'],['pulsar-ns125','linked']]);assert.equal(home.bannerBikes.length,3);
+  assert.equal((await admin('hero-member','POST',{accountId:secondId,heroMemberId:'junaid-a'})).status,409,'one hero member per profile');
+  assert.equal((await admin('profile-bike','POST',{accountId:firstId,operation:'unlink',bikeId:'yamaha-r15m'})).status,400,'hero lineup bikes are managed in Hero lineup');
+  assert.equal((await admin('profile-bike','POST',{accountId:firstId,operation:'link',bikeId:'pulsar-n250'})).status,200);assert.deepEqual((await account(first,'home')).data.account.bikeIds,['yamaha-r15m','pulsar-n250','pulsar-ns125'],'linking a hero bike again does not duplicate it');
+  assert.equal((await account(first,'enroll','POST',{operation:'join',rideId,bikeId:'pulsar-n250'})).status,200);
+  assert.deepEqual((await account(second,'home')).data.rides[0].roster[0],{name:'First Rider',bikeName:'Bajaj Pulsar N250',bikeColour:'Black',bikeNickname:''});
+  assert.equal((await admin('membership')).data.heroMembers.find(m=>m.id==='junaid-a').accountId,firstId);
+  assert.equal((await admin('hero-member','POST',{accountId:firstId,heroMemberId:''})).status,200);
+  home=(await account(first,'home')).data;assert.deepEqual(home.account.bikeIds,['pulsar-ns125']);assert.equal(home.rides[0].bikeId,null,'disconnecting clears a hero bike ride choice');
+  assert(!JSON.stringify(assets.get('hh-site/published.json')).includes(firstId),'the public hero never exposes the account link');
   await admin('profile-bike','POST',{accountId:firstId,operation:'unlink',bikeId:'pulsar-ns125'});assert.equal((await account(first,'home')).data.bannerBikes.length,0);
   await account(first,'profile','PUT',{name:'First Rider',phone:'+91 99999 00000',bikeName:'Honda CB350RS',bikeColour:'Matte black',bikeNickname:'Skyline-test-only'});
   assert.equal((await account(second,'home')).data.rides[0].roster[0].bikeName,'Honda CB350RS','unlinked self-reported bike updates appear in the rider list');

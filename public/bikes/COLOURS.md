@@ -1,5 +1,31 @@
 # Hero colour sets
 
+## Pranjal Kolhe · Pulsar NS125 Black
+
+`pulsar-ns125-black-factory-v1` contains the genuine 16-view **Black** NS125 LED BT
+ABS turntable supplied by [Bajaj's official legacy product page](https://legacy.bajajauto.com/bikes/pulsar/pulsar-ns125).
+The page's Black selector calls `changeExteriorSetHandler` with the
+`pulsar-ns125-new/black/black-web` base and 16 views. Its public viewer builds
+`00.png`–`15.png` using `SpriteSpin.sourceArray`; despite their URL extension, the
+responses are native-alpha 1000×700 WebP. The current main product page has moved
+to a new design, so the official legacy viewer is retained as the resource record.
+
+All 16 unique source angles are retained in factory order. The opening view faces
+right and increasing indices bring the front toward the viewer (`dir: -1`). One
+shared union crop (103,110 to 914,605), scale (1.2903225806451613) and placement
+(76,40) normalize the full set onto transparent 1200×720 lossless WebP frames.
+Black panels, silver/grey factory highlights and 125 graphics are not repainted.
+There is no background removal, generated angle, mirroring or per-angle fitting.
+All angles were inspected against light and dark backgrounds.
+
+Source URLs and viewer ordering: `scripts/bike-sources/pulsar-ns125-black.json`.
+Rebuild using `scripts/prepare-bike-turntable.mjs` and a Sharp package directory;
+existing output folders are refused. Asset and metadata checks, with optional
+contact-sheet generation: `node scripts/test-pranjal-bike.mjs <Sharp package directory> <audit directory>`.
+The member, bike and hero entry live in `src/data/garage-seed.json`, listed in
+`src/data/garage-additions.json` so existing dashboards are offered them. Imagery remains © Bajaj; manufacturer availability and
+attribution do not establish an open reuse licence.
+
 ## Unassigned prank-bike drafts
 
 `src/data/garage-drafts.json` adds three unassigned catalogue drafts without changing

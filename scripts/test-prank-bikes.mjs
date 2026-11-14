@@ -8,18 +8,18 @@ import { loadSharp } from './prepare-bike-turntable.mjs';
 
 const base = JSON.parse(await readFile(new URL('../src/data/garage-seed.json', import.meta.url),'utf8'));
 const offered = offerDraftBikes(base);
-assert.equal(base.bikes.length,12); assert.equal(offered.bikes.length,15);
+assert.equal(base.bikes.length,13); assert.equal(offered.bikes.length,16);
 assert.deepEqual(offered.members,base.members); assert.deepEqual(offered.lineup,base.lineup);
 assert.deepEqual(publicRiders(offered),publicRiders(base),'adding draft bikes must not change the public hero');
 assert.equal(offerDraftBikes(offered),offered,'reopening must not duplicate catalogue entries');
 const edited = structuredClone(offered); edited.bikes.find(b => b.id === 'honda-navi').status = 'hidden';
 assert.equal(offerDraftBikes(edited).bikes.find(b => b.id === 'honda-navi').status,'hidden','preserve saved edits');
-// A catalogue saved before Jasmine was added is offered her member, bike and hero entry.
+// A catalogue saved before Jasmine and Pranjal were added is offered their members, bikes and hero entries.
 const before = structuredClone(base);
-before.members = before.members.filter(m => m.id !== 'jasmine'); before.bikes = before.bikes.filter(b => b.id !== 'jawa-42-bobber'); before.lineup = before.lineup.filter(e => e.id !== 'jawa-42-bobber');
+before.members = before.members.filter(m => !['jasmine','pranjal-kolhe'].includes(m.id)); before.bikes = before.bikes.filter(b => !['jawa-42-bobber','pulsar-ns125'].includes(b.id)); before.lineup = before.lineup.filter(e => !['jawa-42-bobber','pranjal-pulsar-ns125'].includes(e.id));
 const withJasmine = offerNewRiders(before);
 assert.deepEqual(cleanGarage(withJasmine,localFramePaths),cleanGarage(base,localFramePaths));
-assert.equal(publicRiders(withJasmine).at(-1).name,'Jasmine');
+assert.deepEqual(publicRiders(withJasmine).slice(-2).map(r => r.name),['Jasmine','Pranjal Kolhe']);
 assert.equal(offerNewRiders(withJasmine),withJasmine,'reopening must not duplicate new riders');
 assert.equal(offerNewRiders(base),base);
 const renamed = structuredClone(base); renamed.bikes.find(b => b.id === 'jawa-42-bobber').colorName = 'Edited'; renamed.lineup = renamed.lineup.filter(e => e.id !== 'jawa-42-bobber');

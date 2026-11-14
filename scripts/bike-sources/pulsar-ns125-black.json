@@ -1,0 +1,28 @@
+{
+  "imageSet": "pulsar-ns125-black-factory-v1",
+  "sourcePage": "https://legacy.bajajauto.com/bikes/pulsar/pulsar-ns125",
+  "sourceColour": "Black",
+  "sourceVariant": "NS125 LED BT ABS",
+  "sourceViewer": "changeExteriorSetHandler(this, base, 16); SpriteSpin.sourceArray(base + '/{frame}.png', { frame: [0, 15], digits: 2 })",
+  "startFrame": 0,
+  "lossless": true,
+  "curl": true,
+  "frames": [
+    "https://cdn.bajajauto.com/-/media/assets/bajajauto/360degreeimages/bikes/pulsar/pulsar-ns125-new/black/black-web/00.png",
+    "https://cdn.bajajauto.com/-/media/assets/bajajauto/360degreeimages/bikes/pulsar/pulsar-ns125-new/black/black-web/01.png",
+    "https://cdn.bajajauto.com/-/media/assets/bajajauto/360degreeimages/bikes/pulsar/pulsar-ns125-new/black/black-web/02.png",
+    "https://cdn.bajajauto.com/-/media/assets/bajajauto/360degreeimages/bikes/pulsar/pulsar-ns125-new/black/black-web/03.png",
+    "https://cdn.bajajauto.com/-/media/assets/bajajauto/360degreeimages/bikes/pulsar/pulsar-ns125-new/black/black-web/04.png",
+    "https://cdn.bajajauto.com/-/media/assets/bajajauto/360degreeimages/bikes/pulsar/pulsar-ns125-new/black/black-web/05.png",
+    "https://cdn.bajajauto.com/-/media/assets/bajajauto/360degreeimages/bikes/pulsar/pulsar-ns125-new/black/black-web/06.png",
+    "https://cdn.bajajauto.com/-/media/assets/bajajauto/360degreeimages/bikes/pulsar/pulsar-ns125-new/black/black-web/07.png",
+    "https://cdn.bajajauto.com/-/media/assets/bajajauto/360degreeimages/bikes/pulsar/pulsar-ns125-new/black/black-web/08.png",
+    "https://cdn.bajajauto.com/-/media/assets/bajajauto/360degreeimages/bikes/pulsar/pulsar-ns125-new/black/black-web/09.png",
+    "https://cdn.bajajauto.com/-/media/assets/bajajauto/360degreeimages/bikes/pulsar/pulsar-ns125-new/black/black-web/10.png",
+    "https://cdn.bajajauto.com/-/media/assets/bajajauto/360degreeimages/bikes/pulsar/pulsar-ns125-new/black/black-web/11.png",
+    "https://cdn.bajajauto.com/-/media/assets/bajajauto/360degreeimages/bikes/pulsar/pulsar-ns125-new/black/black-web/12.png",
+    "https://cdn.bajajauto.com/-/media/assets/bajajauto/360degreeimages/bikes/pulsar/pulsar-ns125-new/black/black-web/13.png",
+    "https://cdn.bajajauto.com/-/media/assets/bajajauto/360degreeimages/bikes/pulsar/pulsar-ns125-new/black/black-web/14.png",
+    "https://cdn.bajajauto.com/-/media/assets/bajajauto/360degreeimages/bikes/pulsar/pulsar-ns125-new/black/black-web/15.png"
+  ]
+}

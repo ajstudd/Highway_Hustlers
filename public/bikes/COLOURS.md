@@ -1,5 +1,48 @@
 # Hero colour sets
 
+## Library additions · CBR650R, Panigale V4 R and original N250
+
+These are separate **draft library bikes**, with no invented riders, public hero
+entries or changes to existing assignments:
+
+- **Honda CBR650R E-Clutch · Grand Prix Red**, 36 genuine 2026-model views from
+  [Honda Big Bikes Malaysia](https://hondabigbike.com.my/model/cbr650r/).
+  The site's public WordPress `model/6698` response supplies the ordered red
+  `three_sixty` images. They are factory renders on a white studio background.
+- **Ducati Panigale V4 R · R Livery**, 18 genuine 20-degree studio views from the
+  [official configurator](https://configurator.ducati.com/bikes/ww/en/superbike/panv4r7g).
+  R Livery combines Ducati Red with silver; it is not a plain-red V4 or V4 S.
+  Sources were exported through the configurator's normal Studio → 360 View
+  asset inventory. Angles are sorted numerically, with an opening offset of 12
+  (260 degrees) for a right-facing profile. No protected API bypass is needed.
+- **Bajaj Pulsar N250 (2023) · Brooklyn Black**, eight original-generation views
+  from [Bajaj's global product page](https://cdn.globalbajaj.com/en/Brands/Pulsar/Pulsar-N250).
+  This has the silver conventional telescopic forks and older instrument cluster,
+  not the 2024 USD-fork redesign. The page's explicit `00,02,04,06,08,10,12,13`
+  source sequence covers one turn. Existing N250 metadata/assets are untouched.
+
+The full URL sequences, selected variants and preparation methods are under
+`scripts/bike-sources/`. All output sets use one shared crop/scale/placement at
+1200×720, lossless WebP. Honda and Ducati use approved source-pixel alpha
+extraction: U2Net proposes a foreground mask, then closed-form matting follows
+the source edges. Enclosed studio-colour wheel openings are seeded as background.
+There is no generative redraw, paint substitution, mirrored view or invented angle.
+Opaque factory RGB is unchanged; only partially transparent edges are unmixed
+from the studio background. Transparent glazing and very fine details remain
+limited by the source renders and mask extraction. N250 retains factory alpha,
+with its translucent floor layer removed while preserving opaque bike pixels.
+
+Rebuild with `node scripts/prepare-library-bike.mjs <manifest> <sharp package dir>
+<cache dir> [python] [model cache]`. Studio processing uses an isolated Python 3.12
+environment with `rembg[cpu]==2.0.87`, `pymatting==1.1.16` and
+`opencv-python-headless==5.0.0.93`; these are offline tools, not app dependencies.
+For viewer exports, save the manifest's exact angles as `00.source` onward in the
+cache before rebuilding. Respect access restrictions rather than spoofing private
+API credentials. Existing output directories are refused.
+
+Imagery © Honda, Ducati and Bajaj respectively; manufacturer attribution does not
+assert an open reuse licence. Review appropriate usage permission for publication.
+
 ## Pranjal Kolhe · Pulsar NS125 Black
 
 `pulsar-ns125-black-factory-v1` contains the genuine 16-view **Black** NS125 LED BT

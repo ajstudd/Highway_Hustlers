@@ -1,0 +1,31 @@
+{
+  "imageSet": "ducati-panigale-v4r-r-livery-v2",
+  "wheelRegionStart": 0.52,
+  "sourcePage": "https://configurator.ducati.com/bikes/ww/en/superbike/panv4r7g",
+  "sourceColour": "R Livery (Ducati Red / silver)",
+  "sourceVariant": "Current V4 R configurator, SBK7 PANV4R7G",
+  "sourceViewer": "Studio daytime 360 view; 18 angles at 20-degree intervals, sorted by cameradegree",
+  "lossless": true,
+  "frames": [
+    "https://cdn.prd.services.configurator.ducati.com/iod/image/SBK7/PANV4R7G/RRS/path_turntablecamera/27/WW/en?environment=env_studio_m&cameradegree=20&resize=1920%3A1080",
+    "https://cdn.prd.services.configurator.ducati.com/iod/image/SBK7/PANV4R7G/RRS/path_turntablecamera/27/WW/en?environment=env_studio_m&cameradegree=40&resize=1920%3A1080",
+    "https://cdn.prd.services.configurator.ducati.com/iod/image/SBK7/PANV4R7G/RRS/path_turntablecamera/27/WW/en?environment=env_studio_m&cameradegree=60&resize=1920%3A1080",
+    "https://cdn.prd.services.configurator.ducati.com/iod/image/SBK7/PANV4R7G/RRS/path_turntablecamera/27/WW/en?environment=env_studio_m&cameradegree=80&resize=1920%3A1080",
+    "https://cdn.prd.services.configurator.ducati.com/iod/image/SBK7/PANV4R7G/RRS/path_turntablecamera/27/WW/en?environment=env_studio_m&cameradegree=100&resize=1920%3A1080",
+    "https://cdn.prd.services.configurator.ducati.com/iod/image/SBK7/PANV4R7G/RRS/path_turntablecamera/27/WW/en?environment=env_studio_m&cameradegree=120&resize=1920%3A1080",
+    "https://cdn.prd.services.configurator.ducati.com/iod/image/SBK7/PANV4R7G/RRS/path_turntablecamera/27/WW/en?environment=env_studio_m&cameradegree=140&resize=1920%3A1080",
+    "https://cdn.prd.services.configurator.ducati.com/iod/image/SBK7/PANV4R7G/RRS/path_turntablecamera/27/WW/en?environment=env_studio_m&cameradegree=160&resize=1920%3A1080",
+    "https://cdn.prd.services.configurator.ducati.com/iod/image/SBK7/PANV4R7G/RRS/path_turntablecamera/27/WW/en?environment=env_studio_m&cameradegree=180&resize=1920%3A1080",
+    "https://cdn.prd.services.configurator.ducati.com/iod/image/SBK7/PANV4R7G/RRS/path_turntablecamera/27/WW/en?environment=env_studio_m&cameradegree=200&resize=1920%3A1080",
+    "https://cdn.prd.services.configurator.ducati.com/iod/image/SBK7/PANV4R7G/RRS/path_turntablecamera/27/WW/en?environment=env_studio_m&cameradegree=220&resize=1920%3A1080",
+    "https://cdn.prd.services.configurator.ducati.com/iod/image/SBK7/PANV4R7G/RRS/path_turntablecamera/27/WW/en?environment=env_studio_m&cameradegree=240&resize=1920%3A1080",
+    "https://cdn.prd.services.configurator.ducati.com/iod/image/SBK7/PANV4R7G/RRS/path_turntablecamera/27/WW/en?environment=env_studio_m&cameradegree=260&resize=1920%3A1080",
+    "https://cdn.prd.services.configurator.ducati.com/iod/image/SBK7/PANV4R7G/RRS/path_turntablecamera/27/WW/en?environment=env_studio_m&cameradegree=280&resize=1920%3A1080",
+    "https://cdn.prd.services.configurator.ducati.com/iod/image/SBK7/PANV4R7G/RRS/path_turntablecamera/27/WW/en?environment=env_studio_m&cameradegree=300&resize=1920%3A1080",
+    "https://cdn.prd.services.configurator.ducati.com/iod/image/SBK7/PANV4R7G/RRS/path_turntablecamera/27/WW/en?environment=env_studio_m&cameradegree=320&resize=1920%3A1080",
+    "https://cdn.prd.services.configurator.ducati.com/iod/image/SBK7/PANV4R7G/RRS/path_turntablecamera/27/WW/en?environment=env_studio_m&cameradegree=340&resize=1920%3A1080",
+    "https://cdn.prd.services.configurator.ducati.com/iod/image/SBK7/PANV4R7G/RRS/path_turntablecamera/27/WW/en?environment=env_studio_m&cameradegree=360&resize=1920%3A1080"
+  ],
+  "preparation": "studio-alpha",
+  "startFrame": 12
+}

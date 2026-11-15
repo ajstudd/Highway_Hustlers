@@ -1,37 +1,553 @@
 [
   {
-    "id": "tvs-xl100", "brand": "TVS", "model": "XL100 Heavy Duty Alloy", "cc": 100,
-    "character": "Utility moped", "colorName": "Red", "glow": "#c83a36", "dir": 1,
-    "facing": "right", "status": "draft",
+    "id": "tvs-xl100",
+    "brand": "TVS",
+    "model": "XL100 Heavy Duty Alloy",
+    "cc": 100,
+    "character": "Utility moped",
+    "colorName": "Red",
+    "glow": "#c83a36",
+    "dir": 1,
+    "facing": "right",
+    "status": "draft",
     "frames": [
-      { "source": "local", "path": "/bikes/tvs-xl100-hd-alloy-red-v1/00.webp", "width": 1200, "height": 720 },
-      { "source": "local", "path": "/bikes/tvs-xl100-hd-alloy-red-v1/01.webp", "width": 1200, "height": 720 },
-      { "source": "local", "path": "/bikes/tvs-xl100-hd-alloy-red-v1/02.webp", "width": 1200, "height": 720 },
-      { "source": "local", "path": "/bikes/tvs-xl100-hd-alloy-red-v1/03.webp", "width": 1200, "height": 720 },
-      { "source": "local", "path": "/bikes/tvs-xl100-hd-alloy-red-v1/04.webp", "width": 1200, "height": 720 },
-      { "source": "local", "path": "/bikes/tvs-xl100-hd-alloy-red-v1/05.webp", "width": 1200, "height": 720 },
-      { "source": "local", "path": "/bikes/tvs-xl100-hd-alloy-red-v1/06.webp", "width": 1200, "height": 720 },
-      { "source": "local", "path": "/bikes/tvs-xl100-hd-alloy-red-v1/07.webp", "width": 1200, "height": 720 }
+      {
+        "source": "local",
+        "path": "/bikes/tvs-xl100-hd-alloy-red-v1/00.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/tvs-xl100-hd-alloy-red-v1/01.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/tvs-xl100-hd-alloy-red-v1/02.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/tvs-xl100-hd-alloy-red-v1/03.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/tvs-xl100-hd-alloy-red-v1/04.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/tvs-xl100-hd-alloy-red-v1/05.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/tvs-xl100-hd-alloy-red-v1/06.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/tvs-xl100-hd-alloy-red-v1/07.webp",
+        "width": 1200,
+        "height": 720
+      }
     ]
   },
   {
-    "id": "honda-navi", "brand": "Honda", "model": "Navi", "cc": 109,
-    "character": "Mini street", "colorName": "Yellow", "glow": "#c9ce43", "dir": -1,
-    "facing": "right", "status": "draft",
+    "id": "honda-navi",
+    "brand": "Honda",
+    "model": "Navi",
+    "cc": 109,
+    "character": "Mini street",
+    "colorName": "Yellow",
+    "glow": "#c9ce43",
+    "dir": -1,
+    "facing": "right",
+    "status": "draft",
     "frames": [
-      { "source": "local", "path": "/bikes/honda-navi-yellow-v1/00.webp", "width": 1200, "height": 720 },
-      { "source": "local", "path": "/bikes/honda-navi-yellow-v1/01.webp", "width": 1200, "height": 720 },
-      { "source": "local", "path": "/bikes/honda-navi-yellow-v1/02.webp", "width": 1200, "height": 720 },
-      { "source": "local", "path": "/bikes/honda-navi-yellow-v1/03.webp", "width": 1200, "height": 720 },
-      { "source": "local", "path": "/bikes/honda-navi-yellow-v1/04.webp", "width": 1200, "height": 720 },
-      { "source": "local", "path": "/bikes/honda-navi-yellow-v1/05.webp", "width": 1200, "height": 720 },
-      { "source": "local", "path": "/bikes/honda-navi-yellow-v1/06.webp", "width": 1200, "height": 720 },
-      { "source": "local", "path": "/bikes/honda-navi-yellow-v1/07.webp", "width": 1200, "height": 720 }
+      {
+        "source": "local",
+        "path": "/bikes/honda-navi-yellow-v1/00.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-navi-yellow-v1/01.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-navi-yellow-v1/02.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-navi-yellow-v1/03.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-navi-yellow-v1/04.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-navi-yellow-v1/05.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-navi-yellow-v1/06.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-navi-yellow-v1/07.webp",
+        "width": 1200,
+        "height": 720
+      }
     ]
   },
   {
-    "id": "honda-monkey", "brand": "Honda", "model": "Monkey 125", "cc": 124,
-    "character": "Minibike · rotation pending", "colorName": "", "glow": "#d3ae4d",
-    "dir": 1, "facing": "right", "status": "draft", "frames": []
+    "id": "honda-monkey",
+    "brand": "Honda",
+    "model": "Monkey 125",
+    "cc": 124,
+    "character": "Minibike · rotation pending",
+    "colorName": "",
+    "glow": "#d3ae4d",
+    "dir": 1,
+    "facing": "right",
+    "status": "draft",
+    "frames": []
+  },
+  {
+    "id": "honda-cbr650r",
+    "brand": "Honda",
+    "model": "CBR650R E-Clutch",
+    "cc": 649,
+    "character": "Inline-four supersport",
+    "colorName": "Grand Prix Red",
+    "glow": "#bd2e30",
+    "dir": -1,
+    "facing": "right",
+    "status": "draft",
+    "frames": [
+      {
+        "source": "local",
+        "path": "/bikes/honda-cbr650r-grand-prix-red-v1/00.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-cbr650r-grand-prix-red-v1/01.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-cbr650r-grand-prix-red-v1/02.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-cbr650r-grand-prix-red-v1/03.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-cbr650r-grand-prix-red-v1/04.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-cbr650r-grand-prix-red-v1/05.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-cbr650r-grand-prix-red-v1/06.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-cbr650r-grand-prix-red-v1/07.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-cbr650r-grand-prix-red-v1/08.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-cbr650r-grand-prix-red-v1/09.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-cbr650r-grand-prix-red-v1/10.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-cbr650r-grand-prix-red-v1/11.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-cbr650r-grand-prix-red-v1/12.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-cbr650r-grand-prix-red-v1/13.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-cbr650r-grand-prix-red-v1/14.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-cbr650r-grand-prix-red-v1/15.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-cbr650r-grand-prix-red-v1/16.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-cbr650r-grand-prix-red-v1/17.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-cbr650r-grand-prix-red-v1/18.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-cbr650r-grand-prix-red-v1/19.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-cbr650r-grand-prix-red-v1/20.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-cbr650r-grand-prix-red-v1/21.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-cbr650r-grand-prix-red-v1/22.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-cbr650r-grand-prix-red-v1/23.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-cbr650r-grand-prix-red-v1/24.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-cbr650r-grand-prix-red-v1/25.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-cbr650r-grand-prix-red-v1/26.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-cbr650r-grand-prix-red-v1/27.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-cbr650r-grand-prix-red-v1/28.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-cbr650r-grand-prix-red-v1/29.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-cbr650r-grand-prix-red-v1/30.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-cbr650r-grand-prix-red-v1/31.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-cbr650r-grand-prix-red-v1/32.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-cbr650r-grand-prix-red-v1/33.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-cbr650r-grand-prix-red-v1/34.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/honda-cbr650r-grand-prix-red-v1/35.webp",
+        "width": 1200,
+        "height": 720
+      }
+    ]
+  },
+  {
+    "id": "ducati-panigale-v4r",
+    "brand": "Ducati",
+    "model": "Panigale V4 R",
+    "cc": 998,
+    "character": "Homologation superbike",
+    "colorName": "R Livery · Ducati Red / Silver",
+    "glow": "#c9232d",
+    "dir": -1,
+    "facing": "right",
+    "status": "draft",
+    "frames": [
+      {
+        "source": "local",
+        "path": "/bikes/ducati-panigale-v4r-r-livery-v2/00.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/ducati-panigale-v4r-r-livery-v2/01.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/ducati-panigale-v4r-r-livery-v2/02.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/ducati-panigale-v4r-r-livery-v2/03.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/ducati-panigale-v4r-r-livery-v2/04.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/ducati-panigale-v4r-r-livery-v2/05.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/ducati-panigale-v4r-r-livery-v2/06.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/ducati-panigale-v4r-r-livery-v2/07.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/ducati-panigale-v4r-r-livery-v2/08.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/ducati-panigale-v4r-r-livery-v2/09.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/ducati-panigale-v4r-r-livery-v2/10.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/ducati-panigale-v4r-r-livery-v2/11.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/ducati-panigale-v4r-r-livery-v2/12.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/ducati-panigale-v4r-r-livery-v2/13.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/ducati-panigale-v4r-r-livery-v2/14.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/ducati-panigale-v4r-r-livery-v2/15.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/ducati-panigale-v4r-r-livery-v2/16.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/ducati-panigale-v4r-r-livery-v2/17.webp",
+        "width": 1200,
+        "height": 720
+      }
+    ]
+  },
+  {
+    "id": "pulsar-n250-2023",
+    "brand": "Bajaj",
+    "model": "Pulsar N250 (2023)",
+    "cc": 249,
+    "character": "Original telescopic-fork roadster",
+    "colorName": "Brooklyn Black",
+    "glow": "#8c949e",
+    "dir": -1,
+    "facing": "right",
+    "status": "draft",
+    "frames": [
+      {
+        "source": "local",
+        "path": "/bikes/pulsar-n250-2023-brooklyn-black-v1/00.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/pulsar-n250-2023-brooklyn-black-v1/01.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/pulsar-n250-2023-brooklyn-black-v1/02.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/pulsar-n250-2023-brooklyn-black-v1/03.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/pulsar-n250-2023-brooklyn-black-v1/04.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/pulsar-n250-2023-brooklyn-black-v1/05.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/pulsar-n250-2023-brooklyn-black-v1/06.webp",
+        "width": 1200,
+        "height": 720
+      },
+      {
+        "source": "local",
+        "path": "/bikes/pulsar-n250-2023-brooklyn-black-v1/07.webp",
+        "width": 1200,
+        "height": 720
+      }
+    ]
   }
 ]

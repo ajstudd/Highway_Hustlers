@@ -1,3 +1,4 @@
+import { googleMapsUrl } from './maps-link.mjs';
 const legacyIds = new Set(['kerwa', 'bhojpur', 'kolar', 'bhimbetka', 'raisen', 'sanchi', 'pachmarhi']);
 const text = (value, max, required = false) => {
   if (typeof value !== 'string' || value.length > max || (required && !value.trim()) || /[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(value)) throw new Error('Check the text fields and their lengths.');
@@ -21,8 +22,10 @@ export function cleanPlaces(input) {
     const media = value.media.map(cleanMedia);
     if (new Set(media.map(m => m.id)).size !== media.length) throw new Error('An asset can only appear once in each place.');
     const legacyId = legacyIds.has(value.legacyId) ? value.legacyId : undefined;
-    if (value.needsLocationReview && value.published) throw Error('Review the archived ride’s distance and map coordinates before publishing its album.');
+    if (value.needsLocationReview && value.published) throw Error('Review the archived ride’s distance and destination pin before publishing its album.');
     if (value.published && !media.length && !legacyId) throw new Error('Add a photo or video before publishing a new place.');
-    return { id, name: text(value.name, 100, true), description: text(value.description, 400), kind: value.kind, km: number(value.km, 0, 5000), lat: number(value.lat, -90, 90), lon: number(value.lon, -180, 180), published: value.published, ...(legacyId ? { legacyId } : {}), ...(value.needsLocationReview ? { needsLocationReview: true } : {}), ...(typeof value.sourceRideId === 'string' && /^[a-z0-9-]{1,80}$/.test(value.sourceRideId) ? { sourceRideId: value.sourceRideId } : {}), ...(typeof value.rideDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value.rideDate) ? { rideDate: value.rideDate } : {}), media };
+    const mapsUrl=value.mapsUrl?googleMapsUrl(value.mapsUrl).href:'';
+    if(value.distanceUnknown!==undefined&&typeof value.distanceUnknown!=='boolean')throw Error('Choose whether to show distance.');
+    return { ...(mapsUrl?{mapsUrl}:{}),...(value.distanceUnknown?{distanceUnknown:true}:{}),id, name: text(value.name, 100, true), description: text(value.description, 400), kind: value.kind, km: number(value.km, 0, 5000), lat: number(value.lat, -90, 90), lon: number(value.lon, -180, 180), published: value.published, ...(legacyId ? { legacyId } : {}), ...(value.needsLocationReview ? { needsLocationReview: true } : {}), ...(typeof value.sourceRideId === 'string' && /^[a-z0-9-]{1,80}$/.test(value.sourceRideId) ? { sourceRideId: value.sourceRideId } : {}), ...(typeof value.rideDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value.rideDate) ? { rideDate: value.rideDate } : {}), media };
   });
 }

@@ -7,6 +7,7 @@ import { enrollmentOpen, rideExpired } from './ride-lifecycle.mjs';
 import { profileBikeDetails,profileBannerBikes,rideRoster,linkedBikeIds,profileBikeIds } from './profile-bikes.mjs';
 import { adminEmails, googleAdminCredential } from './admin-access.mjs';
 import { validPasswordHash, sessionCookie } from './security.mjs';
+import { riderCardId,dreamBikeView,memberGallery } from './member-extras.mjs';
 
 class MemberError extends Error { constructor(status,message){super(message);this.status=status;} }
 const fail = (status,message) => { throw new MemberError(status,message); };
@@ -82,7 +83,12 @@ export function createMembers(env = process.env, injectedStore, fetcher = fetch,
         const rideView=r=>({id:r.id,details:r.details,status:r.status,joined:r.participants.includes(account.id),enrollmentOpen:r.status==='open'&&enrollmentOpen(r.details),roster:rideRoster(row.state,r,account,memberGarage),bikeId:r.participants.includes(account.id)?r.bikeChoices?.[account.id]||null:null,photos:photos.filter(p=>p.rideId===r.id).map(p=>({id:p.id,status:p.status,media:p.media})),canUploadPhotos:approved(row.state,account)&&r.participants.includes(account.id)&&['open','closed','completed'].includes(r.status)});
         const rides=row.state.rides.filter(r=>r.status==='open'&&!rideExpired(r.details)).map(rideView);
         const pastRides=row.state.rides.filter(r=>r.participants.includes(account.id)&&(r.status==='completed'||r.status==='closed'||(r.status==='open'&&rideExpired(r.details)))).slice(-20).reverse().map(rideView);
-        return send(200,{account:publicAccount({...account,...profileBikeDetails(account,memberGarage),status:approved(row.state,account)?'approved':account.status==='approved'?'suspended':account.status}),bannerBikes:profileBannerBikes(account,memberGarage),rides,pastRides,notifications,cloudName,photoUploads:!!(env.CLOUDINARY_API_KEY&&env.CLOUDINARY_API_SECRET)});
+        return send(200,{account:publicAccount({...account,...profileBikeDetails(account,memberGarage),status:approved(row.state,account)?'approved':account.status==='approved'?'suspended':account.status}),cardId:approved(row.state,account)?riderCardId(account):null,dreamBike:dreamBikeView(account,memberGarage),gallery:memberGallery(photos,row.state),bannerBikes:profileBannerBikes(account,memberGarage),rides,pastRides,notifications,cloudName,photoUploads:!!(env.CLOUDINARY_API_KEY&&env.CLOUDINARY_API_SECRET)});
+      }
+      if(action==='dream-bike'&&req.method==='PUT'){
+        const name=field(body.name,180);
+        await mutateMembers(db,state=>{const a=state.accounts.find(a=>a.id===accountId);if((a.dreamBikeName||'')===name)return;a.dreamBikeName=name;a.dreamBikeId=null;a.dreamBikeRequestedAt=name?new Date().toISOString():null;});
+        return send(200,{ok:true});
       }
       if(action==='profile'&&req.method==='PUT') {
         const name=field(body.name,100),phone=field(body.phone,24);

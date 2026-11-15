@@ -49,7 +49,10 @@ try{
   await admin('moderate-ride-photo','POST',{id:results[1].data.id,status:'rejected',expected:'pending'});assert.equal((await db.accountPhotos(ids[0])).length,2,'rejection never refunds a slot');
   await mutateMembers(db,s=>{s.rides[0].status='completed';});assert.equal((await upload(1)).status,200,'joined members can share photos after a ride');
   const homeResponse=await fetch(`${base}/api/member?action=home`,{headers:{Cookie:`hhr_member_dev=${tokens[1]}`}}),home=await homeResponse.json();assert.equal(home.pastRides[0].photos.length,1,'members only see their own submissions');
+  assert.equal(home.gallery.length,1);assert.equal(home.gallery[0].ride,'Kerwa');assert.equal(home.gallery[0].status,'pending','pending own photos remain visible in the personal gallery');
+  assert(!home.gallery.some(p=>p.id===submission),'another member’s catalogue photos are not returned');
   await mutateMembers(db,s=>{s.rides[0].status='cancelled';});assert.equal((await upload(1)).status,403);
+  const cancelledHome=await(await fetch(`${base}/api/member?action=home`,{headers:{Cookie:`hhr_member_dev=${tokens[0]}`}})).json();assert.equal(cancelledHome.gallery.length,2,'cancelled rides retain the owner’s gallery');assert(cancelledHome.gallery.some(p=>p.status==='rejected'));
   assert.equal((await upload(1,{purpose:'profile'})).status,200);assert.equal((await db.getMemberState()).state.accounts[1].photo.type,'image');
   failProvider=true;const retry=randomUUID();assert.equal((await upload(1,{purpose:'profile',uuid:retry})).status,503);const before=calls;assert.equal((await upload(1,{purpose:'profile',uuid:retry})).status,409);assert.equal(calls,before,'uncertain provider uploads retain their reservation');
   assert.equal((await upload(1,{purpose:'profile'})).status,503); // fourth attempt is still allowed; provider remains unavailable.

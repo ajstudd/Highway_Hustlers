@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import { coordinatesFromLink,googleMapsUrl,resolveMapsLink } from '../server/maps-link.mjs';
+import { cleanPlaces } from '../server/content.mjs';
+assert.deepEqual(coordinatesFromLink('https://www.google.com/maps/search/?api=1&query=23.12,77.45'),{lat:23.12,lon:77.45});
+const pin='https://www.google.com/maps/place/Midghat+view+point/@23,77,12z/data=!3d22.91!4d77.51';
+assert.deepEqual(coordinatesFromLink(pin),{lat:22.91,lon:77.51});
+assert.equal(coordinatesFromLink('https://www.google.com/maps/@23,77,12z'),null,'camera position is not a destination pin');
+assert.equal(coordinatesFromLink('https://www.google.com/maps?q=91,181'),null);
+for(const bad of ['http://www.google.com/maps?q=23,77','https://www.google.com.evil.test/maps','https://localhost/maps','https://127.0.0.1/maps','https://user:pw@google.com/maps','https://google.com:444/maps'])assert.throws(()=>googleMapsUrl(bad));
+let calls=0;const full=await resolveMapsLink(pin,()=>{throw Error('Full pin must not make network requests');});assert.equal(full.name,'Midghat view point');
+const short=await resolveMapsLink('https://maps.app.goo.gl/abc',async()=>{calls++;return new Response(null,{status:302,headers:{Location:pin}});});assert.equal(calls,1);assert.equal(short.lat,22.91);
+await assert.rejects(resolveMapsLink('https://maps.app.goo.gl/abc',async()=>new Response(null,{status:302,headers:{Location:'http://169.254.169.254/latest/meta-data'}})));
+calls=0;await assert.rejects(resolveMapsLink('https://maps.app.goo.gl/abc',async()=>{calls++;return new Response(null,{status:302,headers:{Location:'https://maps.app.goo.gl/abc'}});}));assert.equal(calls,5,'redirect loops are bounded');
+const place={id:'test-place',name:'Midghat',description:'Test',kind:'Sunday morning',km:0,lat:22.91,lon:77.51,published:false,media:[],mapsUrl:pin,distanceUnknown:true};
+const saved=cleanPlaces([place])[0];assert.equal(saved.mapsUrl,pin);assert.equal(saved.distanceUnknown,true);assert.throws(()=>cleanPlaces([{...place,mapsUrl:'https://evil.test/'}]));
+console.log('Maps links: explicit pins, camera rejection, short link expansion, bounded redirects, SSRF host restrictions and optional distances passed.');

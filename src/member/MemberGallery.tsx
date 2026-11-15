@@ -1,0 +1,9 @@
+import { useEffect,useRef,useState } from 'react';
+import { X } from 'lucide-react';
+import type { MemberHome } from './api';
+import { mediaUrl } from '../lib/gallery';
+export function MemberGallery({photos,cloudName}:{photos:MemberHome['gallery'];cloudName:string}){
+  const [selected,setSelected]=useState<MemberHome['gallery'][number]|null>(null),[limit,setLimit]=useState(12);const dialog=useRef<HTMLDialogElement>(null);
+  useEffect(()=>{if(selected)dialog.current?.showModal();else dialog.current?.close();},[selected]);
+  return <section id="member-gallery" className="member-gallery"><div className="member-section-heading"><div><p className="member-eyebrow">THROUGH YOUR LENS</p><h2>Your kind of <em>morning.</em></h2></div><span>{photos.length} {photos.length===1?'photo':'photos'}</span></div>{!photos.length?<p className="member-gallery-empty">Your ride photos belong here. Join a ride and share a moment to start your collection.</p>:<div className="member-gallery-grid">{photos.slice(0,limit).map((photo,i)=><button key={photo.id} onClick={()=>setSelected(photo)} aria-label={`Open photo ${i+1} from ${photo.ride}`}><img src={mediaUrl(photo.media,cloudName,640)} alt={photo.media.caption||`Your photo from ${photo.ride}`} loading="lazy"/><span><strong>{photo.ride}</strong><small>{photo.status==='approved'?'In the crew’s catalogue':photo.status==='pending'?'Awaiting review':'Not selected for showcase'}</small></span></button>)}</div>}{limit<photos.length&&<button onClick={()=>setLimit(limit+12)}>More moments</button>}<dialog ref={dialog} className="member-photo-dialog" onCancel={()=>setSelected(null)} onClick={e=>{if(e.target===e.currentTarget)setSelected(null);}}>{selected&&<><button onClick={()=>setSelected(null)} aria-label="Close photo"><X size={22}/></button><img src={mediaUrl(selected.media,cloudName,2048)} alt={selected.media.caption||`Your photo from ${selected.ride}`}/><p>{selected.ride}</p></>}</dialog></section>;
+}

@@ -1,6 +1,7 @@
 import seed from '../src/data/gallery-seed.json' with { type: 'json' };
 import { createPostgresStore, createLocalStore } from './store.mjs';
 import { cleanPlaces, cleanMedia } from './content.mjs';
+import { resolveMapsLink } from './maps-link.mjs';
 import { digest, validPasswordHash, verifyPassword, sessionToken, readToken, sessionCookie, sameOrigin } from './security.mjs';
 import { validateUploadSize, uploadParameters, uploadSignature, uploadTicket, verifyUploadTicket, policy } from './uploads.mjs';
 import { cleanGarage } from '../shared/garage.mjs';
@@ -83,6 +84,10 @@ export function createCms(env = process.env, injectedStore, fetcher = fetch) {
         res.setHeader('Set-Cookie', sessionCookie('', production, true)); return send(200, { authenticated: false });
       }
       if (!authenticated) fail(401, 'Your session has ended. Sign in again; unsaved work is still in this tab.');
+      if(action==='resolve-place'&&req.method==='POST'){
+        if(await db.attempt('maps-link:admin',Date.now())>30)fail(429,'Too many map lookups. Please wait a few minutes.');
+        try{return send(200,await resolveMapsLink(body.url,fetcher));}catch(error){fail(400,error.message?.startsWith('This link')||error.message?.startsWith('Use ')||error.message?.startsWith('Paste ')?error.message:'Could not resolve this Maps link. Try its full place URL.');}
+      }
       if(action==='ride-photos'&&req.method==='GET'){
         const status=url.searchParams.get('status')||'';if(!['','pending','approved','rejected'].includes(status))fail(400,'Invalid photo status.');
         const offset=Number(url.searchParams.get('offset')||0);if(!Number.isSafeInteger(offset)||offset<0||offset>100000)fail(400,'Invalid catalogue page.');
@@ -126,6 +131,12 @@ export function createCms(env = process.env, injectedStore, fetcher = fetch) {
         const bikes=garage.bikes.filter(preparedBike).map(b=>({id:b.id,brand:b.brand,model:b.model,colorName:b.colorName,frames:b.frames.length,status:b.status}));
         const heroMembers=garage.members.map(m=>({id:m.id,name:m.name,active:m.active,bikes:garage.lineup.filter(e=>e.memberId===m.id).length,accountId:state.accounts.find(a=>a.heroMemberId===m.id)?.id||null}));
         return send(200,{revision,accounts:state.accounts.map(accountView),allowed:state.allowed,rides,bikes,heroMembers});
+      }
+      if(action==='dream-bike'&&req.method==='POST'){
+        if(typeof body.bikeId!=='string'||typeof body.expectedName!=='string')fail(400,'Choose a dream bike.');
+        const {garage}=await db.getGarage(seedGarage),bike=garage.bikes.find(b=>b.id===body.bikeId);
+        if(body.bikeId&&(!preparedBike(bike)||bike.frames.length<2))fail(400,'Choose a prepared rotation with at least two frames from the saved library.');
+        await mutateMembers(db,state=>{const a=state.accounts.find(a=>a.id===body.accountId);if(!a)fail(404,'Profile not found.');if((a.dreamBikeName||'')!==body.expectedName)fail(409,'The member changed their dream bike. Refresh before assigning.');if(!a.dreamBikeName&&body.bikeId)fail(400,'The member has not requested a dream bike.');a.dreamBikeId=body.bikeId||null;notice(state,'Your dream garage',bike?`${bike.brand} ${bike.model} is ready to explore on your profile.`:'Your dream bike display has been removed.',a.id);});return send(200,{ok:true});
       }
       if(action==='profile-bike'&&req.method==='POST') {
         if(!['link','unlink'].includes(body.operation)||typeof body.bikeId!=='string'||!body.bikeId)fail(400,'Choose a bike to link or unlink.');
@@ -193,10 +204,10 @@ export function createCms(env = process.env, injectedStore, fetcher = fetch) {
       if(action==='ride-participant'&&req.method==='POST') {
         await mutateMembers(db,state=>{
           const ride=state.rides.find(r=>r.id===body.rideId),a=state.accounts.find(a=>a.id===body.accountId);
-          if(!ride||ride.status!=='open'||rideExpired(ride.details))fail(409,'This ride is no longer open.');
+          if(!ride||!['open','closed','completed'].includes(ride.status))fail(409,'Choose an upcoming or completed ride. Cancelled rides cannot be edited.');
           if(!a)fail(404,'Profile not found.');
-          if(body.operation==='add'){if(!approved(state,a)||!completeProfile(a))fail(400,'Choose an approved member with a complete profile.');if(!ride.participants.includes(a.id))ride.participants.push(a.id);notice(state,'You’re on the ride',`An administrator added you to ${ride.details.location}.`,a.id);}
-          else if(body.operation==='remove'){ride.participants=ride.participants.filter(id=>id!==a.id);if(ride.bikeChoices)delete ride.bikeChoices[a.id];notice(state,'Ride enrolment updated',`An administrator removed your entry for ${ride.details.location}.`,a.id);}
+          if(body.operation==='add'){if(!approved(state,a)||!completeProfile(a))fail(400,'Choose an approved member with a complete profile.');if(ride.participants.includes(a.id))return;ride.participants.push(a.id);notice(state,ride.status==='open'&&!rideExpired(ride.details)?'You’re on the ride':'Ride history updated',`An administrator added you to ${ride.details.location}${ride.details.date?` (${ride.details.date})`:''}. You can share your ride photos from your profile.`,a.id);}
+          else if(body.operation==='remove'){if(!ride.participants.includes(a.id))return;ride.participants=ride.participants.filter(id=>id!==a.id);if(ride.bikeChoices)delete ride.bikeChoices[a.id];notice(state,'Ride enrolment updated',`An administrator removed your entry for ${ride.details.location}.`,a.id);}
           else fail(400,'Choose Add or Remove.');
         });return send(200,{ok:true});
       }

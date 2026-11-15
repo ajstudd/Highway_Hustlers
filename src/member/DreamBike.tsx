@@ -1,0 +1,10 @@
+import { useEffect,useState } from 'react';
+import { ArrowUpRight } from 'lucide-react';
+import type { MemberHome } from './api';
+import { memberRequest } from './api';
+import { ProfileBike } from './ProfileBike';
+export function DreamBike({dream,cloudName,refresh}:{dream:MemberHome['dreamBike'];cloudName:string;refresh:()=>Promise<void>}){
+  const [name,setName]=useState(dream.name),[busy,setBusy]=useState(false),[message,setMessage]=useState('');
+  useEffect(()=>{setName(dream.name);},[dream.name]);
+  return <section id="member-dream" className="member-dream"><div className="member-section-heading"><div><p className="member-eyebrow">ROOM FOR ONE MORE</p><h2>The someday <em>bike.</em></h2></div><span className="member-dream-number" aria-hidden="true">01 / ∞</span></div>{dream.banner?<ProfileBike bikes={[{rider:dream.banner,nickname:''}]} cloudName={cloudName}/>:<div className="member-dream-empty"><span aria-hidden="true">↗</span><div><h3>{dream.name||'What’s on your wishlist?'}</h3><p>{dream.name?'The crew has your request. Your dream garage is waiting for its bike.':'That one bike you always turn around to look at.'}</p></div></div>}<form onSubmit={async e=>{e.preventDefault();setBusy(true);setMessage('');try{await memberRequest('dream-bike','PUT',{name});await refresh();setMessage(name.trim()?'Sent to the crew.':'Dream bike removed.');}catch(error){setMessage(error instanceof Error?error.message:'Please try again.');}finally{setBusy(false);}}}><label htmlFor="dream-bike-name">Your dream bike</label><div><input id="dream-bike-name" value={name} onChange={e=>setName(e.target.value)} maxLength={180} placeholder="e.g. Ducati Panigale V4" disabled={busy}/><button disabled={busy||name.trim()===dream.name}>{busy?'Saving…':dream.name?'Update wish':'Send to the crew'}<ArrowUpRight size={16}/></button></div><p className="member-small">The crew can add a 360° view. Changing your wish clears its current display. Clear the name and save to remove it.</p></form>{message&&<p role="status">{message}</p>}</section>;
+}

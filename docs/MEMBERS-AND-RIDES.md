@@ -1,5 +1,62 @@
 # HHR members and ride enrolment
 
+## Rider cards, dream bikes and personal gallery
+
+Admins can add/remove approved, complete member profiles in open, closed and
+completed rides from **Membership & enrolments → Ride enrolments**. Normal members
+still cannot self-enrol after the window or ride date. Cancelled rides remain
+locked. Historical additions notify the member and enable the existing two-photo
+contribution allowance; they do not republish an announcement or change its date.
+Repeated identical additions do not duplicate notifications or participants.
+
+Place editing now starts with a Google Maps link and **Fill location from link**.
+Explicit pin coordinates and coordinate search links are parsed directly; supported
+Google short links are expanded server-side. Camera centres (`@lat,lon`) are not
+treated as destination pins. Links without a pin need a full place URL or manual
+coordinates under Advanced. Remote resolution is authenticated, rate-limited,
+bounded to five redirects/seven seconds and restricted to known Google Maps hosts.
+The saved Maps link survives archiving and content sanitisation.
+
+Road distance is optional and hidden on public albums when unknown; it is never
+guessed from straight-line distance or a map camera. Existing reviewed distances
+remain unchanged. Fully automatic road distances need a separately configured
+routing provider; this implementation enables no billed Google services. Google
+Maps URLs themselves need no key, whereas Places/Routes APIs require separate
+Google Maps Platform credentials and billing. Google OAuth login credentials are
+not Maps API credentials.
+
+Approved, allowlisted members see **Rider card** on their profile. Its permanent
+identifier is `HHR-` followed by their complete immutable account ID, independent
+of name, email or bike edits. The charcoal/marigold artwork downloads as a
+2000 × 1260 PNG, generated entirely in the browser. The QR contains only this
+identifier, with no contact details, session token or public profile link. It is
+a club keepsake, not a login credential or proof of current membership; an old
+download remains on its owner's device after membership changes. QR generation
+uses [node-qrcode](https://github.com/soldair/node-qrcode), without an external QR
+service. New downloads are shown only while membership is approved.
+
+Any signed-in account can save a dream bike name (up to 180 characters) under
+**Dream bike**. Administrators see it in **Membership & enrolments → Dream bike
+requests** and can attach a prepared rotation from the saved bike library, or
+remove that display. Sets with fewer than two frames are excluded. Admins should
+match the requested model before assigning. Assignments notify the member and
+appear immediately in their private profile; they need no public Publish step.
+Changing or clearing the request clears its old display. A stale admin decision
+is rejected if the member has changed the requested name. Dream assignments never
+add an owned bike, alter the ride bike selector or change the public hero.
+
+**Gallery** collects the signed-in member's completed ride photo uploads, with
+pending/approved/not-selected labels, twelve thumbnails at a time and an
+accessible full-image viewer. It includes contributions from cancelled rides and
+rides they have left. Incomplete upload reservations are excluded; other members'
+photos are never returned. Moderation determines public showcasing, not whether
+owners can see their own uploads. The photo files still have unlisted public
+Cloudinary URLs, as described below. Profile avatars are separate from ride photos.
+
+No additional environment variables or manual database migration are required for
+these features. Fields are additive in the existing member workspace; photos use
+the existing account-scoped photo store. Public CDN snapshots remain unchanged.
+
 Implemented locally, November 2026. Do not treat this document as evidence of
 production deployment or a real Google sign-in test. No real member accounts or
 emails are seeded. The separate demo server and all demo identities live outside

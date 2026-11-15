@@ -11,6 +11,7 @@ import { offerDraftBikes, offerNewRiders } from '../../shared/garage-seed.mjs';
 import { emptyUpcomingRide, type UpcomingRide } from '../../shared/upcoming-ride.mjs';
 import UpcomingRideEditor from './UpcomingRideEditor';
 import MembershipEditor from './MembershipEditor';
+import PlaceLocation from './PlaceLocation';
 import RidePhotoReview from './RidePhotoReview';
 
 type Library = { media: Media[]; cursor: string; cloudName: string };
@@ -78,7 +79,7 @@ export default function Admin() {
   function choose(id: string) { setSelected(id); setConfirmRemove(false); setError(''); }
   function addPlace() {
     const id = `place-${crypto.randomUUID()}`;
-    setPlaces(items => [...items, { id, name: 'Untitled place', description: '', kind: 'Sunday morning', km: 0, lat: 23.2599, lon: 77.4126, published: false, media: [] }]); choose(id);
+    setPlaces(items => [...items, { id, name: 'Untitled place', description: '', kind: 'Sunday morning', km: 0, lat: 23.2599, lon: 77.4126, published: false, needsLocationReview:true,distanceUnknown:true, media: [] }]); choose(id);
     requestAnimationFrame(() => editor.current?.focus());
   }
   async function save(event?: FormEvent) {
@@ -231,8 +232,7 @@ export default function Admin() {
           <section className="admin-section"><div className="admin-section-title"><h3>Place details</h3><label className="admin-publish"><input type="checkbox" checked={place.published} onChange={e => update({ published: e.target.checked })}/> Include on publish</label></div>
             <div className="admin-two"><label>Place name<input required maxLength={80} value={place.name} onChange={e => update({ name: e.target.value })}/></label><label>Ride type<select value={place.kind} onChange={e => update({ kind: e.target.value as Place['kind'] })}><option>Sunday morning</option><option>Full day</option><option>Weekend</option></select></label></div>
             <label>Short description<textarea maxLength={400} rows={2} value={place.description} onChange={e => update({ description: e.target.value })} placeholder="What makes this stop worth the ride?"/></label>
-            {place.needsLocationReview&&<div className="admin-warning"><p>This album was drafted automatically after the ride. Add the actual distance and map coordinates, review the description and photos, then confirm below before publishing.</p><label className="admin-publish"><input type="checkbox" onChange={e=>{if(e.target.checked)update({needsLocationReview:false});}}/>I’ve checked the location and distance</label></div>}
-            <div className="admin-three"><label>Distance from Bhopal (km)<input type="number" required min="0" max="5000" step="any" value={Number.isNaN(place.km) ? '' : place.km} onChange={e => update({ km: e.target.value === '' ? NaN : Number(e.target.value) })}/></label><label>Latitude<input type="number" required min="-90" max="90" step="any" value={Number.isNaN(place.lat) ? '' : place.lat} onChange={e => update({ lat: e.target.value === '' ? NaN : Number(e.target.value) })}/></label><label>Longitude<input type="number" required min="-180" max="180" step="any" value={Number.isNaN(place.lon) ? '' : place.lon} onChange={e => update({ lon: e.target.value === '' ? NaN : Number(e.target.value) })}/></label></div>
+            <PlaceLocation key={place.id} place={place} change={update} disabled={busy}/>
           </section>
           <section className="admin-section"><div className="admin-section-title"><div><h3>Photos & videos</h3><p className="admin-muted">First in the album is the cover. Only add media you have permission to publish.</p></div></div>
             {!data?.cloudReady && <p className="admin-warning">Cloudinary library and uploads need the API key and secret in your server environment. Existing published media continues to work.</p>}

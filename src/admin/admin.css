@@ -227,3 +227,4 @@ dialog.hh-hero-preview { width:min(1360px,calc(100vw - 32px)); max-height:94dvh;
 .admin-auth-box .admin-auth-divider { margin-top:28px; font-size:13px; }
 .admin-auth-box .admin-auth-divider + form { margin-top:12px; }
 .admin-bike-source { flex-shrink:0; font-size:13px; padding:0 4px; }
+.admin-place-location{margin-top:24px}.admin-place-location>button{margin-bottom:16px}.admin-place-location>.admin-publish{margin:18px 0}.admin-place-location details{margin-top:18px;padding:16px;border:1px solid rgb(var(--paper)/.18);border-radius:8px}.admin-place-location summary{cursor:pointer;min-height:28px}.admin-place-location details[open] summary{margin-bottom:16px}

@@ -1,8 +1,21 @@
-import { useState } from 'react';
-import { cmsRequest,type Place } from '../lib/gallery';
-export default function PlaceLocation({place,change,disabled}:{place:Place;change:(values:Partial<Place>)=>void;disabled:boolean}){
-  const unknown=place.distanceUnknown??!!(place.needsLocationReview&&place.km===0);
-  const [busy,setBusy]=useState(false),[message,setMessage]=useState('');
-  async function lookup(){setBusy(true);setMessage('');try{const result=await cmsRequest<{lat:number;lon:number;mapsUrl:string}>('resolve-place',{method:'POST',body:JSON.stringify({url:place.mapsUrl})});change({lat:result.lat,lon:result.lon,mapsUrl:result.mapsUrl,distanceUnknown:unknown,needsLocationReview:false});setMessage('Map pin filled. Road distance is optional; enter it below if you know it.');}catch(e){setMessage(e instanceof Error?e.message:'Could not read this link.');}finally{setBusy(false);}}
-  return <div className="admin-place-location"><label>Google Maps destination link<input type="url" maxLength={2048} value={place.mapsUrl||''} disabled={disabled||busy} onChange={e=>{change({mapsUrl:e.target.value,needsLocationReview:true});setMessage('');}} placeholder="https://maps.app.goo.gl/…"/></label><button type="button" disabled={disabled||busy||!place.mapsUrl} onClick={()=>void lookup()}>{busy?'Finding pin…':'Fill location from link'}</button>{message&&<p role="status" className="admin-muted">{message}</p>}<label className="admin-publish"><input type="checkbox" checked={!unknown} onChange={e=>change({distanceUnknown:!e.target.checked})}/>Show distance from Bhopal</label>{!unknown&&<label>Road distance from Bhopal (km)<input type="number" min="0" max="5000" step="any" required value={Number.isNaN(place.km)?'':place.km} onChange={e=>change({km:e.target.value===''?NaN:Number(e.target.value)})}/></label>}<p className="admin-muted admin-small">A Maps link can supply the pin, but not a reliable road distance. Leave distance hidden if unknown.</p><details><summary>Advanced · edit coordinates</summary><div className="admin-two"><label>Latitude<input type="number" min="-90" max="90" step="any" required value={Number.isNaN(place.lat)?'':place.lat} onChange={e=>change({lat:e.target.value===''?NaN:Number(e.target.value),needsLocationReview:true})}/></label><label>Longitude<input type="number" min="-180" max="180" step="any" required value={Number.isNaN(place.lon)?'':place.lon} onChange={e=>change({lon:e.target.value===''?NaN:Number(e.target.value),needsLocationReview:true})}/></label></div><label className="admin-publish"><input type="checkbox" checked={!place.needsLocationReview} onChange={e=>change({needsLocationReview:!e.target.checked})}/>I’ve checked this destination pin</label></details></div>;
+import type { Place } from '../lib/gallery';
+
+export default function PlaceLocation({ place, change }: {
+  place: Place; change: (values: Partial<Place>) => void;
+}) {
+  const distanceUnknown = place.distanceUnknown ?? Boolean(place.needsLocationReview && place.km === 0);
+
+  return <div className="admin-place-location">
+    <div className="admin-two">
+      <label>Google Maps destination link
+        <input type="url" inputMode="url" maxLength={2048} value={place.mapsUrl ?? ''} placeholder="Paste a Google Maps link"
+          onChange={event => change({ mapsUrl: event.target.value, needsLocationReview: true })}/>
+      </label>
+      <label>One-way road distance from Bhopal (km, optional)
+        <input type="number" min="0" max="5000" step="any" value={distanceUnknown ? '' : place.km}
+          onChange={event => change({ km: event.target.value === '' ? 0 : event.target.valueAsNumber, distanceUnknown: event.target.value === '' })}/>
+      </label>
+    </div>
+    <p className="admin-muted admin-small">You can paste a short link from Google Maps Share or the full URL for the place.</p>
+  </div>;
 }

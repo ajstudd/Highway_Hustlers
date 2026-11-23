@@ -12,13 +12,16 @@
 .upcoming-ride-copy { min-width:0; align-self:center; }
 .upcoming-ride-copy h3 { font-family:'Bricolage Grotesque',sans-serif; font-size:clamp(40px,5vw,68px); line-height:1.05; letter-spacing:-.035em; font-weight:800; text-wrap:balance; overflow-wrap:anywhere; max-width:18ch; }
 .upcoming-ride-description { font-size:18px; line-height:1.65; color:rgb(var(--paper) / .8); max-width:55ch; margin-top:23px; white-space:pre-line; overflow-wrap:anywhere; }
+.upcoming-ride-distance { margin-top:12px; font-size:14px; color:rgb(var(--paper) / .75); }
 .upcoming-ride-plan { display:grid; gap:26px; margin-top:34px; }
 .upcoming-ride-meet { display:flex; gap:14px; }
 .upcoming-ride-meet>svg { color:rgb(var(--marigold)); flex-shrink:0; margin-top:2px; }
 .upcoming-ride-plan h4 { font-size:14px; font-weight:600; margin:0 0 7px; color:rgb(var(--paper) / .7); }
 .upcoming-ride-plan p { font-size:16px; line-height:1.65; white-space:pre-line; overflow-wrap:anywhere; }
 .upcoming-ride-notes { padding-top:22px; border-top:1px solid rgb(var(--paper) / .14); max-width:60ch; }
-.upcoming-ride-map { display:inline-flex; align-items:center; gap:20px; margin-top:32px; padding-bottom:9px; border-bottom:1px solid rgb(var(--marigold) / .65); color:rgb(var(--marigold)); font-size:15px; font-weight:600; transition:color 160ms; }
+.upcoming-ride-map { display:inline-flex; align-items:center; gap:8px; margin-top:16px; padding-bottom:5px; border-bottom:1px solid rgb(var(--marigold) / .65); color:rgb(var(--marigold)); font-size:15px; font-weight:600; transition:color 160ms; }
+.upcoming-ride-map svg { flex-shrink:0; }
+.upcoming-ride-meet .upcoming-ride-map { margin-top:8px; }
 .upcoming-ride-map:hover { color:rgb(var(--paper)); }
 .upcoming-ride :is(a,button):focus-visible { outline:2px solid rgb(var(--marigold)); outline-offset:5px; }
 .upcoming-ride-photos { min-width:0; align-self:start; }
@@ -35,6 +38,6 @@
 .upcoming-ride-window { margin-top:24px; font-size:13px; line-height:1.7; color:rgb(var(--paper) / .75); grid-column:1; }
 .upcoming-ride-enroll>a { display:inline-flex; align-items:center; gap:18px; min-height:44px; padding:12px 20px; border-radius:8px; background:rgb(var(--marigold)); color:rgb(var(--ink)); font-weight:600; }
 .upcoming-ride-enroll>p { font-size:13px; line-height:1.6; color:rgb(var(--paper) / .75); margin-top:12px; max-width:45ch; }
-@media(min-width:800px) { .upcoming-ride:not(.upcoming-ride-with-photo) .upcoming-ride-copy { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); gap:0 60px; } .upcoming-ride:not(.upcoming-ride-with-photo) .upcoming-ride-description { grid-column:1; } .upcoming-ride:not(.upcoming-ride-with-photo) .upcoming-ride-plan { grid-column:2; grid-row:1/4; margin-top:0; } .upcoming-ride:not(.upcoming-ride-with-photo) .upcoming-ride-map { justify-self:start; } }
+@media(min-width:800px) { .upcoming-ride:not(.upcoming-ride-with-photo) .upcoming-ride-copy { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); gap:0 60px; } .upcoming-ride:not(.upcoming-ride-with-photo) .upcoming-ride-plan { grid-column:2; grid-row:1/4; align-self:start; margin-top:0; } }
 @media(max-width:799px) { .upcoming-ride-inner { padding:48px 20px 56px; } .upcoming-ride-heading { align-items:flex-start; flex-direction:column; gap:20px; padding-bottom:24px; } .upcoming-ride-with-photo .upcoming-ride-body { grid-template-columns:minmax(0,1fr); } .upcoming-ride-body { padding-top:28px; gap:32px; } .upcoming-ride-copy h3 { font-size:clamp(36px,8vw,54px); } .upcoming-ride-description { font-size:17px; } }
 @media(prefers-reduced-motion:reduce) { .upcoming-ride :is(a,button) { transition:none; } }

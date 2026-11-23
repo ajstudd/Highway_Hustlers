@@ -21,8 +21,13 @@ export async function createPostgresStore(connection, injectedSql) {
       await sql`INSERT INTO hh_member_workspace (id,state) VALUES (1,${JSON.stringify(emptyMemberState())}::jsonb) ON CONFLICT (id) DO NOTHING`;
       const [row] = await sql`SELECT revision,state FROM hh_member_workspace WHERE id=1`; return row;
     },
-    async saveMemberState(state, revision) {
-      const [row] = await sql`UPDATE hh_member_workspace SET state=${JSON.stringify(state)}::jsonb,revision=revision+1 WHERE id=1 AND revision=${revision} RETURNING revision`; return row || null;
+    async saveMemberState(state, revision, { revokeAccountId } = {}) {
+      const payload = JSON.stringify(state);
+      const [row] = revokeAccountId
+        ? await sql`WITH saved AS (UPDATE hh_member_workspace SET state=${payload}::jsonb,revision=revision+1 WHERE id=1 AND revision=${revision} RETURNING revision),
+            revoked AS (DELETE FROM hh_member_sessions WHERE account_id=${revokeAccountId} AND EXISTS (SELECT 1 FROM saved)) SELECT revision FROM saved`
+        : await sql`UPDATE hh_member_workspace SET state=${payload}::jsonb,revision=revision+1 WHERE id=1 AND revision=${revision} RETURNING revision`;
+      return row || null;
     },
     async putMemberSession(token, accountId, expires) { await sql`DELETE FROM hh_member_sessions WHERE expires<${Date.now()}`; await sql`INSERT INTO hh_member_sessions VALUES (${token},${accountId},${expires})`; },
     async memberSession(token) { const [row] = await sql`SELECT account_id AS "accountId" FROM hh_member_sessions WHERE token=${token} AND expires>${Date.now()}`; return row?.accountId || null; },
@@ -92,7 +97,12 @@ export function createLocalStore(filename) {
   return {
     ...localPhotos(transaction),
     getMemberState: () => transaction(d => { d.members ??= { revision: 0, state: emptyMemberState() }; return d.members; }),
-    saveMemberState: (state, revision) => transaction(d => { if (d.members?.revision !== revision) return null; d.members = { revision: revision+1, state }; return { revision: d.members.revision }; }),
+    saveMemberState: (state, revision, { revokeAccountId } = {}) => transaction(d => {
+      if (d.members?.revision !== revision) return null;
+      d.members = { revision: revision+1, state };
+      if (revokeAccountId) for (const [token, session] of Object.entries(d.memberSessions || {})) if (session.accountId === revokeAccountId) delete d.memberSessions[token];
+      return { revision: d.members.revision };
+    }),
     putMemberSession: (token, accountId, expires) => transaction(d => { d.memberSessions ??= {}; for (const [key,value] of Object.entries(d.memberSessions)) if (value.expires < Date.now()) delete d.memberSessions[key]; d.memberSessions[token] = { accountId, expires }; }),
     memberSession: token => transaction(d => d.memberSessions?.[token]?.expires > Date.now() ? d.memberSessions[token].accountId : null),
     logoutMember: token => transaction(d => { if (d.memberSessions) delete d.memberSessions[token]; }),

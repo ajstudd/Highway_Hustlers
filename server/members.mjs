@@ -12,6 +12,11 @@ import { riderCardId,dreamBikeView,memberGallery } from './member-extras.mjs';
 class MemberError extends Error { constructor(status,message){super(message);this.status=status;} }
 const fail = (status,message) => { throw new MemberError(status,message); };
 const field = (value,max) => { if(typeof value!=='string'||value.length>max||/[\u0000-\u001f]/.test(value)) fail(400,'Check your profile fields.');return value.trim(); };
+function activeAccount(state, accountId) {
+  const account = state.accounts.find(entry => entry.id === accountId);
+  if (!account) fail(401, 'Sign in again to continue.');
+  return account;
+}
 export function createMembers(env = process.env, injectedStore, fetcher = fetch, identityVerifier) {
   const production = env.VERCEL === '1' || env.NODE_ENV === 'production';
   const config = authConfiguration(env), cloudName = env.CLOUDINARY_CLOUD_NAME || 'jr5po5s7';
@@ -87,7 +92,7 @@ export function createMembers(env = process.env, injectedStore, fetcher = fetch,
       }
       if(action==='dream-bike'&&req.method==='PUT'){
         const name=field(body.name,180);
-        await mutateMembers(db,state=>{const a=state.accounts.find(a=>a.id===accountId);if((a.dreamBikeName||'')===name)return;a.dreamBikeName=name;a.dreamBikeId=null;a.dreamBikeRequestedAt=name?new Date().toISOString():null;});
+        await mutateMembers(db,state=>{const a=activeAccount(state,accountId);if((a.dreamBikeName||'')===name)return;a.dreamBikeName=name;a.dreamBikeId=null;a.dreamBikeRequestedAt=name?new Date().toISOString():null;});
         return send(200,{ok:true});
       }
       if(action==='profile'&&req.method==='PUT') {
@@ -97,7 +102,7 @@ export function createMembers(env = process.env, injectedStore, fetcher = fetch,
         if(body.bikeNicknames!==undefined){if(!body.bikeNicknames||typeof body.bikeNicknames!=='object'||Array.isArray(body.bikeNicknames)||Object.keys(body.bikeNicknames).length>6)fail(400,'Check your bike nicknames.');nicknames=Object.fromEntries(Object.entries(body.bikeNicknames).map(([id,value])=>[id,field(value,60)]));}
         const {garage}=await db.getGarage(seedGarage);
         if(!completeProfile({name,phone}))fail(400,'Enter your name and a valid phone number.');
-        await mutateMembers(db,state=>{const a=state.accounts.find(a=>a.id===accountId);a.name=name;a.phone=phone;const linked=linkedBikeIds(a).filter(id=>garage.bikes.some(b=>b.id===id));a.bikeIds=linked;delete a.bikeId;const owned=profileBikeIds(a,garage);
+        await mutateMembers(db,state=>{const a=activeAccount(state,accountId);a.name=name;a.phone=phone;const linked=linkedBikeIds(a).filter(id=>garage.bikes.some(b=>b.id===id));a.bikeIds=linked;delete a.bikeId;const owned=profileBikeIds(a,garage);
           // Library and hero-lineup model and colour are admin-managed; only nicknames are the member's.
           for(const [key,value]of Object.entries(bikeFields)){if(!owned.length)a[key]=value;}
           if(nicknames){a.bikeNicknames={};for(const id of owned)if(nicknames[id]!==undefined)a.bikeNicknames[id]=nicknames[id];}if(a.status==='new'&&!state.allowed.includes(a.email)){a.status='pending';a.requestedAt=new Date().toISOString();}});
@@ -107,7 +112,7 @@ export function createMembers(env = process.env, injectedStore, fetcher = fetch,
         if(!['join','leave'].includes(body.operation)||typeof body.rideId!=='string'||(body.bikeId!==undefined&&typeof body.bikeId!=='string'))fail(400,'Choose a ride and an action.');
         const {garage}=body.bikeId?await db.getGarage(seedGarage):{garage:null};
         await mutateMembers(db,state=>{
-          const a=state.accounts.find(a=>a.id===accountId),ride=state.rides.find(r=>r.id===body.rideId);
+          const a=activeAccount(state,accountId),ride=state.rides.find(r=>r.id===body.rideId);
           if(!ride||ride.status!=='open'||rideExpired(ride.details))fail(409,'This ride is no longer open.');
           if(body.operation==='leave'){ride.participants=ride.participants.filter(id=>id!==accountId);if(ride.bikeChoices)delete ride.bikeChoices[accountId];return;}
           if(!approved(state,a))fail(403,'Your HHR membership must be approved before joining a ride.');
@@ -120,7 +125,7 @@ export function createMembers(env = process.env, injectedStore, fetcher = fetch,
           ride.participants.push(accountId);setBike();
         });return send(200,{ok:true});
       }
-      if(action==='read-notifications'&&req.method==='POST'){await mutateMembers(db,state=>{state.accounts.find(a=>a.id===accountId).seenAt=new Date().toISOString();});return send(200,{ok:true});}
+      if(action==='read-notifications'&&req.method==='POST'){await mutateMembers(db,state=>{activeAccount(state,accountId).seenAt=new Date().toISOString();});return send(200,{ok:true});}
       if(['sign-photo','confirm-photo'].includes(action)&&req.method==='POST')fail(410,'Profile photos now use the secure uploader. Refresh your profile and try again.');
       fail(404,'Not found.');
     }catch(error){const status=error instanceof SyntaxError?400:error.status||503;send(status,{error:error.status?error.message:status===400?'Invalid JSON request.':'The member service is unavailable. Please try again shortly.'});}

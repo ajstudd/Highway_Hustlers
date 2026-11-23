@@ -21,18 +21,21 @@ export default function UpcomingRideEditor({ ride, change, cloudName, cloudReady
     <section className="admin-editor">
       <div className="admin-editor-heading"><div><h1>Upcoming ride</h1><p className="admin-muted">One next ride, just above the Instagram invitation.</p></div><button ref={previewButton} type="button" aria-expanded={preview} aria-controls="ride-draft-preview" onClick={() => setPreview(!preview)}><Eye size={16}/>{preview ? 'Hide preview' : 'Preview section'}</button></div>
       <fieldset disabled={busy} className="admin-fields">
-        <section className="admin-section"><div className="admin-section-title"><h2>Ride details</h2><label className="admin-publish"><input type="checkbox" checked={ride.published} onChange={e => update({ published: e.target.checked })}/>Include on publish</label></div>
-          <p className="admin-muted admin-small">Leave this off while planning. Required when included: location, description and meeting point.</p>
-          <label>Location name<input maxLength={100} value={ride.location} onChange={e => update({ location: e.target.value })}/></label>
+        <section className="admin-section"><div className="admin-section-title"><h2>Ride details</h2></div>
+          <div className="admin-two admin-field-note">
+            <label>Destination name<input maxLength={100} value={ride.location} onChange={e => update({ location: e.target.value })}/></label>
+            <label>Destination Google Maps link<input type="url" inputMode="url" maxLength={2048} value={ride.mapsUrl} onChange={e => update({ mapsUrl: e.target.value })} placeholder="Paste a Google Maps link"/></label>
+            <label>Meeting point name<input maxLength={240} value={ride.meetingPoint} onChange={e => update({ meetingPoint: e.target.value })}/></label>
+            <label>Meeting point Google Maps link<input type="url" inputMode="url" maxLength={2048} value={ride.meetingPointMapsUrl ?? ''} onChange={e => update({ meetingPointMapsUrl: e.target.value })} placeholder="Paste a Google Maps link"/></label>
+          </div>
+          <p className="admin-muted admin-small">You can paste a short link from Google Maps Share or the full URL for the place.</p>
+          <label>One-way road distance from Bhopal (km, optional)<input type="number" min="0" max="5000" step="any" value={ride.distanceKm ?? ''} onChange={e => update({ distanceKm: e.target.value === '' ? undefined : e.target.valueAsNumber })}/></label>
           <label>Description<textarea rows={3} maxLength={600} value={ride.description} onChange={e => update({ description: e.target.value })}/></label>
           <div className="admin-two admin-field-note"><label>Ride date (optional)<input type="date" min="2000-01-01" max="2199-12-31" value={ride.date} onChange={e => update({ date: e.target.value })}/></label><label>Meeting time (optional, IST)<input type="time" value={ride.meetingTime} onChange={e => update({ meetingTime: e.target.value })}/></label></div>
           {(ride.date || ride.meetingTime) && <button type="button" onClick={() => update({ date: '', meetingTime: '' })}>Clear date & time</button>}
           <div className="admin-two admin-field-note"><label>Enrolment opens (optional, IST)<input type="datetime-local" value={ride.enrollmentStart?.slice(0,16)||''} onChange={e=>update({enrollmentStart:e.target.value?`${e.target.value}:00+05:30`:undefined})}/></label><label>Enrolment closes (optional, IST)<input type="datetime-local" value={ride.enrollmentEnd?.slice(0,16)||''} onChange={e=>update({enrollmentEnd:e.target.value?`${e.target.value}:00+05:30`:undefined})}/></label></div>
           <p className="admin-muted admin-small">Members can join only inside this window. After closing, only an admin can add them. Members may still leave.</p>
-          <label>Meeting point<input maxLength={240} value={ride.meetingPoint} onChange={e => update({ meetingPoint: e.target.value })}/></label>
-          <label>Google Maps link (optional)<input type="url" inputMode="url" maxLength={2048} value={ride.mapsUrl} onChange={e => update({ mapsUrl: e.target.value })} placeholder="https://maps.app.goo.gl/…"/></label>
           <label>Notes (optional)<textarea rows={3} maxLength={1200} value={ride.notes} onChange={e => update({ notes: e.target.value })} placeholder="Anything riders should know before setting off."/></label>
-          <p className="admin-muted admin-small admin-field-note">All included details will be public. After the ride, turn off Include on publish, save and publish again to hide the section.</p>
         </section>
         <section className="admin-section"><div className="admin-section-title"><div><h2>Photos (optional)</h2><p className="admin-muted">Up to six. First photo opens the section; captions describe each view.</p></div></div>
           {!cloudReady && <p className="admin-warning">Uploads and the library need the Cloudinary credentials on the server. You can publish a ride without photos.</p>}

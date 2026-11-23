@@ -9,24 +9,41 @@ The existing Vite site stays on Vercel. `/admin` is the content dashboard;
 verified bike references, sessions and rate limits.
 Cloudinary stores and delivers photos/videos, prepared bike frames and a published
 JSON content snapshot. Normal public visits query **neither Neon nor the Cloudinary
-Admin API**. Server secrets never use a `VITE_` prefix; only public delivery
-configuration uses the optional `VITE_CLOUDINARY_CLOUD_NAME` / `VITE_CONTENT_SNAPSHOT_ID`.
+Admin API**. The `VITE_` prefix is for browser-visible configuration. Server
+secrets must remain in server-only variables.
+
+## Save drafts and publish selected changes
+
+Use **Save draft** on the page you are editing. Each button saves that page's
+changes. Open **Review & publish** to see what differs from the current website.
+Check the changes to release, then choose **Publish selected**. An unchecked
+change remains saved for later. The review shows which pages have unsaved edits
+and any saved items that need more information before publication.
+
+Albums can be published individually. The hero review lists the affected riders
+and applies the lineup as one change because it uses the saved members, bikes,
+and assignments together. Membership and photo moderation actions save as you
+take them. Adding a photo to an album changes its draft.
 
 ## Upcoming ride
 
 `/admin` → **Upcoming ride** manages one next ride, displayed between the favourite
 mornings and the closing Instagram invitation. No sample ride is seeded in production.
 
-- Set the location, description and meeting point. These are required when **Include
-  on publish** is enabled. You can save an incomplete draft with that switch off.
+- Set the location, description and meeting point before publishing a ride. You
+  can save an incomplete draft while you plan.
 - Date and meeting time are optional; meeting time is in India Standard Time (IST).
-- Notes, an HTTPS Google Maps link and up to six photos are optional. Use the existing
+- Enter the destination and meeting-point names and paste each Google Maps link
+  into its own field. A short link from **Share → Copy link** or the full URL of
+  a selected place both work. The ride announcement shows each link with its
+  location. Enter the one-way road distance from Bhopal if you know it.
+- Notes and up to six photos are optional. Use the existing
   compressed uploader (25 MB source limit) or pick photos from the Cloudinary library.
   Change captions/order or remove references without deleting originals.
-- **Preview section** shows the current draft without publishing. **Save draft** then
-  **Publish website** makes the announcement live, like other content sections.
-- To hide a ride manually, turn off **Include on publish**, save and publish. To cancel
-  it and notify members, use **Cancel ride & notify members**. With no published ride, the entire section
+- **Preview section** shows the current draft. Save the draft, then select the
+  ride in **Review & publish** to make the announcement live.
+- To take a ride off the website, choose its **Remove** action in the review. To
+  cancel it and notify members, use **Cancel ride & notify members**. With no published ride, the entire section
   is omitted, including its space. Dated rides now roll over automatically as described
   in the member guide. The main Ride with us link targets the announcement
   when present, and the Instagram invitation otherwise.
@@ -36,8 +53,7 @@ idempotent, non-destructive migration. Ride edits share the gallery's optimistic
 revision counter, so stale saves/publications conflict rather than overwrite newer
 work. Saving places preserves the ride and vice versa. The public JSON adds an
 optional `upcomingRide`; older publications and last-good browser caches remain
-valid. All publication paths (dashboard, first-build bootstrap, recovery script)
-include only the eligible saved ride. Public delivery still makes zero Neon queries.
+valid. Public delivery still makes zero Neon queries.
 Hidden content is not private media; do not put sensitive details into a public ride.
 
 ## One-time production setup
@@ -79,9 +95,9 @@ Hidden content is not private media; do not put sensitive details into a public 
 5. Open `https://YOUR-DOMAIN/admin`, sign in, and choose a place. Use **Choose from
    Cloudinary** to select the four existing uploads. New uploads go directly from
    the browser to Cloudinary using a signature from the authenticated API.
-6. Reorder media: the first item becomes the cover. Add captions and coordinates,
-   choose **Include on publish**, then **Save draft**. This saves to Neon without
-   changing the live site. **Publish website** validates the saved content, writes an
+6. Reorder the media so the cover is first. Add captions, the Google Maps
+   destination link and the one-way road distance if known. Choose **Save draft**,
+   then select the album in **Review & publish** when it is ready. Publishing writes an
    immutable recovery snapshot, replaces the public JSON alias and requests CDN
    invalidation. Other visitors get the publication on their next load; an already
    open tab is not polled every minute. Same-browser publications notify open website
@@ -174,9 +190,8 @@ frames and admin changes are not overwritten.
 - **Members**: the initial catalogue deduplicates Junaid A's two entries into one
   member, while keeping Junaid K separate. Deactivating a member excludes all their
   hero entries from the next publication. It does not delete their bikes or images.
-- **Bike library**: metadata and image sets are separate from members. Draft and
-  hidden bikes are never exported. Published status means eligible for the hero;
-  a visible lineup assignment and an active member are still required.
+- **Bike library** uses **Hero availability** to determine which bikes can appear
+  in the lineup. The lineup also needs a visible assignment and an active member.
 - **Hero lineup**: assign/reassign members and bikes, toggle individual entries,
   change order and preview the actual hero before publishing. Multiple members may
   reference the same image set without duplicating the files. An empty lineup is
@@ -220,10 +235,9 @@ saved draft. Ordinary upload failures leave the preceding public alias intact.
 Default public JSON: `https://res.cloudinary.com/jr5po5s7/raw/upload/hh-site/published.json`.
 To use another Cloudinary product environment or snapshot namespace, set the server's
 `CLOUDINARY_CLOUD_NAME` / `CONTENT_SNAPSHOT_ID` **and** matching public build variables
-`VITE_CLOUDINARY_CLOUD_NAME` / `VITE_CONTENT_SNAPSHOT_ID`. Only these public names/paths
-belong in `VITE_` variables. Preview deployments must have an explicit separate
-`CONTENT_SNAPSHOT_ID` or publishing is refused; use a separate development DB/branch
-and a matching preview public path as well.
+`VITE_CLOUDINARY_CLOUD_NAME` / `VITE_CONTENT_SNAPSHOT_ID`. Preview deployments must
+have a separate `CONTENT_SNAPSHOT_ID` to publish. Use a separate development
+database or branch and a matching preview public path as well.
 
 Public clients request the snapshot on load, then retain the last successfully
 validated copy in optional browser storage for outages. They never substitute the

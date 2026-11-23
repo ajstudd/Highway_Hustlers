@@ -23,6 +23,10 @@ const cloud = async (url, options) => {
     if (failAlias && id === 'hh-site/published.json') return new Response('', { status: 500 });
     assets.set(id, json); return Response.json({ public_id: id, version: uploads });
   }
+  if (url.startsWith('https://res.cloudinary.com/')) {
+    const snapshot = assets.get('hh-site/published.json');
+    return snapshot ? Response.json(snapshot) : new Response('', { status: 404 });
+  }
   lookups++;
   const id = decodeURIComponent(url.split('/upload/')[1]);
   return Response.json({ public_id: id, resource_type: 'image', version: 12345, format: 'webp', width: 1200, height: 720, bytes: 10000 });
@@ -61,12 +65,17 @@ try {
   const publish = {revision:doc.revision,garageRevision:saved.data.revision};
   const count = uploads;
   assert.equal((await request('publish','POST',{...publish,garageRevision:0},cookie)).status,409); assert.equal(uploads,count);
+  const review = await request('publish-review', 'GET', undefined, cookie);
+  assert.equal(review.status, 200);
+  assert.deepEqual(review.data.changes.map(change => change.id), ['hero']);
+  assert(review.data.changes[0].details.some(detail => detail.startsWith('Remove ')));
+  const selection = {...publish, reviewId: review.data.reviewId, selection:['hero']};
   failAlias = true;
-  assert.equal((await request('publish','POST',publish,cookie)).status,502);
+  assert.equal((await request('publish','POST',selection,cookie)).status,502);
   assert.equal(assets.get('hh-site/published.json').riders.length,13,'failed alias update keeps the previous live snapshot');
   assert.equal((await request('editor','GET',undefined,cookie)).data.published.garageRevision,0);
   failAlias = false;
-  assert.equal((await request('publish','POST',publish,cookie)).status,200);
+  assert.equal((await request('publish','POST',selection,cookie)).status,200);
   const snapshot = assets.get('hh-site/published.json');
   assert.equal(snapshot.riders.length,9);
   assert(!snapshot.riders.some(r => r.id === 'classic-350' || r.id === 'tvs-raider-125' || r.name === 'Junaid A'));

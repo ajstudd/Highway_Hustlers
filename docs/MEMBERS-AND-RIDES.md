@@ -2,28 +2,26 @@
 
 ## Rider cards, dream bikes and personal gallery
 
-Admins can add/remove approved, complete member profiles in open, closed and
-completed rides from **Membership & enrolments → Ride enrolments**. Normal members
-still cannot self-enrol after the window or ride date. Cancelled rides remain
-locked. Historical additions notify the member and enable the existing two-photo
-contribution allowance; they do not republish an announcement or change its date.
-Repeated identical additions do not duplicate notifications or participants.
+**Membership & enrolments** has tabs for **Requests**, **Allowed emails**,
+**Ride enrolments**, **Bike requests**, **Profile links** and **Non-members**.
+Use **Non-members** to remove an unconfirmed profile and end its member sessions.
+The person can sign in again to create a new profile. The removal action protects
+confirmed members and profiles with member or ride records.
 
-Place editing now starts with a Google Maps link and **Fill location from link**.
-Explicit pin coordinates and coordinate search links are parsed directly; supported
-Google short links are expanded server-side. Camera centres (`@lat,lon`) are not
-treated as destination pins. Links without a pin need a full place URL or manual
-coordinates under Advanced. Remote resolution is authenticated, rate-limited,
-bounded to five redirects/seven seconds and restricted to known Google Maps hosts.
-The saved Maps link survives archiving and content sanitisation.
+In **Ride enrolments**, choose an upcoming or past ride to expand its roster.
+An admin can add or remove approved members and use **Approve membership & add**
+to approve a pending request and add that person in one step. Cancelled rides are
+read-only. Members can self-enrol within the ride's enrolment window. Historical
+additions notify the member and enable the two-photo contribution allowance.
 
-Road distance is optional and hidden on public albums when unknown; it is never
-guessed from straight-line distance or a map camera. Existing reviewed distances
-remain unchanged. Fully automatic road distances need a separately configured
-routing provider; this implementation enables no billed Google services. Google
-Maps URLs themselves need no key, whereas Places/Routes APIs require separate
-Google Maps Platform credentials and billing. Google OAuth login credentials are
-not Maps API credentials.
+Place editing uses a Google Maps destination link and an optional one-way road
+distance from Bhopal. Paste the short link from **Share → Copy link** or the full
+URL of the selected place. The album's **Find this place** link opens the saved
+URL in Google Maps. When a full URL contains an explicit pin, its coordinates are
+stored automatically. Existing albums with only coordinates keep working.
+
+Upcoming rides have separate names and Google Maps links for the meeting point
+and destination. Leave the distance blank to hide it from riders.
 
 Approved, allowlisted members see **Rider card** on their profile. Its permanent
 identifier is `HHR-` followed by their complete immutable account ID, independent
@@ -36,7 +34,7 @@ uses [node-qrcode](https://github.com/soldair/node-qrcode), without an external 
 service. New downloads are shown only while membership is approved.
 
 Any signed-in account can save a dream bike name (up to 180 characters) under
-**Dream bike**. Administrators see it in **Membership & enrolments → Dream bike
+**Dream bike**. Administrators see it in **Membership & enrolments → Bike
 requests** and can attach a prepared rotation from the saved bike library, or
 remove that display. Sets with fewer than two frames are excluded. Admins should
 match the requested model before assigning. Assignments notify the member and
@@ -73,7 +71,7 @@ Anyone with a supported Google account can sign in. Sign-in alone is not members
 
 1. An email on the dashboard's allowlist receives approved membership at sign-in.
 2. Everyone else completes their name and phone number. Saving submits a pending
-   membership request, visible under **Membership & enrolments**.
+   membership request, visible under **Membership & enrolments → Requests**.
 3. An administrator approves or declines the request. Approval adds the exact email
    to the allowlist. No automatic matching to a hero rider's name is performed.
 4. Only an approved, allowlisted account with a complete profile can join a ride.
@@ -151,11 +149,11 @@ available as a fallback, and `ADMIN_PASSWORD_HASH` is still required.
 ## Ride management and deadlines
 
 The public **Join this ride** link only appears for a ride that has a ride ID.
-Rides saved before the member feature have none: open `/admin` (which assigns one)
-and press **Publish website**.
+For rides saved before the member feature, open `/admin` to assign an ID and
+select the ride update in **Review & publish**.
 
-Save the upcoming ride as before, then **Publish website** to announce it to member
-profiles as well as the public site. A stable server-generated ride ID separates
+Save the ride draft, then select it in **Review & publish** to announce it to
+member profiles and the public site. A stable server-generated ride ID separates
 one outing from the next; editing a location or date never transfers attendance to
 a new ride accidentally.
 
@@ -195,8 +193,8 @@ After a dated ride has ended:
 
 - Save one unpublished **Our favourite mornings** place draft, with the ride's
   location, up to 400 characters of description, photos and ride date/provenance.
-- Require a human review of the album's actual distance and coordinates before it
-  can be published. We do not invent route distances or show a fake map location.
+- Carry over the destination link and one-way road distance. If the ride has no
+  destination link, paste one before publishing the album.
 - Mark the member ride completed, retain its attendees, and add a profile update.
 - Remove an expired announcement from the existing public JSON, without publishing
   any other saved edits. The rest of that last publication stays unchanged.
@@ -284,8 +282,8 @@ Server-side limits (browser compression is not trusted):
 
 Uploaded photos go to **Ride photos** in the dashboard as *Awaiting review*. An
 admin can approve a photo, leave it unselected, or add an approved photo to any
-album draft. Nothing appears on the public site until it is added to an album and
-**Publish website** is pressed. Unselected photos stay in the catalogue for later
+album draft. The photo appears on the website after the album is selected and
+published from **Review & publish**. Unselected photos stay in the catalogue for later
 use. Like profile photos, uploaded files have unlisted but public Cloudinary URLs;
 they are not private storage.
 

@@ -17,7 +17,6 @@ export function createRideCron(env=process.env,injectedStore,fetcher=fetch) {
     try{
       db=injectedStore||await createPostgresStore(env.DATABASE_URL);await db.getGarage(seedGarage);
       lock=sessionToken();if(!await db.acquirePublish(lock,Date.now()))return send(409,{error:'A publication is running. Retry shortly.'});
-      const archived=await archiveExpiredRide(db,seedPlaces);
       await mutateMembers(db,state=>{for(const ride of state.rides.filter(r=>r.status==='open'&&rideExpired(r.details))){ride.status='completed';notice(state,'Ride completed',`${ride.details.location}: thanks for riding with HHR.`);}});
       const publisher=createPublisher(env,fetcher);
       const response=await fetcher(publisher.snapshotUrl,{cache:'no-store',signal:AbortSignal.timeout(10000)});
@@ -25,7 +24,7 @@ export function createRideCron(env=process.env,injectedStore,fetcher=fetch) {
       const text=await response.text();if(text.length>1500000)throw Error('Oversized snapshot.');
       const snapshot=validateSnapshot(JSON.parse(text));
       if(snapshot.cloudName!==publisher.cloudName)throw Error('Mismatched public media environment.');
-      if(snapshot.upcomingRide&&rideExpired(snapshot.upcomingRide))await archiveExpiredRide(db,seedPlaces,Date.now(),snapshot.upcomingRide);
+      const archived = rideExpired(snapshot.upcomingRide) ? await archiveExpiredRide(db,seedPlaces,Date.now(),snapshot.upcomingRide) : null;
       let removed=false;
       if(snapshot.upcomingRide&&rideExpired(snapshot.upcomingRide)){
         const revision=`expiry-${lock.slice(0,24)}`,updated={...snapshot,upcomingRide:null,revision,publishedAt:new Date().toISOString()};

@@ -146,18 +146,40 @@ dialog.admin-library { color:#f2ebdd; background:#181613; border:1px solid #5148
 .admin-publishing { position:sticky; top:0; z-index:4; display:flex; align-items:center; justify-content:space-between; gap:24px; padding:18px 32px; border-block:1px solid var(--admin-border); background:#181613; }
 .admin-publishing strong { font-size:1rem; font-weight:600; }
 .admin-publishing p { margin-top:4px; }
-.admin-publishing-actions { display:flex; gap:10px; flex-shrink:0; }
+.admin-publishing>button { flex-shrink:0; }
+.admin-draft-bar { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 32px; border-bottom:1px solid var(--admin-border); }
+.admin-draft-bar strong,.admin-draft-bar span { display:block; }
+.admin-draft-bar span { font-size:13px; }
+.admin-draft-bar>button { flex-shrink:0; }
+.admin-unsaved-dot { width:7px; height:7px; flex-shrink:0; border-radius:50%; background:var(--admin-accent); }
+.admin-review-list { display:grid; gap:8px; margin-top:20px; }
+.admin-review-list>li { border:1px solid var(--admin-border); border-radius:6px; padding:12px; }
+.hh-admin .admin-review-choice { display:flex; flex-direction:row; align-items:flex-start; gap:10px; cursor:pointer; }
+.admin-review-choice input { flex-shrink:0; margin-top:2px; }
+.admin-review-choice strong,.admin-review-choice small { display:block; }
+.admin-review-choice small,.admin-review-detail { color:var(--admin-muted); font-size:13px; }
+.admin-review-detail { margin:6px 0 0 28px; }
+.admin-review-detail li+li { margin-top:4px; }
+.admin-review-empty,.admin-review-error { margin-top:20px; }
+.admin-review footer { flex-wrap:wrap; }
 .admin-global-feedback { max-width:1500px; margin:auto; padding:16px 32px; min-height:58px; }
 .admin-editor-heading { position:static; }
 .admin-lineup-editor { max-width:1500px; margin:auto; }
 .admin-membership { max-width:1240px; margin:auto; }
-.admin-membership .admin-section>h2 { font-size:22px; }
+.admin-membership-tabs { display:flex; flex-wrap:wrap; gap:6px; margin:12px 0 20px; padding-bottom:12px; border-bottom:1px solid var(--admin-border); }
+.admin-membership-tabs button[aria-selected=true] { background:#30281d; color:#ffd28b; border-color:#7c5b2e; }
+.admin-membership-feedback:not(:empty) { display:grid; gap:8px; margin-bottom:20px; }
+.admin-membership-panel>h2 { font-size:22px; }
 .admin-allow-form { display:flex; align-items:flex-end; gap:16px; margin-block:20px; flex-wrap:wrap; }
-.admin-allow-form>label { flex:1; min-width:200px; }
+.admin-allow-form>label { flex:1; min-width:min(100%,200px); }
 .admin-requests article,.admin-allowed li,.admin-member-ride li { display:flex; align-items:center; justify-content:space-between; gap:20px; padding-block:18px; border-bottom:1px solid var(--admin-border); flex-wrap:wrap; }
-.admin-requests p,.admin-allowed span,.admin-member-ride p { overflow-wrap:anywhere; }
-.admin-member-ride { padding-block:28px; border-top:1px solid var(--admin-border); }
-.admin-member-ride:first-of-type { margin-top:28px; }
+.admin-requests p,.admin-allowed p,.admin-allowed span,.admin-member-ride p { overflow-wrap:anywhere; }
+.admin-member-ride { padding:16px; border:1px solid var(--admin-border); border-radius:8px; }
+.admin-member-ride summary { cursor:pointer; min-height:44px; padding-block:8px; }
+.admin-member-ride summary strong { margin-left:4px; }
+.admin-member-ride summary span { display:block; margin-left:19px; font-size:13px; }
+.admin-ride-roster { margin-top:8px; border-top:1px solid var(--admin-border); }
+.admin-member-ride .admin-allow-form { margin-bottom:0; }
 .admin-profile-bike { display:flex; flex-direction:column; gap:12px; max-width:100%; min-width:0; }
 .admin-profile-bike>form { display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; }
 .admin-profile-bike>form>label { min-width:0; flex:1 1 260px; }
@@ -206,8 +228,8 @@ dialog.hh-hero-preview { width:min(1360px,calc(100vw - 32px)); max-height:94dvh;
 }
 @media(max-width:600px) {
   .admin-sections { padding:12px 16px; gap:4px; }
-  .admin-publishing { padding:14px 20px; flex-direction:column; gap:12px; align-items:stretch; }
-  .admin-publishing-actions { justify-content:flex-end; }
+  .admin-membership-tabs button { flex:1 1 calc(50% - 6px); }
+  .admin-publishing,.admin-draft-bar { padding:12px 20px; gap:12px; }
   .admin-publishing p { font-size:.75rem; }
   .admin-global-feedback { padding-inline:20px; }
   .admin-bike-preview { height:240px; }
@@ -227,4 +249,5 @@ dialog.hh-hero-preview { width:min(1360px,calc(100vw - 32px)); max-height:94dvh;
 .admin-auth-box .admin-auth-divider { margin-top:28px; font-size:13px; }
 .admin-auth-box .admin-auth-divider + form { margin-top:12px; }
 .admin-bike-source { flex-shrink:0; font-size:13px; padding:0 4px; }
-.admin-place-location{margin-top:24px}.admin-place-location>button{margin-bottom:16px}.admin-place-location>.admin-publish{margin:18px 0}.admin-place-location details{margin-top:18px;padding:16px;border:1px solid rgb(var(--paper)/.18);border-radius:8px}.admin-place-location summary{cursor:pointer;min-height:28px}.admin-place-location details[open] summary{margin-bottom:16px}
+.admin-place-location { margin-top:24px; }
+.admin-place-location>p { margin-top:8px; }

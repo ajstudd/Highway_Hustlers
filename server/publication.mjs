@@ -6,6 +6,7 @@ import { cleanGarage, publicRiders } from '../shared/garage.mjs';
 import { cleanPlaces } from './content.mjs';
 import { uploadSignature } from './uploads.mjs';
 import { cleanUpcomingRide } from '../shared/upcoming-ride.mjs';
+import { validateSnapshot } from '../shared/public-snapshot.mjs';
 
 export { seedGarage, seedPlaces, localFramePaths };
 export function snapshotOf(places, garage, cloudName, revision, publishedAt = new Date().toISOString(), upcomingRide = null) {
@@ -39,6 +40,21 @@ export function createPublisher(env, fetcher = fetch) {
       if (!local) throw Error('Local publishing is not enabled.');
       try { return JSON.parse(await readFile(`${local}.published.json`, 'utf8')); }
       catch (error) { if (error.code !== 'ENOENT') throw error; return snapshotOf(seedPlaces, seedGarage, cloudName, 'local-seed'); }
+    },
+    async readLive(expectedRevision) {
+      let value;
+      if (local) value = await this.readLocal();
+      else {
+        const response = await fetcher(snapshotUrl, { cache: 'no-store', signal: AbortSignal.timeout(10000) });
+        if (response.status === 404 && !expectedRevision) return null;
+        if (!response.ok || Number(response.headers.get('content-length')) > 1500000) throw Error('Public content is unavailable.');
+        const json = await response.text();
+        if (Buffer.byteLength(json) > 1500000) throw Error('Public content is too large.');
+        value = JSON.parse(json);
+      }
+      const snapshot = validateSnapshot(value);
+      if (snapshot.cloudName !== cloudName || (expectedRevision && snapshot.revision !== expectedRevision)) throw Error('The live publication is still updating.');
+      return snapshot;
     },
     async publish(snapshot, releaseId) {
       if (!ready) throw Error('Publishing needs Cloudinary credentials and a separate snapshot ID for Preview environments.');

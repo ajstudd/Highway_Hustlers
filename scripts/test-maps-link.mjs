@@ -1,11 +1,15 @@
 import assert from 'node:assert/strict';
 import { coordinatesFromLink,googleMapsUrl,resolveMapsLink } from '../server/maps-link.mjs';
+import { savedMapPin } from '../shared/maps-link.mjs';
 import { cleanPlaces } from '../server/content.mjs';
 assert.deepEqual(coordinatesFromLink('https://www.google.com/maps/search/?api=1&query=23.12,77.45'),{lat:23.12,lon:77.45});
 const pin='https://www.google.com/maps/place/Midghat+view+point/@23,77,12z/data=!3d22.91!4d77.51';
 assert.deepEqual(coordinatesFromLink(pin),{lat:22.91,lon:77.51});
 assert.equal(coordinatesFromLink('https://www.google.com/maps/@23,77,12z'),null,'camera position is not a destination pin');
 assert.equal(coordinatesFromLink('https://www.google.com/maps?q=91,181'),null);
+assert.deepEqual(savedMapPin('https://www.google.com/maps/search/?api=1&query=0%2C-77.45&query_place_id=ChIJ-test-place'),{lat:0,lon:-77.45});
+assert.equal(savedMapPin('https://www.google.com/maps/?q=%E0'),null);
+assert.equal(savedMapPin('https://maps.app.goo.gl/abc'),null);
 for(const bad of ['http://www.google.com/maps?q=23,77','https://www.google.com.evil.test/maps','https://localhost/maps','https://127.0.0.1/maps','https://user:pw@google.com/maps','https://google.com:444/maps'])assert.throws(()=>googleMapsUrl(bad));
 let calls=0;const full=await resolveMapsLink(pin,()=>{throw Error('Full pin must not make network requests');});assert.equal(full.name,'Midghat view point');
 const short=await resolveMapsLink('https://maps.app.goo.gl/abc',async()=>{calls++;return new Response(null,{status:302,headers:{Location:pin}});});assert.equal(calls,1);assert.equal(short.lat,22.91);
@@ -13,4 +17,11 @@ await assert.rejects(resolveMapsLink('https://maps.app.goo.gl/abc',async()=>new 
 calls=0;await assert.rejects(resolveMapsLink('https://maps.app.goo.gl/abc',async()=>{calls++;return new Response(null,{status:302,headers:{Location:'https://maps.app.goo.gl/abc'}});}));assert.equal(calls,5,'redirect loops are bounded');
 const place={id:'test-place',name:'Midghat',description:'Test',kind:'Sunday morning',km:0,lat:22.91,lon:77.51,published:false,media:[],mapsUrl:pin,distanceUnknown:true};
 const saved=cleanPlaces([place])[0];assert.equal(saved.mapsUrl,pin);assert.equal(saved.distanceUnknown,true);assert.throws(()=>cleanPlaces([{...place,mapsUrl:'https://evil.test/'}]));
+const linkedPlace = { ...place, lat: 0, lon: 0, legacyId: 'kerwa', needsLocationReview: true, published: true };
+const withShortLink = cleanPlaces([{ ...linkedPlace, mapsUrl: 'https://maps.app.goo.gl/abc' }])[0];
+assert.equal(withShortLink.mapsUrl, 'https://maps.app.goo.gl/abc');
+assert.equal(withShortLink.needsLocationReview, undefined);
+assert.throws(() => cleanPlaces([{ ...linkedPlace, mapsUrl: '' }]), /Add a Google Maps destination link/);
+const withFullLink = cleanPlaces([linkedPlace])[0];
+assert.deepEqual({ lat: withFullLink.lat, lon: withFullLink.lon }, { lat: 22.91, lon: 77.51 });
 console.log('Maps links: explicit pins, camera rejection, short link expansion, bounded redirects, SSRF host restrictions and optional distances passed.');

@@ -36,7 +36,7 @@ const cloud=async(url,options={})=>{
   if(url.startsWith('https://res.cloudinary.com/'))return assets.has('hh-site/published.json')?Response.json(assets.get('hh-site/published.json')):new Response('',{status:404});
   throw Error('Unexpected provider call');
 };
-const identities={first:{sub:'sub-first',email:'first@gmail.com',name:'First Rider'},second:{sub:'sub-second',email:'second@gmail.com',name:'Second Rider'},boss:{sub:'sub-boss',email:'boss@gmail.com',name:'Boss'}};
+const identities={first:{sub:'sub-first',email:'first@gmail.com',name:'First Rider'},second:{sub:'sub-second',email:'second@gmail.com',name:'Second Rider'},boss:{sub:'sub-boss',email:'boss@gmail.com',name:'Boss'},visitor:{sub:'sub-visitor',email:'visitor@gmail.com',name:'Visitor'},guest:{sub:'sub-guest',email:'guest@gmail.com',name:'Upcoming Guest'}};
 let cms,member,cron;
 const server=createServer((req,res)=>req.url.startsWith('/api/cms')?cms(req,res):req.url.startsWith('/api/ride-rollover')?cron(req,res):member(req,res));await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const base=`http://127.0.0.1:${server.address().port}`;
@@ -92,6 +92,18 @@ try{
   assert.equal((await account(first,'confirm-photo','POST',{})).status,410);
   let workspace=(await admin('membership')).data;assert.equal(workspace.accounts.filter(a=>a.status==='pending').length,1);
   const firstId=home.account.id;
+  const visitor = await googleLogin('visitor');
+  const visitorId = (await account(visitor, 'session')).data.account.id;
+  assert.equal((await admin('membership')).data.accounts.find(a=>a.id===visitorId).canRemove, true);
+  assert.equal((await request('/api/cms?action=membership', 'POST', { operation: 'remove-account', accountId: visitorId }, visitor)).status, 401);
+  assert.equal((await admin('membership', 'POST', { operation: 'remove-account', accountId: visitorId })).status, 200);
+  assert.equal((await pg.query('SELECT 1 FROM hh_member_sessions WHERE account_id=$1', [visitorId])).rows.length, 0);
+  assert.equal((await account(visitor, 'session')).data.account, null);
+  assert.equal((await account(visitor, 'home')).status, 401);
+  const returning = await googleLogin('visitor');
+  const returningId = (await account(returning, 'session')).data.account.id;
+  assert.notEqual(returningId, visitorId, 'a new sign-in creates a fresh unconfirmed profile');
+  assert.equal((await admin('membership', 'POST', { operation: 'remove-account', accountId: visitorId })).status, 200, 'retrying removal does not remove the new profile');
   assert.equal(home.cardId,null,'pending applicants do not receive member cards');
   assert.equal((await account(first,'dream-bike','PUT',{name:'Ducati Panigale V4',dreamBikeId:'pulsar-ns125',accountId:'someone-else'})).status,200);
   assert.equal((await account(first,'home')).data.dreamBike.name,'Ducati Panigale V4');
@@ -180,6 +192,18 @@ try{
   assert.equal((await account(first,'enroll','POST',{operation:'join',rideId})).status,409,'server enforces deadline');
   assert.equal((await admin('ride-participant','POST',{operation:'add',accountId:firstId,rideId})).status,200,'admin can override enrolment deadline');
   assert.equal((await account(first,'home')).data.rides[0].joined,true);
+  const guest = await googleLogin('guest');
+  const guestId = (await account(guest,'session')).data.account.id;
+  assert.equal((await admin('ride-participant','POST',{operation:'approve-add',accountId:guestId,rideId})).status,400,'profile is required before approval from a ride');
+  assert.equal((await account(guest,'profile','PUT',{name:'Upcoming Guest',phone:'9999900011'})).status,200);
+  assert.equal((await admin('ride-participant','POST',{operation:'add',accountId:guestId,rideId})).status,400);
+  assert.equal((await admin('ride-participant','POST',{operation:'approve-add',accountId:guestId,rideId})).status,200);
+  const guestHome = (await account(guest,'home')).data;
+  assert.equal(guestHome.account.status,'approved');assert.equal(guestHome.rides[0].joined,true);
+  const guestNotices = (await db.getMemberState()).state.notifications.filter(n=>n.recipient===guestId).length;
+  assert.equal((await admin('ride-participant','POST',{operation:'approve-add',accountId:guestId,rideId})).status,200);
+  assert.equal((await db.getMemberState()).state.notifications.filter(n=>n.recipient===guestId).length,guestNotices);
+  assert.equal((await admin('membership','POST',{operation:'remove-account',accountId:guestId})).status,409);
   await admin('membership','POST',{operation:'remove-allow',email:'first@gmail.com'});
   assert.equal((await account(first,'home')).data.rides[0].joined,false,'revocation immediately removes open entries');
   assert.equal((await account(first,'enroll','POST',{operation:'join',rideId})).status,403);
@@ -187,6 +211,7 @@ try{
   // Re-signing with the same Google subject keeps edits and phone/photo; a
   // changed verified email loses membership until approved for that address.
   identities.first.email='changed@gmail.com';const changed=await googleLogin('first');assert.equal((await account(changed,'home')).data.account.status,'new');
+  assert.equal((await admin('membership','POST',{operation:'remove-account',accountId:firstId})).status,409,'a previously confirmed member is protected after an email change');
   identities.first.email='first@gmail.com';await googleLogin('first');
   current=(await admin('editor')).data;
   assert.equal((await admin('cancel-ride','POST',{revision:current.revision})).status,200);
@@ -197,18 +222,22 @@ try{
   current=(await admin('editor')).data;
   await admin('new-ride','POST',{revision:current.revision});current=(await admin('editor')).data;
   saved=await admin('upcoming-ride','PUT',{revision:current.revision,upcomingRide:ride});await admin('publish','POST',{revision:saved.data.revision,garageRevision:current.garageRevision});
-  const pastRide={...saved.data.upcomingRide,date:'2020-01-01'};
+  const pastRide={...saved.data.upcomingRide,date:'2020-01-01',mapsUrl:'https://www.google.com/maps/search/?api=1&query=23.12,77.45',meetingPointMapsUrl:'https://maps.app.goo.gl/test-meeting-point',distanceKm:43.5};
   await db.saveUpcomingRide(pastRide,saved.data.revision);
   const originalSnapshot=assets.get('hh-site/published.json');assets.set('hh-site/published.json',{...originalSnapshot,upcomingRide:pastRide});
   const beforeArchive=await db.get(seedPlaces);await db.save([{...beforeArchive.places[0],name:'Secret draft name'},...beforeArchive.places.slice(1)],beforeArchive.revision);
   assert.equal((await request('/api/ride-rollover')).status,401);
   const rollover=await request('/api/ride-rollover','GET',undefined,'',{Authorization:'Bearer cron-test-secret'});assert.equal(rollover.status,200);
-  const archived=await db.get(seedPlaces);assert.equal(archived.upcomingRide,null);assert.equal(archived.places[0].published,false);assert.equal(archived.places[0].sourceRideId,pastRide.id);assert.equal(archived.places[0].needsLocationReview,true);
+  const archived=await db.get(seedPlaces);assert.equal(archived.upcomingRide,null);assert.equal(archived.places[0].published,false);assert.equal(archived.places[0].sourceRideId,pastRide.id);assert.equal(archived.places[0].needsLocationReview,false);
+  assert.deepEqual({lat:archived.places[0].lat,lon:archived.places[0].lon},{lat:23.12,lon:77.45});
+  assert.equal(archived.places[0].mapsUrl,pastRide.mapsUrl);assert.equal(archived.places[0].distanceUnknown,false);assert.equal(archived.places[0].km,43.5);
   assert.equal(assets.get('hh-site/published.json').upcomingRide,null);assert(!JSON.stringify(assets.get('hh-site/published.json')).includes('Secret draft name'));
   await request('/api/ride-rollover','GET',undefined,'',{Authorization:'Bearer cron-test-secret'});assert.equal((await db.get(seedPlaces)).places.filter(p=>p.sourceRideId===pastRide.id).length,1,'rollover retry never duplicates albums');
-  const legacy={...pastRide};delete legacy.id;
+  const legacy={...pastRide,mapsUrl:'',distanceKm:undefined};delete legacy.id;
   await archiveExpiredRide(db,seedPlaces,Date.now(),legacy);await archiveExpiredRide(db,seedPlaces,Date.now(),legacy);
   assert.equal((await db.get(seedPlaces)).places.filter(p=>p.sourceRideId?.startsWith('legacy-')).length,1,'pre-ID publications also archive exactly once');
+  assert.equal((await db.get(seedPlaces)).places[0].needsLocationReview,true);
+  assert.equal((await db.get(seedPlaces)).places[0].distanceUnknown,true);
   await mutateMembers(db,state=>{const a=state.accounts.find(a=>a.id===firstId);a.status='approved';if(!state.allowed.includes(a.email))state.allowed.push(a.email);const r=state.rides.find(r=>r.id===pastRide.id);r.status='completed';r.participants=[];});
   assert.equal((await account(first,'enroll','POST',{operation:'join',rideId:pastRide.id})).status,409,'members cannot self-enrol in past rides');
   assert.equal((await admin('ride-participant','POST',{operation:'add',accountId:firstId,rideId:pastRide.id})).status,200,'admin can add a member to a completed ride');
@@ -216,8 +245,13 @@ try{
   const notices=(await db.getMemberState()).state.notifications.length;
   await admin('ride-participant','POST',{operation:'add',accountId:firstId,rideId:pastRide.id});assert.equal((await db.getMemberState()).state.notifications.length,notices,'retry does not duplicate the enrolment notification');
   assert.equal((await admin('ride-participant','POST',{operation:'remove',accountId:firstId,rideId:pastRide.id})).status,200);
+  assert.equal((await account(returning,'profile','PUT',{name:'Past Ride Guest',phone:'9999900012'})).status,200);
+  assert.equal((await admin('ride-participant','POST',{operation:'approve-add',accountId:returningId,rideId:pastRide.id})).status,200);
+  const returningHome = (await account(returning,'home')).data;
+  assert.equal(returningHome.account.status,'approved');
+  assert(returningHome.pastRides.some(ride=>ride.id===pastRide.id&&ride.joined&&ride.canUploadPhotos));
   await mutateMembers(db,state=>{state.rides.find(r=>r.id===pastRide.id).status='cancelled';});assert.equal((await admin('ride-participant','POST',{operation:'add',accountId:firstId,rideId:pastRide.id})).status,409,'cancelled rides remain locked');
   await account(first,'logout','POST',{});assert.equal((await account(first,'home')).status,401);
   const stored=await pg.query('SELECT token FROM hh_member_sessions');assert(stored.rows.every(row=>!second.includes(row.token)),'sessions stored only as hashes');
-  console.log('Members: verified Google JWTs, OAuth state/PKCE/replay, separate sessions/CSRF, pending approval, access revocation, deadline enforcement/admin override, private attendees, notifications, automatic IST rollover and idempotent gallery drafts passed.');
+  console.log('Members: OAuth and session isolation, unconfirmed account removal, ride-based approval, deadline enforcement, private attendees, notifications and automatic IST rollover passed.');
 }finally{await new Promise(resolve=>server.close(resolve));await pg.close();}

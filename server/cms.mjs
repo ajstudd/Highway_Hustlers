@@ -6,16 +6,29 @@ import { digest, validPasswordHash, verifyPassword, sessionToken, readToken, ses
 import { validateUploadSize, uploadParameters, uploadSignature, uploadTicket, verifyUploadTicket, policy } from './uploads.mjs';
 import { cleanGarage } from '../shared/garage.mjs';
 import { createPublisher, snapshotOf, seedGarage, localFramePaths } from './publication.mjs';
+import { reviewPublication } from './publication-review.mjs';
+import { validateSnapshot } from '../shared/public-snapshot.mjs';
 import { signBikeBatch, verifyBikeBatch, confirmedBikeFrame } from './bike-uploads.mjs';
 import { cleanUpcomingRide } from '../shared/upcoming-ride.mjs';
 import { archiveExpiredRide, identifiedRide, rideExpired } from './ride-lifecycle.mjs';
-import { approved, completeProfile, emailOf, mutateMembers, notice, publicAccount, syncPublishedRide } from './member-state.mjs';
+import { approved, canRemoveUnconfirmedAccount, completeProfile, emailOf, mutateMembers, notice, publicAccount, syncPublishedRide } from './member-state.mjs';
 import { profileBikeDetails, linkedBikeIds, preparedBike, ridingBike, heroBikeIds, profileBikeIds, MAX_PROFILE_BIKES } from './profile-bikes.mjs';
 import { adminCredentials, adminEmails, passwordCredential } from './admin-access.mjs';
 import { authConfiguration } from './google-login.mjs';
 
 class HttpError extends Error { constructor(status, message) { super(message); this.status = status; } }
 const fail = (status, message) => { throw new HttpError(status, message); };
+function allowMemberEmail(state, email) {
+  if (state.allowed.includes(email)) return;
+  if (state.allowed.length >= 500) fail(400, 'Use up to 500 approved emails.');
+  state.allowed.push(email);
+}
+function approveMembership(state, account, message) {
+  allowMemberEmail(state, account.email);
+  account.status = 'approved';
+  account.membershipConfirmed = true;
+  notice(state, 'Welcome to HHR', message, account.id);
+}
 export function createCms(env = process.env, injectedStore, fetcher = fetch) {
   const production = env.VERCEL === '1' || env.NODE_ENV === 'production';
   const local = !production && env.CMS_LOCAL_FILE;
@@ -23,6 +36,17 @@ export function createCms(env = process.env, injectedStore, fetcher = fetch) {
   const cloudName = env.CLOUDINARY_CLOUD_NAME || 'jr5po5s7';
   const cloudReady = !!(env.CLOUDINARY_API_KEY && env.CLOUDINARY_API_SECRET);
   const publisher = createPublisher(env, fetcher);
+  async function publicationReview(db, places, garage) {
+    let live;
+    try { live = await publisher.readLive(garage.published?.snapshotRevision); }
+    catch { fail(503, 'The current website publication could not be verified. Try opening the review again shortly.'); }
+    const closedRides = new Set();
+    if (places.upcomingRide?.id) {
+      const { state } = await db.getMemberState();
+      for (const ride of state.rides) if (['completed', 'cancelled'].includes(ride.status)) closedRides.add(ride.id);
+    }
+    return reviewPublication(live, places, garage, closedRides);
+  }
   let storePromise;
   const store = () => {
     if (!env.DATABASE_URL && !local && !injectedStore) fail(503, 'Connect a Neon database in Vercel Storage to enable the dashboard.');
@@ -106,7 +130,8 @@ export function createCms(env = process.env, injectedStore, fetcher = fetch) {
         const saved=await db.save(cleanPlaces(current.places),body.revision);if(!saved)fail(409,'Content changed. Reload before adding a photo.');return send(200,saved);
       }
       if (action === 'editor' && req.method === 'GET') {
-        await archiveExpiredRide(db,seed);
+        const liveRide = (await db.getGarage(seedGarage)).published?.upcomingRide;
+        if (rideExpired(liveRide)) await archiveExpiredRide(db, seed, Date.now(), liveRide);
         let [places, garage] = await Promise.all([db.get(seed), db.getGarage(seedGarage)]);
         if(places.upcomingRide&&!places.upcomingRide.id){
           const assigned=await db.saveUpcomingRide(identifiedRide(places.upcomingRide),places.revision);
@@ -117,7 +142,7 @@ export function createCms(env = process.env, injectedStore, fetcher = fetch) {
       if (action === 'upcoming-ride' && req.method === 'PUT') {
         if (!Number.isInteger(body.revision) || body.revision < 0) fail(400, 'Invalid content revision. Reload the dashboard.');
         const current = await db.get(seed);
-        let ride; try { ride = identifiedRide(body.upcomingRide,current.upcomingRide); } catch (e) { fail(400, e.message); }
+        let ride; try { ride = identifiedRide(body.upcomingRide, current.upcomingRide, { draft: body.draft === true }); } catch (e) { fail(400, e.message); }
         if (ride?.published && rideExpired(ride)) fail(400,'Choose a future ride date before including it on publish.');
         const saved = await db.saveUpcomingRide(ride, body.revision);
         if (!saved) fail(409, 'Another tab changed the content. Your edits are still here; reload before saving.');
@@ -130,7 +155,7 @@ export function createCms(env = process.env, injectedStore, fetcher = fetch) {
         const rides=state.rides.map(r=>({...r,participants:r.participants.map(id=>state.accounts.find(a=>a.id===id)).filter(Boolean).map(a=>({...accountView(a),...ridingBike(a,r,garage)}))}));
         const bikes=garage.bikes.filter(preparedBike).map(b=>({id:b.id,brand:b.brand,model:b.model,colorName:b.colorName,frames:b.frames.length,status:b.status}));
         const heroMembers=garage.members.map(m=>({id:m.id,name:m.name,active:m.active,bikes:garage.lineup.filter(e=>e.memberId===m.id).length,accountId:state.accounts.find(a=>a.heroMemberId===m.id)?.id||null}));
-        return send(200,{revision,accounts:state.accounts.map(accountView),allowed:state.allowed,rides,bikes,heroMembers});
+        return send(200,{revision,accounts:state.accounts.map(account=>({...accountView(account),canRemove:canRemoveUnconfirmedAccount(state,account)})),allowed:state.allowed,rides,bikes,heroMembers});
       }
       if(action==='dream-bike'&&req.method==='POST'){
         if(typeof body.bikeId!=='string'||typeof body.expectedName!=='string')fail(400,'Choose a dream bike.');
@@ -185,18 +210,29 @@ export function createCms(env = process.env, injectedStore, fetcher = fetch) {
         await syncPublishedRide(db,garage.published.upcomingRide||null,garage.published.snapshotRevision);return send(200,{ok:true});
       }
       if(action==='membership'&&req.method==='POST') {
+        if (body.operation === 'remove-account') {
+          const accountId = body.accountId;
+          if (typeof accountId !== 'string' || !/^[a-f0-9]{24}$/.test(accountId)) fail(400, 'Choose an unconfirmed account to remove.');
+          await mutateMembers(db, state => {
+            const account = state.accounts.find(entry => entry.id === accountId);
+            if (!account) return;
+            if (!canRemoveUnconfirmedAccount(state, account)) fail(409, 'Only unconfirmed accounts without member records can be removed.');
+            state.accounts = state.accounts.filter(entry => entry.id !== accountId);
+            state.notifications = state.notifications.filter(entry => entry.recipient !== accountId);
+          }, { revokeAccountId: accountId });
+          return send(200, { ok: true });
+        }
         try { await mutateMembers(db,state=>{
           if(body.operation==='allow') {
-            const email=emailOf(body.email);if(state.allowed.length>=500&&!state.allowed.includes(email))fail(400,'Use up to 500 approved emails.');
-            if(!state.allowed.includes(email))state.allowed.push(email);
-            for(const a of state.accounts.filter(a=>a.email===email)){a.status='approved';notice(state,'Welcome to HHR','Your membership is approved. Complete your profile to join a ride.',a.id);}
+            const email=emailOf(body.email);allowMemberEmail(state,email);
+            for(const a of state.accounts.filter(a=>a.email===email))approveMembership(state,a,'Your membership is approved. Complete your profile to join a ride.');
           } else if(body.operation==='remove-allow') {
             const email=emailOf(body.email);state.allowed=state.allowed.filter(e=>e!==email);
-            for(const a of state.accounts.filter(a=>a.email===email)){a.status='suspended';for(const r of state.rides.filter(r=>r.status==='open'))r.participants=r.participants.filter(id=>id!==a.id);notice(state,'Membership updated','Your ride access has been paused. Contact an HHR administrator.',a.id);}
+            for(const a of state.accounts.filter(a=>a.email===email)){a.membershipConfirmed=true;a.status='suspended';for(const r of state.rides.filter(r=>r.status==='open'))r.participants=r.participants.filter(id=>id!==a.id);notice(state,'Membership updated','Your ride access has been paused. Contact an HHR administrator.',a.id);}
           } else if(['approve','reject'].includes(body.operation)) {
             const a=state.accounts.find(a=>a.id===body.accountId);if(!a)fail(404,'Profile not found.');
-            if(body.operation==='approve'){if(!state.allowed.includes(a.email)){if(state.allowed.length>=500)fail(400,'Use up to 500 approved emails.');state.allowed.push(a.email);}a.status='approved';notice(state,'Welcome to HHR','Your membership request has been approved.',a.id);}
-            else{a.status='rejected';state.allowed=state.allowed.filter(e=>e!==a.email);for(const r of state.rides.filter(r=>r.status==='open'))r.participants=r.participants.filter(id=>id!==a.id);notice(state,'Membership request reviewed','Your request was not approved. Contact HHR if you have a question.',a.id);}
+            if(body.operation==='approve')approveMembership(state,a,'Your membership request has been approved.');
+            else{if(['approved','suspended'].includes(a.status))a.membershipConfirmed=true;a.status='rejected';state.allowed=state.allowed.filter(e=>e!==a.email);for(const r of state.rides.filter(r=>r.status==='open'))r.participants=r.participants.filter(id=>id!==a.id);notice(state,'Membership request reviewed','Your request was not approved. Contact HHR if you have a question.',a.id);}
           } else fail(400,'Choose a membership action.');
         }); } catch(e){if(e.status)throw e;fail(400,e.message);}
         return send(200,{ok:true});
@@ -206,7 +242,14 @@ export function createCms(env = process.env, injectedStore, fetcher = fetch) {
           const ride=state.rides.find(r=>r.id===body.rideId),a=state.accounts.find(a=>a.id===body.accountId);
           if(!ride||!['open','closed','completed'].includes(ride.status))fail(409,'Choose an upcoming or completed ride. Cancelled rides cannot be edited.');
           if(!a)fail(404,'Profile not found.');
-          if(body.operation==='add'){if(!approved(state,a)||!completeProfile(a))fail(400,'Choose an approved member with a complete profile.');if(ride.participants.includes(a.id))return;ride.participants.push(a.id);notice(state,ride.status==='open'&&!rideExpired(ride.details)?'You’re on the ride':'Ride history updated',`An administrator added you to ${ride.details.location}${ride.details.date?` (${ride.details.date})`:''}. You can share your ride photos from your profile.`,a.id);}
+          if(['add','approve-add'].includes(body.operation)) {
+            if (!completeProfile(a)) fail(400, 'Choose a member with a complete profile.');
+            if (body.operation === 'approve-add' && a.status === 'pending') approveMembership(state, a, 'Your membership request has been approved.');
+            if (!approved(state,a)) fail(400,'Choose an approved member or a pending membership request.');
+            if (ride.participants.includes(a.id)) return;
+            ride.participants.push(a.id);
+            notice(state,ride.status==='open'&&!rideExpired(ride.details)?'You’re on the ride':'Ride history updated',`An administrator added you to ${ride.details.location}${ride.details.date?` (${ride.details.date})`:''}. You can share your ride photos from your profile.`,a.id);
+          }
           else if(body.operation==='remove'){if(!ride.participants.includes(a.id))return;ride.participants=ride.participants.filter(id=>id!==a.id);if(ride.bikeChoices)delete ride.bikeChoices[a.id];notice(state,'Ride enrolment updated',`An administrator removed your entry for ${ride.details.location}.`,a.id);}
           else fail(400,'Choose Add or Remove.');
         });return send(200,{ok:true});
@@ -215,14 +258,20 @@ export function createCms(env = process.env, injectedStore, fetcher = fetch) {
         const content=await db.get(seed);
         if(content.revision!==body.revision||!content.upcomingRide?.id)fail(409,'Reload the saved ride before cancelling.');
         const id=content.upcomingRide.id;
+        const live = (await db.getGarage(seedGarage)).published?.upcomingRide;
+        if (live?.id !== id || rideExpired(live)) fail(409, 'Only a live upcoming ride can be cancelled.');
         const saved=await db.saveUpcomingRide({...content.upcomingRide,published:false},content.revision);
         if(!saved)fail(409,'Another editor changed the ride. Reload first.');
         await mutateMembers(db,state=>{const r=state.rides.find(r=>r.id===id);if(r&&r.status!=='cancelled'){r.status='cancelled';notice(state,'Ride cancelled',`${r.details.location} has been cancelled. Please do not travel to the meeting point.`);}});
-        return send(200,{...saved,notice:'Cancelled for members immediately. Publish the saved draft to remove the public announcement.'});
+        return send(200,{...saved,notice:'Cancelled for members. Select the announcement removal in Review & publish.'});
       }
       if(action==='new-ride'&&req.method==='POST') {
         const content=await db.get(seed);if(content.revision!==body.revision)fail(409,'Reload before starting a new ride.');
-        if(content.upcomingRide?.published)fail(409,'Cancel or finish the current ride before starting another.');
+        const live = (await db.getGarage(seedGarage)).published?.upcomingRide;
+        if (live?.published && !rideExpired(live)) {
+          const { state } = await db.getMemberState();
+          if (!state.rides.some(ride => ride.id === live.id && ride.status === 'cancelled')) fail(409, 'Remove or cancel the live ride before starting another.');
+        }
         const saved=await db.saveUpcomingRide(null,content.revision);if(!saved)fail(409,'Content changed. Reload first.');return send(200,saved);
       }
       if (action === 'garage' && req.method === 'PUT') {
@@ -236,6 +285,12 @@ export function createCms(env = process.env, injectedStore, fetcher = fetch) {
         if (!saved) fail(409, 'Another tab changed the garage. Your edits are still here; reload before saving.');
         return send(200, saved);
       }
+      if (action === 'publish-review' && req.method === 'GET') {
+        if (!publisher.ready) fail(503, 'Publishing needs Cloudinary credentials. Preview deployments also need a separate CONTENT_SNAPSHOT_ID.');
+        const [places, garage] = await Promise.all([db.get(seed), db.getGarage(seedGarage)]);
+        const { changes, reviewId, revision, garageRevision } = await publicationReview(db, places, garage);
+        return send(200, { changes, reviewId, revision, garageRevision });
+      }
       if (action === 'publish' && req.method === 'POST') {
         if (!publisher.ready) fail(503, 'Publishing needs Cloudinary credentials. Preview deployments also need a separate CONTENT_SNAPSHOT_ID.');
         if (![body.revision, body.garageRevision].every(n => Number.isInteger(n) && n >= 0)) fail(400, 'Save your draft before publishing.');
@@ -246,9 +301,23 @@ export function createCms(env = process.env, injectedStore, fetcher = fetch) {
           const [places, garage] = await Promise.all([db.get(seed), db.getGarage(seedGarage)]);
           if (places.revision !== body.revision || garage.revision !== body.garageRevision) fail(409, 'Another tab saved newer content. Reload before publishing.');
           const revision = `${places.revision}-${garage.revision}-${lock.slice(0,12)}`;
-          const snapshot = snapshotOf(places.places, garage.garage, cloudName, revision, undefined, places.upcomingRide);
-          if(snapshot.upcomingRide&&rideExpired(snapshot.upcomingRide))fail(409,'This ride date has passed. Reload to archive it before publishing.');
-          if(snapshot.upcomingRide?.id){const memberState=await db.getMemberState();if(memberState.state.rides.some(r=>r.id===snapshot.upcomingRide.id&&['cancelled','completed'].includes(r.status)))fail(409,'This ride is closed. Start a new ride instead.');}
+          const reviewed = body.reviewId !== undefined || body.selection !== undefined;
+          let snapshot;
+          if (reviewed) {
+            const review = await publicationReview(db, places, garage);
+            if (body.reviewId !== review.reviewId) fail(409, 'The website or saved drafts changed. Open a new review before publishing.');
+            const selection = body.selection;
+            const eligible = new Set(review.changes.filter(change => !change.issue).map(change => change.id));
+            if (!Array.isArray(selection) || !selection.length || selection.length > eligible.size || new Set(selection).size !== selection.length || selection.some(id => !eligible.has(id))) fail(400, 'Select available changes from the publication review.');
+            if (selection.includes('ride') && selection.includes('remove-ride')) fail(400, 'Choose one action for the upcoming ride.');
+            try {
+              snapshot = validateSnapshot({ schemaVersion: 1, revision, publishedAt: new Date().toISOString(), cloudName, ...review.apply(selection) });
+            } catch (error) { fail(400, error.message); }
+          } else {
+            snapshot = snapshotOf(places.places, garage.garage, cloudName, revision, undefined, places.upcomingRide);
+            if(snapshot.upcomingRide&&rideExpired(snapshot.upcomingRide))fail(409,'This ride date has passed. Reload to archive it before publishing.');
+            if(snapshot.upcomingRide?.id){const memberState=await db.getMemberState();if(memberState.state.rides.some(r=>r.id===snapshot.upcomingRide.id&&['cancelled','completed'].includes(r.status)))fail(409,'This ride is closed. Start a new ride instead.');}
+          }
           let published;
           try { published = await publisher.publish(snapshot, revision); } catch { fail(502, 'Publishing could not be confirmed. Your saved draft is safe. The previous publication remains available if the upload failed; retry publishing.'); }
           const state = { ...published, revision: places.revision, garageRevision: garage.revision, snapshotRevision: revision, upcomingRide:snapshot.upcomingRide };
@@ -260,7 +329,7 @@ export function createCms(env = process.env, injectedStore, fetcher = fetch) {
       if (action === 'places' && req.method === 'GET') return send(200, { ...await db.get(seed), cloudName, cloudReady });
       if (action === 'places' && req.method === 'PUT') {
         if (!Number.isInteger(body.revision) || body.revision < 0) fail(400, 'Invalid revision. Reload the dashboard.');
-        let places; try { places = cleanPlaces(body.places); } catch (e) { fail(400, e.message); }
+        let places; try { places = cleanPlaces(body.places, { draft: body.draft === true }); } catch (e) { fail(400, e.message); }
         const saved = await db.save(places, body.revision);
         if (!saved) fail(409, 'Another tab changed these places. Copy any unsaved text, then reload before saving.');
         return send(200, saved);

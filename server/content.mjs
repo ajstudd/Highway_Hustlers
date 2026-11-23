@@ -1,4 +1,4 @@
-import { googleMapsUrl } from './maps-link.mjs';
+import { googleMapsUrl, savedMapPin } from '../shared/maps-link.mjs';
 const legacyIds = new Set(['kerwa', 'bhojpur', 'kolar', 'bhimbetka', 'raisen', 'sanchi', 'pachmarhi']);
 const text = (value, max, required = false) => {
   if (typeof value !== 'string' || value.length > max || (required && !value.trim()) || /[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(value)) throw new Error('Check the text fields and their lengths.');
@@ -11,7 +11,7 @@ export function cleanMedia(value) {
   if (!/^[\p{L}\p{N}_. /-]+$/u.test(publicId) || publicId.split('/').some(p => !p || p === '.' || p === '..')) throw new Error('Invalid Cloudinary asset ID.');
   return { id: text(value.id, 255, true), type: value.type, publicId, version: number(value.version, 1, 99999999999), width: number(value.width, 1, 100000), height: number(value.height, 1, 100000), caption: text(value.caption ?? '', 300) };
 }
-export function cleanPlaces(input) {
+export function cleanPlaces(input, { draft = false } = {}) {
   if (!Array.isArray(input) || input.length > 100) throw new Error('Use up to 100 places.');
   const ids = new Set();
   return input.map(value => {
@@ -22,10 +22,13 @@ export function cleanPlaces(input) {
     const media = value.media.map(cleanMedia);
     if (new Set(media.map(m => m.id)).size !== media.length) throw new Error('An asset can only appear once in each place.');
     const legacyId = legacyIds.has(value.legacyId) ? value.legacyId : undefined;
-    if (value.needsLocationReview && value.published) throw Error('Review the archived ride’s distance and destination pin before publishing its album.');
-    if (value.published && !media.length && !legacyId) throw new Error('Add a photo or video before publishing a new place.');
-    const mapsUrl=value.mapsUrl?googleMapsUrl(value.mapsUrl).href:'';
+    const mapsUrl = value.mapsUrl ? googleMapsUrl(value.mapsUrl).href : '';
+    const needsLocationReview = value.needsLocationReview && !mapsUrl;
+    const published = !draft && value.published;
+    if (needsLocationReview && published) throw Error('Add a Google Maps destination link before publishing this place.');
+    if (published && !media.length && !legacyId) throw new Error('Add a photo or video before publishing a new place.');
+    const coordinates = savedMapPin(mapsUrl) ?? { lat: number(value.lat, -90, 90), lon: number(value.lon, -180, 180) };
     if(value.distanceUnknown!==undefined&&typeof value.distanceUnknown!=='boolean')throw Error('Choose whether to show distance.');
-    return { ...(mapsUrl?{mapsUrl}:{}),...(value.distanceUnknown?{distanceUnknown:true}:{}),id, name: text(value.name, 100, true), description: text(value.description, 400), kind: value.kind, km: number(value.km, 0, 5000), lat: number(value.lat, -90, 90), lon: number(value.lon, -180, 180), published: value.published, ...(legacyId ? { legacyId } : {}), ...(value.needsLocationReview ? { needsLocationReview: true } : {}), ...(typeof value.sourceRideId === 'string' && /^[a-z0-9-]{1,80}$/.test(value.sourceRideId) ? { sourceRideId: value.sourceRideId } : {}), ...(typeof value.rideDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value.rideDate) ? { rideDate: value.rideDate } : {}), media };
+    return { ...(mapsUrl ? { mapsUrl } : {}), ...(value.distanceUnknown ? { distanceUnknown: true } : {}), id, name: text(value.name, 100, true), description: text(value.description, 400), kind: value.kind, km: number(value.km, 0, 5000), ...coordinates, published, ...(legacyId ? { legacyId } : {}), ...(needsLocationReview ? { needsLocationReview: true } : {}), ...(typeof value.sourceRideId === 'string' && /^[a-z0-9-]{1,80}$/.test(value.sourceRideId) ? { sourceRideId: value.sourceRideId } : {}), ...(typeof value.rideDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value.rideDate) ? { rideDate: value.rideDate } : {}), media };
   });
 }

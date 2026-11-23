@@ -1,6 +1,5 @@
-import { useRef, useState, type FormEvent, type RefObject } from 'react';
-import { ArrowDown, ArrowUp, ArrowUpRight, Eye, ImagePlus, MapPin, Plus, Save, Star, Trash2, Upload, X } from 'lucide-react';
-import { LoadingSpinner } from '../components/Loading';
+import { useRef, useState, type FormEvent, type ReactNode, type RefObject } from 'react';
+import { ArrowDown, ArrowUp, ArrowUpRight, Eye, ImagePlus, MapPin, Plus, Star, Trash2, Upload, X } from 'lucide-react';
 import { mediaUrl, placeMapUrl, type Place } from '../lib/gallery';
 import MediaPreviewImage from './MediaPreviewImage';
 import PlaceLocation from './PlaceLocation';
@@ -8,7 +7,7 @@ import './editor-workspaces.css';
 
 type PlaceEditorProps = {
   places: Place[]; savedPlaces: Place[]; selected: string; cloudName: string; cloudReady: boolean;
-  busy: boolean; dirty: boolean; saving: boolean;
+  busy: boolean; draftActions: ReactNode;
   select: (id: string) => void; add: () => void; remove: () => void; move: (direction: number) => void;
   change: (patch: Partial<Place>) => void; save: (event?: FormEvent) => void;
   upload: (files: FileList | null) => void; openLibrary: () => void;
@@ -25,7 +24,7 @@ export default function PlaceEditor(props: PlaceEditorProps) {
   return <section className="media-workspace" aria-labelledby="place-workspace-heading">
     <header className="workspace-heading place-workspace-heading">
       <div><h1 id="place-workspace-heading">Places &amp; media</h1><p>Edit the places and albums shown in Our favourite mornings.</p></div>
-      <button className={props.dirty ? 'admin-primary' : ''} type="button" disabled={busy || !props.dirty} onClick={() => props.save()}>{props.saving ? <LoadingSpinner size={16}/> : <Save size={16}/>} Save draft</button>
+      {props.draftActions}
     </header>
     <div className="place-workspace">
       <aside className="workspace-panel place-browser">

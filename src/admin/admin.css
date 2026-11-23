@@ -147,10 +147,11 @@ dialog.admin-library { color:#f2ebdd; background:#181613; border:1px solid #5148
 .admin-publishing strong { font-size:1rem; font-weight:600; }
 .admin-publishing p { margin-top:4px; }
 .admin-publishing>button { flex-shrink:0; }
-.admin-draft-bar { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 32px; border-bottom:1px solid var(--admin-border); }
+.admin-draft-bar { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; padding:14px 32px; border-bottom:1px solid var(--admin-border); }
 .admin-draft-bar strong,.admin-draft-bar span { display:block; }
 .admin-draft-bar span { font-size:13px; }
-.admin-draft-bar>button { flex-shrink:0; }
+.admin-draft-bar>div:first-child>button { margin-top:8px; }
+.admin-draft-actions { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
 .admin-unsaved-dot { width:7px; height:7px; flex-shrink:0; border-radius:50%; background:var(--admin-accent); }
 .admin-review-list { display:grid; gap:8px; margin-top:20px; }
 .admin-review-list>li { border:1px solid var(--admin-border); border-radius:6px; padding:12px; }

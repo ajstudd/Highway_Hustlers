@@ -11,6 +11,7 @@ export async function createPostgresStore(connection, injectedSql) {
   await sql`CREATE TABLE IF NOT EXISTS hh_sessions (token TEXT PRIMARY KEY, credential TEXT NOT NULL, expires BIGINT NOT NULL)`;
   await sql`CREATE TABLE IF NOT EXISTS hh_login_limits (bucket TEXT PRIMARY KEY, attempts INTEGER NOT NULL, expires BIGINT NOT NULL)`;
   await sql`CREATE TABLE IF NOT EXISTS hh_site (id INTEGER PRIMARY KEY CHECK (id=1), revision INTEGER NOT NULL DEFAULT 0, garage JSONB NOT NULL, published JSONB, publish_token TEXT, publish_expires BIGINT NOT NULL DEFAULT 0)`;
+  await sql`ALTER TABLE hh_site ADD COLUMN IF NOT EXISTS published_garage JSONB`;
   await sql`CREATE TABLE IF NOT EXISTS hh_bike_assets (public_id TEXT PRIMARY KEY, frame JSONB NOT NULL)`;
   await sql`CREATE TABLE IF NOT EXISTS hh_member_workspace (id INTEGER PRIMARY KEY CHECK (id=1), revision INTEGER NOT NULL DEFAULT 0, state JSONB NOT NULL)`;
   await sql`CREATE TABLE IF NOT EXISTS hh_member_sessions (token TEXT PRIMARY KEY, account_id TEXT NOT NULL, expires BIGINT NOT NULL)`;
@@ -51,18 +52,18 @@ export async function createPostgresStore(connection, injectedSql) {
     },
     async getGarage(seed) {
       await sql`INSERT INTO hh_site (id,garage) VALUES (1,${JSON.stringify(seed)}::jsonb) ON CONFLICT (id) DO NOTHING`;
-      const [row] = await sql`SELECT revision,garage,published FROM hh_site WHERE id=1`; return row;
+      const [row] = await sql`SELECT revision,garage,published,published_garage AS "publishedGarage" FROM hh_site WHERE id=1`; return row;
     },
-    async saveGarage(garage, revision) {
-      const [row] = await sql`UPDATE hh_site SET garage=${JSON.stringify(garage)}::jsonb, revision=revision+1 WHERE id=1 AND revision=${revision} RETURNING revision,garage,published`;
+    async saveGarage(garage, revision, publishedGarage) {
+      const [row] = await sql`UPDATE hh_site SET garage=${JSON.stringify(garage)}::jsonb, revision=revision+1, published_garage=COALESCE(published_garage, ${publishedGarage ? JSON.stringify(publishedGarage) : null}::jsonb) WHERE id=1 AND revision=${revision} RETURNING revision,garage,published`;
       return row || null;
     },
     async acquirePublish(token, now) {
       const [row] = await sql`UPDATE hh_site SET publish_token=${token},publish_expires=${now + 300000} WHERE id=1 AND (publish_token IS NULL OR publish_expires<${now}) RETURNING id`;
       return !!row;
     },
-    async finishPublish(token, published) {
-      const [row] = await sql`UPDATE hh_site SET published=${JSON.stringify(published)}::jsonb,publish_token=NULL,publish_expires=0 WHERE id=1 AND publish_token=${token} RETURNING published`;
+    async finishPublish(token, published, publishedGarage) {
+      const [row] = await sql`UPDATE hh_site SET published=${JSON.stringify(published)}::jsonb,published_garage=COALESCE(${publishedGarage ? JSON.stringify(publishedGarage) : null}::jsonb, published_garage),publish_token=NULL,publish_expires=0 WHERE id=1 AND publish_token=${token} RETURNING published`;
       return row || null;
     },
     async releasePublish(token) { await sql`UPDATE hh_site SET publish_token=NULL,publish_expires=0 WHERE id=1 AND publish_token=${token}`; },
@@ -113,9 +114,13 @@ export function createLocalStore(filename) {
     saveUpcomingRide: (upcomingRide, revision) => transaction(d => { if (d.content?.revision !== revision) return null; d.content = { ...d.content, revision: revision+1, upcomingRide }; return { revision: d.content.revision, upcomingRide }; }),
     finishRide: (places, revision, upcomingRide=null) => transaction(d => { if (d.content?.revision !== revision) return null; d.content = { ...d.content, revision: revision+1, places, upcomingRide }; return d.content; }),
     getGarage: seed => transaction(d => { d.site ??= { revision: 0, garage: seed, published: null }; return d.site; }),
-    saveGarage: (garage, revision) => transaction(d => { if (d.site?.revision !== revision) return null; d.site = { ...d.site, revision: revision+1, garage }; return d.site; }),
+    saveGarage: (garage, revision, publishedGarage) => transaction(d => {
+      if (d.site?.revision !== revision) return null;
+      d.site = { ...d.site, revision: revision+1, garage, publishedGarage: d.site.publishedGarage ?? publishedGarage };
+      return { revision: d.site.revision, garage, published: d.site.published };
+    }),
     acquirePublish: (token, now) => transaction(d => { if (!d.site || (d.site.publishToken && d.site.publishExpires >= now)) return false; d.site.publishToken = token; d.site.publishExpires = now+300000; return true; }),
-    finishPublish: (token, published) => transaction(d => { if (d.site?.publishToken !== token) return null; d.site.published = published; delete d.site.publishToken; delete d.site.publishExpires; return { published }; }),
+    finishPublish: (token, published, publishedGarage) => transaction(d => { if (d.site?.publishToken !== token) return null; d.site.published = published; if (publishedGarage) d.site.publishedGarage = publishedGarage; delete d.site.publishToken; delete d.site.publishExpires; return { published }; }),
     releasePublish: token => transaction(d => { if (d.site?.publishToken === token) { delete d.site.publishToken; delete d.site.publishExpires; } }),
     knownBikeFrames: ids => transaction(d => ids.map(id => d.assets?.[id]).filter(Boolean)),
     rememberBikeFrame: frame => transaction(d => { d.assets ??= {}; d.assets[frame.publicId] ??= frame; }),

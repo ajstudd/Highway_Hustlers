@@ -22,7 +22,7 @@ if (!process.argv.includes('--publish')) {
     const snapshot = snapshotOf(latestPlaces.places, latestGarage.garage, publisher.cloudName, revision, undefined, latestPlaces.upcomingRide);
     const result = await publisher.publish(snapshot, revision);
     const published = { ...result, revision: latestPlaces.revision, garageRevision: latestGarage.revision, snapshotRevision: revision, upcomingRide:snapshot.upcomingRide };
-    if (!await db.finishPublish(lock, published)) throw Error('The upload completed but its status could not be saved. Check before retrying.');
+    if (!await db.finishPublish(lock, published, latestGarage.garage)) throw Error('The upload completed but its status could not be saved. Check before retrying.');
     await syncPublishedRide(db,snapshot.upcomingRide,revision);
     console.log('Published the current saved content snapshot. Verify it before deploying the new public frontend.');
   } finally { await db.releasePublish(lock); }

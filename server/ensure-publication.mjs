@@ -35,7 +35,7 @@ export async function ensureProductionPublication(env, { fetcher = fetch, storeF
       const revision = `${places.revision}-${garage.revision}-${lock.slice(0,12)}`;
       const snapshot = snapshotOf(places.places, garage.garage, publisher.cloudName, revision, undefined, places.upcomingRide);
       const result = await publisher.publish(snapshot, revision);
-      if (!await db.finishPublish(lock, { ...result, revision: places.revision, garageRevision: garage.revision, snapshotRevision: revision, upcomingRide:snapshot.upcomingRide })) throw Error('First content upload completed but its status could not be saved. Retry the deployment.');
+      if (!await db.finishPublish(lock, { ...result, revision: places.revision, garageRevision: garage.revision, snapshotRevision: revision, upcomingRide:snapshot.upcomingRide }, garage.garage)) throw Error('First content upload completed but its status could not be saved. Retry the deployment.');
       await syncPublishedRide(db,snapshot.upcomingRide,revision);
       // Check the exact URL the browser will use, allowing bounded propagation.
       for (let attempt = 0; attempt < 4; attempt++) {

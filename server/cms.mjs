@@ -1,4 +1,5 @@
 import seed from '../src/data/gallery-seed.json' with { type: 'json' };
+import { isDeepStrictEqual } from 'node:util';
 import { createPostgresStore, createLocalStore } from './store.mjs';
 import { cleanPlaces, cleanMedia } from './content.mjs';
 import { resolveMapsLink } from './maps-link.mjs';
@@ -7,6 +8,7 @@ import { validateUploadSize, uploadParameters, uploadSignature, uploadTicket, ve
 import { cleanGarage } from '../shared/garage.mjs';
 import { createPublisher, snapshotOf, seedGarage, localFramePaths } from './publication.mjs';
 import { reviewPublication } from './publication-review.mjs';
+import { missingLineupReference, publishedGarageFor } from './garage-review.mjs';
 import { validateSnapshot } from '../shared/public-snapshot.mjs';
 import { signBikeBatch, verifyBikeBatch, confirmedBikeFrame } from './bike-uploads.mjs';
 import { cleanUpcomingRide } from '../shared/upcoming-ride.mjs';
@@ -36,10 +38,12 @@ export function createCms(env = process.env, injectedStore, fetcher = fetch) {
   const cloudName = env.CLOUDINARY_CLOUD_NAME || 'jr5po5s7';
   const cloudReady = !!(env.CLOUDINARY_API_KEY && env.CLOUDINARY_API_SECRET);
   const publisher = createPublisher(env, fetcher);
+  async function currentPublication(garage) {
+    try { return await publisher.readLive(garage.published?.snapshotRevision); }
+    catch { fail(503, 'The current website publication could not be verified. Try again shortly.'); }
+  }
   async function publicationReview(db, places, garage) {
-    let live;
-    try { live = await publisher.readLive(garage.published?.snapshotRevision); }
-    catch { fail(503, 'The current website publication could not be verified. Try opening the review again shortly.'); }
+    const live = await currentPublication(garage);
     const closedRides = new Set();
     if (places.upcomingRide?.id) {
       const { state } = await db.getMemberState();
@@ -283,10 +287,64 @@ export function createCms(env = process.env, injectedStore, fetcher = fetch) {
         const cloudFrames = garage.bikes.flatMap(b => b.frames.filter(f => f.source === 'cloudinary'));
         const verified = new Map((await db.knownBikeFrames([...new Set(cloudFrames.map(f => f.publicId))])).map(f => [f.publicId, f]));
         if (cloudFrames.some(f => { const known = verified.get(f.publicId); return !known || known.version !== f.version || known.format !== f.format || known.width !== f.width || known.height !== f.height; })) fail(400, 'One or more bike frames have not been confirmed by this dashboard. Upload and verify them first.');
-        await db.getGarage(seedGarage);
-        const saved = await db.saveGarage(garage, body.revision);
+        const current = await db.getGarage(seedGarage);
+        if (current.revision !== body.revision) fail(409, 'Another tab changed the garage. Your edits are still here; reload before saving.');
+        const baseline = current.publishedGarage || publishedGarageFor(current, await currentPublication(current));
+        const saved = await db.saveGarage(garage, body.revision, baseline);
         if (!saved) fail(409, 'Another tab changed the garage. Your edits are still here; reload before saving.');
         return send(200, saved);
+      }
+      if (action === 'discard-draft' && req.method === 'POST') {
+        const { section, revision } = body;
+        const gallerySection = section === 'places' || section === 'upcoming';
+        if (!gallerySection && !['members', 'bikes', 'lineup'].includes(section)) fail(400, 'Choose a page with a draft.');
+        if (!Number.isInteger(revision) || revision < 0) fail(400, 'Invalid draft revision. Reload the dashboard.');
+        await db.getGarage(seedGarage);
+        const lock = sessionToken();
+        if (!await db.acquirePublish(lock, Date.now())) fail(409, 'A publication is running. Wait for it to finish before discarding a draft.');
+        try {
+          const garage = await db.getGarage(seedGarage);
+          const current = gallerySection ? await db.get(seed) : garage;
+          const stale = () => fail(409, 'Another tab changed the draft. Reload before discarding it.');
+          if (current.revision !== revision) stale();
+          let saved;
+          if (gallerySection) {
+            const live = await currentPublication(garage);
+            if (section === 'places') {
+              const places = live?.places ?? [];
+              saved = isDeepStrictEqual(current.places, places) ? { revision, places } : await db.save(places, revision);
+            } else {
+              let ride = live?.upcomingRide ?? null;
+              if (ride) {
+                const { state } = await db.getMemberState();
+                if (rideExpired(ride) || state.rides.some(record => record.id === ride.id && ['completed', 'cancelled'].includes(record.status))) ride = null;
+              }
+              saved = isDeepStrictEqual(current.upcomingRide ?? null, ride) ? { revision, upcomingRide: ride } : await db.saveUpcomingRide(ride, revision);
+            }
+          } else {
+            const baseline = garage.publishedGarage || publishedGarageFor(garage, await currentPublication(garage));
+            const restored = { ...garage.garage, [section]: baseline[section] };
+            if (missingLineupReference(restored)) {
+              fail(409, section === 'lineup'
+                ? 'Restore the referenced members and bikes before discarding this lineup draft.'
+                : 'A saved Hero lineup entry still uses a draft item from this page. Update or discard the lineup draft first.');
+            }
+            if (section === 'members' || section === 'bikes') {
+              const kept = new Set(restored[section].map(item => item.id));
+              const removed = new Set(garage.garage[section].filter(item => !kept.has(item.id)).map(item => item.id));
+              if (removed.size) {
+                const { state } = await db.getMemberState();
+                const linked = state.accounts.some(account => section === 'members'
+                  ? removed.has(account.heroMemberId)
+                  : [...linkedBikeIds(account), account.dreamBikeId].some(id => removed.has(id)));
+                if (linked) fail(409, 'A member profile still uses a draft item from this page. Remove the link in Membership & enrolments first.');
+              }
+            }
+            saved = isDeepStrictEqual(restored, garage.garage) ? { revision, garage: garage.garage } : await db.saveGarage(restored, revision, baseline);
+          }
+          if (!saved) stale();
+          return send(200, saved);
+        } finally { await db.releasePublish(lock); }
       }
       if (action === 'publish-review' && req.method === 'GET') {
         if (!publisher.ready) fail(503, 'Publishing needs Cloudinary credentials. Preview deployments also need a separate CONTENT_SNAPSHOT_ID.');
@@ -305,7 +363,7 @@ export function createCms(env = process.env, injectedStore, fetcher = fetch) {
           if (places.revision !== body.revision || garage.revision !== body.garageRevision) fail(409, 'Another tab saved newer content. Reload before publishing.');
           const revision = `${places.revision}-${garage.revision}-${lock.slice(0,12)}`;
           const reviewed = body.reviewId !== undefined || body.selection !== undefined;
-          let snapshot;
+          let snapshot, publishedGarage;
           if (reviewed) {
             const review = await publicationReview(db, places, garage);
             if (body.reviewId !== review.reviewId) fail(409, 'The website or saved drafts changed. Open a new review before publishing.');
@@ -314,17 +372,20 @@ export function createCms(env = process.env, injectedStore, fetcher = fetch) {
             if (!Array.isArray(selection) || !selection.length || selection.length > eligible.size || new Set(selection).size !== selection.length || selection.some(id => !eligible.has(id))) fail(400, 'Select available changes from the publication review.');
             if (selection.includes('ride') && selection.includes('remove-ride')) fail(400, 'Choose one action for the upcoming ride.');
             try {
-              snapshot = validateSnapshot({ schemaVersion: 1, revision, publishedAt: new Date().toISOString(), cloudName, ...review.apply(selection) });
+              const selected = review.apply(selection);
+              snapshot = validateSnapshot({ schemaVersion: 1, revision, publishedAt: new Date().toISOString(), cloudName, ...selected.publicContent });
+              publishedGarage = selected.garage;
             } catch (error) { fail(400, error.message); }
           } else {
             snapshot = snapshotOf(places.places, garage.garage, cloudName, revision, undefined, places.upcomingRide);
+            publishedGarage = garage.garage;
             if(snapshot.upcomingRide&&rideExpired(snapshot.upcomingRide))fail(409,'This ride date has passed. Reload to archive it before publishing.');
             if(snapshot.upcomingRide?.id){const memberState=await db.getMemberState();if(memberState.state.rides.some(r=>r.id===snapshot.upcomingRide.id&&['cancelled','completed'].includes(r.status)))fail(409,'This ride is closed. Start a new ride instead.');}
           }
           let published;
           try { published = await publisher.publish(snapshot, revision); } catch { fail(502, 'Publishing could not be confirmed. Your saved draft is safe. The previous publication remains available if the upload failed; retry publishing.'); }
           const state = { ...published, revision: places.revision, garageRevision: garage.revision, snapshotRevision: revision, upcomingRide:snapshot.upcomingRide };
-          if (!await db.finishPublish(lock, state)) fail(503, 'Content was uploaded but its status could not be saved. Refresh and retry publishing.');
+          if (!await db.finishPublish(lock, state, publishedGarage)) fail(503, 'Content was uploaded but its status could not be saved. Refresh and retry publishing.');
           try {await syncPublishedRide(db,snapshot.upcomingRide,revision);} catch {return send(200,{published:state,warning:'The website was published, but member ride updates need a retry. Open Membership and sync the published ride.'});}
           return send(200, { published: state });
         } finally { try { await db.releasePublish(lock); } catch { /* The bounded lock expires if the database is unavailable. */ } }

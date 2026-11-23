@@ -5,6 +5,7 @@ import { cleanGarage, publicRiders } from '../shared/garage.mjs';
 import { localFramePaths } from '../shared/garage-seed.mjs';
 import { rideExpired } from './ride-lifecycle.mjs';
 import { digest } from './security.mjs';
+import { publishedGarageFor, reviewGarage } from './garage-review.mjs';
 
 export function reviewPublication(live, gallery, garage, closedRides, now = Date.now()) {
   const livePlaces = live?.places ?? [];
@@ -40,18 +41,9 @@ export function reviewPublication(live, gallery, garage, closedRides, now = Date
     changes.push({ id: 'place-order', title: 'Place order', area: 'Places & media', action: 'Reorder', details: ['Apply the saved order to the albums on the website.'] });
   }
 
-  const riders = publicRiders(cleanGarage(garage.garage, localFramePaths));
-  if (!isDeepStrictEqual(riders, liveRiders)) {
-    const before = new Map(liveRiders.map(rider => [rider.id, rider]));
-    const after = new Set(riders.map(rider => rider.id));
-    const label = rider => `${rider.name} · ${rider.brand} ${rider.model} · ${rider.colorName}`;
-    const details = riders.filter(rider => !isDeepStrictEqual(before.get(rider.id), rider)).map(rider => `${before.has(rider.id) ? 'Update' : 'Add'} ${label(rider)}`);
-    details.push(...liveRiders.filter(rider => !after.has(rider.id)).map(rider => `Remove ${label(rider)}`));
-    const keptInPreviousOrder = liveRiders.filter(rider => after.has(rider.id)).map(rider => rider.id);
-    const keptInNewOrder = riders.filter(rider => before.has(rider.id)).map(rider => rider.id);
-    if (!isDeepStrictEqual(keptInPreviousOrder, keptInNewOrder)) details.push('Change display order');
-    changes.push({ id: 'hero', title: 'Hero lineup', area: 'Homepage hero', action: 'Update', details });
-  }
+  const publishedGarage = publishedGarageFor(garage, live);
+  const hero = reviewGarage(cleanGarage(garage.garage, localFramePaths), publishedGarage);
+  changes.push(...hero.changes);
 
   let ride = null;
   const draftRide = gallery.upcomingRide;
@@ -66,7 +58,7 @@ export function reviewPublication(live, gallery, garage, closedRides, now = Date
   }
   if (liveRide) changes.push({ id: 'remove-ride', title: liveRide.location, area: 'Upcoming ride', action: 'Remove', details: ['Take the announcement off the website and close member enrolment.'] });
 
-  const reviewId = digest(JSON.stringify([live?.revision, gallery.revision, garage.revision, changes]));
+  const reviewId = digest(JSON.stringify([live?.revision, gallery.revision, garage.revision, publishedGarage, changes]));
   return {
     changes, reviewId, revision: gallery.revision, garageRevision: garage.revision,
     apply(selection) {
@@ -80,11 +72,13 @@ export function reviewPublication(live, gallery, garage, closedRides, now = Date
         let index = 0;
         ordered = ordered.map(place => savedPlaces.has(place.id) ? sorted[index++] : place);
       }
-      return {
+      const publishHero = hero.changes.some(change => picked.has(change.id));
+      const nextGarage = publishHero ? hero.apply(picked) : publishedGarage;
+      return { garage: nextGarage, publicContent: {
         places: ordered,
-        riders: picked.has('hero') ? riders : liveRiders,
+        riders: publishHero ? publicRiders(nextGarage) : liveRiders,
         upcomingRide: picked.has('remove-ride') ? null : picked.has('ride') ? ride : liveRide,
-      };
+      } };
     },
   };
 }

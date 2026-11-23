@@ -10,11 +10,12 @@ type Props = { section: Section; garage: Garage; cloudName: string; cloudReady: 
 const bikeAvailability: Record<Bike['status'], string> = { draft: 'In preparation', published: 'Available for hero', hidden: 'Hidden from hero' };
 export default function GarageEditor({ section, garage, cloudName, cloudReady, busy, dirty, change, upload, migrate }: Props) {
   const [memberId, setMemberId] = useState(garage.members[0]?.id || ''), [bikeId, setBikeId] = useState(garage.bikes[0]?.id || ''), [preview, setPreview] = useState(false);
-  const member = garage.members.find(m => m.id === memberId), bike = garage.bikes.find(b => b.id === bikeId);
+  const member = garage.members.find(m => m.id === memberId) ?? garage.members[0];
+  const bike = garage.bikes.find(b => b.id === bikeId) ?? garage.bikes[0];
   const remaining = garage.bikes.reduce((n,b) => n+b.frames.filter(f => f.source === 'local').length, 0);
   const riders = useMemo(() => publicRiders(garage), [garage]);
-  const setMember = (value: Partial<NonNullable<typeof member>>) => change({ ...garage, members: garage.members.map(m => m.id === memberId ? { ...m, ...value } : m) });
-  const setBike = (value: Partial<Bike>) => change({ ...garage, bikes: garage.bikes.map(b => b.id === bikeId ? { ...b, ...value } : b) });
+  const setMember = (value: Partial<NonNullable<typeof member>>) => change({ ...garage, members: garage.members.map(m => m.id === member?.id ? { ...m, ...value } : m) });
+  const setBike = (value: Partial<Bike>) => change({ ...garage, bikes: garage.bikes.map(b => b.id === bike?.id ? { ...b, ...value } : b) });
   const framePreview = useMemo(() => bike?.frames.length ? { ...bike, name: 'Preview', frames: bike.frames.length, frameAssets: bike.frames } as PublicRider : null, [bike]);
   function addMember() {
     const id = `member-${crypto.randomUUID()}`;
@@ -38,7 +39,7 @@ export default function GarageEditor({ section, garage, cloudName, cloudReady, b
   return <div hidden={section === 'places'}>
     {section === 'members' && <div className="admin-layout">
       <aside className="admin-sidebar"><div className="admin-list-title"><h1>Members</h1><button type="button" aria-label="Add member" onClick={addMember} disabled={busy || garage.members.length >= 150}><Plus size={20}/></button></div><p className="admin-muted">People first. Bikes can be reassigned.</p>
-        <nav aria-label="Edit members">{garage.members.map(m => <button key={m.id} type="button" className={memberId === m.id ? 'is-current' : ''} aria-current={memberId === m.id ? 'page' : undefined} onClick={() => setMemberId(m.id)} disabled={busy}><Users size={19}/><span><strong>{m.name}</strong><small>{m.active ? 'Active' : 'Inactive'} · {garage.lineup.filter(e => e.memberId === m.id).length} bike entries</small></span></button>)}</nav>
+        <nav aria-label="Edit members">{garage.members.map(m => <button key={m.id} type="button" className={member?.id === m.id ? 'is-current' : ''} aria-current={member?.id === m.id ? 'page' : undefined} onClick={() => setMemberId(m.id)} disabled={busy}><Users size={19}/><span><strong>{m.name}</strong><small>{m.active ? 'Active' : 'Inactive'} · {garage.lineup.filter(e => e.memberId === m.id).length} bike entries</small></span></button>)}</nav>
       </aside>
       <section className="admin-editor"><div className="admin-editor-heading"><div><h2>{member?.name || 'Add a member'}</h2><p className="admin-muted">Saved changes go live only when you publish.</p></div></div>
         {member ? <fieldset disabled={busy} className="admin-fields"><section className="admin-section"><div className="admin-section-title"><h3>Member details</h3><label className="admin-publish"><input type="checkbox" checked={member.active} onChange={e => setMember({ active: e.target.checked })}/> Active member</label></div>
@@ -51,7 +52,7 @@ export default function GarageEditor({ section, garage, cloudName, cloudReady, b
     </div>}
     {section === 'bikes' && <div className="admin-layout">
       <aside className="admin-sidebar"><div className="admin-list-title"><h1>Bike library</h1><button type="button" aria-label="Add bike" onClick={addBike} disabled={busy || garage.bikes.length >= 150}><Plus size={20}/></button></div><p className="admin-muted">One image set. Any member assignment.</p>
-        <nav aria-label="Edit bikes">{garage.bikes.map(b => <button type="button" key={b.id} className={bikeId === b.id ? 'is-current' : ''} aria-current={bikeId === b.id ? 'page' : undefined} onClick={() => setBikeId(b.id)} disabled={busy}>{b.frames[0] ? <img src={bikeFrameUrl(b.frames[0], cloudName, 160)} alt="" loading="lazy"/> : <BikeIcon size={19}/>}<span><strong>{b.model || 'Untitled bike'}</strong><small>{b.colorName || 'Colour not set'} · {bikeAvailability[b.status]}</small></span></button>)}</nav>
+        <nav aria-label="Edit bikes">{garage.bikes.map(b => <button key={b.id} type="button" className={bike?.id === b.id ? 'is-current' : ''} aria-current={bike?.id === b.id ? 'page' : undefined} onClick={() => setBikeId(b.id)} disabled={busy}>{b.frames[0] ? <img src={bikeFrameUrl(b.frames[0], cloudName, 160)} alt="" loading="lazy"/> : <BikeIcon size={19}/>}<span><strong>{b.model || 'Untitled bike'}</strong><small>{b.colorName || 'Colour not set'} · {bikeAvailability[b.status]}</small></span></button>)}</nav>
       </aside>
       <section className="admin-editor"><div className="admin-editor-heading"><div><h2>{bike?.model || 'Add a bike'}</h2><p className="admin-muted">Keep original paint, transparent edges and ordered views.</p></div></div>
         {bike ? <fieldset disabled={busy} className="admin-fields">

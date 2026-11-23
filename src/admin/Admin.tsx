@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { ArrowLeft, ArrowUp, ArrowUpRight, Check, ExternalLink, LockKeyhole, LogOut, Plus, Save, X, Send } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { ArrowLeft, ArrowUp, ArrowUpRight, Check, ExternalLink, LockKeyhole, LogOut, Plus, Save, X, Send, Trash2 } from 'lucide-react';
 import { cmsRequest, mediaUrl, type Media, type Place } from '../lib/gallery';
 import { LoadingSpinner, LoadingStatus } from '../components/Loading';
 import './admin.css';
@@ -27,6 +27,7 @@ export default function Admin() {
   const [data, setData] = useState<EditorDocument | null>(null);
   const [places, setPlaces] = useState<Place[]>([]), [baseline, setBaseline] = useState('');
   const [garage, setGarage] = useState<Garage>({ members: [], bikes: [], lineup: [] });
+  const garageWithPresets = useMemo(() => offerDraftBikes(offerNewRiders(garage)), [garage]);
   const [upcomingRide, setUpcomingRide] = useState<UpcomingRide>(emptyUpcomingRide), [rideBaseline, setRideBaseline] = useState('');
   const [section, setSection] = useState<Section>('places');
   const uploadedFrames = useRef(new Map<string, BikeFrame>());
@@ -62,11 +63,8 @@ export default function Admin() {
   function failure(e: unknown) { const text = messageOf(e); setError(text); if (text.startsWith('Your session has ended')) setPhase('login'); }
   async function load() {
     const doc = await cmsRequest<EditorDocument>('editor');
-    const riders = offerNewRiders(doc.garage), offered = offerDraftBikes(riders);
-    setData(doc); setPlaces(doc.places); setBaseline(JSON.stringify(doc.places)); setGarage(offered); setSelected(doc.places[0]?.id || ''); setPhase('editor'); setReview(null);
+    setData(doc); setPlaces(doc.places); setBaseline(JSON.stringify(doc.places)); setGarage(doc.garage); setSelected(doc.places[0]?.id || ''); setPhase('editor'); setReview(null);
     const ride = doc.upcomingRide ?? emptyUpcomingRide(); setUpcomingRide(ride); setRideBaseline(JSON.stringify(ride));
-    if (riders !== doc.garage) setNotice('New presets are available in Hero members, Bike library and Hero lineup. Save the pages you want to keep.');
-    else if (offered !== doc.garage) setNotice('New presets are available in Bike library. Save its draft to keep them.');
   }
   useEffect(() => {
     let active = true;
@@ -103,6 +101,15 @@ export default function Admin() {
     setData(previous => previous ? { ...previous, revision: saved.revision, places: saved.places } : previous);
     setPlaces(saved.places); setBaseline(JSON.stringify(saved.places));
   }
+  function setSavedRide(saved: { revision: number; upcomingRide: UpcomingRide | null }) {
+    setData(previous => previous ? { ...previous, revision: saved.revision, upcomingRide: saved.upcomingRide } : previous);
+    const ride = saved.upcomingRide ?? emptyUpcomingRide();
+    setUpcomingRide(ride); setRideBaseline(JSON.stringify(ride));
+  }
+  function setSavedGarage(page: keyof Garage, saved: { revision: number; garage: Garage }) {
+    setData(previous => previous ? { ...previous, garage: saved.garage, garageRevision: saved.revision } : previous);
+    setGarage(current => ({ ...current, [page]: saved.garage[page] }));
+  }
   async function save(page: DraftSection, event?: FormEvent) {
     event?.preventDefault(); if (!data || busy || !changesBySection[page]) return; setOperation('Saving draft…'); setError(''); setNotice('');
     try {
@@ -111,17 +118,33 @@ export default function Admin() {
         setSavedPlaces(saved);
       } else if (page === 'upcoming') {
         const saved = await cmsRequest<{ revision: number; upcomingRide: UpcomingRide }>('upcoming-ride', { method: 'PUT', body: JSON.stringify({ revision: data.revision, upcomingRide, draft: true }) });
-        setData({ ...data, ...saved }); setUpcomingRide(saved.upcomingRide); setRideBaseline(JSON.stringify(saved.upcomingRide));
+        setSavedRide(saved);
       } else {
         const next = { ...data.garage, [page]: garage[page] };
         if (page === 'lineup' && next.lineup.some(entry => !next.members.some(member => member.id === entry.memberId) || !next.bikes.some(bike => bike.id === entry.bikeId))) {
           throw Error('Save the assigned members and bikes on their pages before saving this lineup.');
         }
         const saved = await cmsRequest<{ revision: number; garage: Garage }>('garage', { method: 'PUT', body: JSON.stringify({ revision: data.garageRevision, garage: next }) });
-        setData({ ...data, garage: saved.garage, garageRevision: saved.revision });
-        setGarage(current => ({ ...current, [page]: saved.garage[page] }));
+        setSavedGarage(page, saved);
       }
       setNotice(`${sectionNames[page]} draft saved.`);
+    } catch (e) { failure(e); } finally { setOperation(''); }
+  }
+  async function discard(page: DraftSection) {
+    if (!data || busy || !window.confirm(`Discard the saved draft and any unsaved edits for ${sectionNames[page]}? This restores the published version of this page.`)) return;
+    setOperation('Discarding draft…'); setError(''); setNotice('');
+    const options = { method: 'POST', body: JSON.stringify({ section: page, revision: page === 'places' || page === 'upcoming' ? data.revision : data.garageRevision }) };
+    try {
+      if (page === 'places') {
+        const saved = await cmsRequest<{ revision: number; places: Place[] }>('discard-draft', options);
+        setSavedPlaces(saved);
+        setSelected(current => saved.places.some(place => place.id === current) ? current : saved.places[0]?.id || '');
+      } else if (page === 'upcoming') {
+        setSavedRide(await cmsRequest<{ revision: number; upcomingRide: UpcomingRide | null }>('discard-draft', options));
+      } else {
+        setSavedGarage(page, await cmsRequest<{ revision: number; garage: Garage }>('discard-draft', options));
+      }
+      setNotice(`${sectionNames[page]} draft discarded.`);
     } catch (e) { failure(e); } finally { setOperation(''); }
   }
   async function openReview() {
@@ -155,8 +178,7 @@ export default function Admin() {
     if(!window.confirm(operation==='cancel-ride'?'Cancel this ride for members and notify them now? Use Review & publish to remove the announcement.':'Start a fresh ride draft? This clears the current ride draft.'))return;
     setOperation(operation === 'cancel-ride' ? 'Cancelling ride…' : 'Creating a ride draft…');setError('');try {
       const saved = await cmsRequest<{revision:number; upcomingRide:UpcomingRide | null; notice?:string}>(operation,{method:'POST',body:JSON.stringify({revision:data.revision})});
-      setData({ ...data, revision: saved.revision, upcomingRide: saved.upcomingRide });
-      const ride = saved.upcomingRide ?? emptyUpcomingRide(); setUpcomingRide(ride); setRideBaseline(JSON.stringify(ride));
+      setSavedRide(saved);
       setNotice(saved.notice || 'New ride draft ready.');
     } catch(e){failure(e);}finally{setOperation('');}
   }
@@ -249,17 +271,23 @@ export default function Admin() {
       <a className="admin-back" href="/"><ArrowLeft size={15}/> Back to the website</a>
     </div>
   </main>;
+  const draftActions = draftSection && <div className="admin-draft-actions">
+    <button className="admin-danger" type="button" disabled={busy} onClick={() => void discard(draftSection)}>{operation === 'Discarding draft…' ? <LoadingSpinner size={16}/> : <Trash2 size={16}/>} Discard draft</button>
+    <button className={changesBySection[draftSection] ? 'admin-primary' : ''} type="button" disabled={busy || !changesBySection[draftSection]} onClick={() => void save(draftSection)}>{operation === 'Saving draft…' ? <LoadingSpinner size={16}/> : <Save size={16}/>} Save draft</button>
+  </div>;
   return <main className="hh-admin">
     <header className="admin-top"><a className="admin-brand" href="/">Highway Hustlers<span>Content dashboard{data?.localPreview ? ' · Local preview' : ''}</span></a><div><a href="/" target="_blank" rel="noreferrer" aria-label="View website"><span>View website</span> <ExternalLink size={15}/></a><button onClick={logout} disabled={busy}>{operation === 'Signing out…' ? <LoadingSpinner size={16}/> : <LogOut size={15}/>} Sign out</button></div></header>
     <nav className="admin-sections" aria-label="Dashboard sections">{(['upcoming','membership','ridePhotos','places','members','bikes','lineup'] as Section[]).map(id => <button key={id} type="button" aria-current={section === id ? 'page' : undefined} disabled={busy} onClick={() => { setSection(id); setShowLibrary(false); setNotice(''); setError(''); }}>{sectionNames[id]}{id !== 'membership' && id !== 'ridePhotos' && changesBySection[id] && <span className="admin-unsaved-dot" aria-label="Unsaved edits"/>}</button>)}</nav>
     {section !== 'membership' && <div className="admin-publishing"><div><strong>{data?.localPreview ? 'Website preview' : 'Website publication'}</strong>{data?.published && <p className="admin-muted admin-small">Last published {new Date(data.published.publishedAt).toLocaleString()}</p>}</div><button type="button" aria-haspopup="dialog" disabled={busy || !data?.publishReady} onClick={() => void openReview()}><Send size={16}/> Review &amp; publish</button></div>}
     {draftSection && draftSection !== 'places' && <div className="admin-draft-bar" aria-label={`${sectionNames[draftSection]} draft`}>
-      <div><strong>{sectionNames[draftSection]}</strong><span className="admin-muted">{changesBySection[draftSection] ? 'Unsaved edits on this page' : 'No unsaved edits'}</span></div>
-      <button className={changesBySection[draftSection] ? 'admin-primary' : ''} type="button" disabled={busy || !changesBySection[draftSection]} onClick={() => void save(draftSection)}>{operation === 'Saving draft…' ? <LoadingSpinner size={16}/> : <Save size={16}/>} Save draft</button>
+      <div><strong>{sectionNames[draftSection]}</strong><span className="admin-muted">{changesBySection[draftSection] ? 'Unsaved edits on this page' : 'No unsaved edits'}</span>
+        {draftSection !== 'upcoming' && garageWithPresets !== garage && <button type="button" disabled={busy} onClick={() => { setGarage(garageWithPresets); setNotice('Garage presets loaded. Save the drafts you want to keep.'); }}><Plus size={16}/> Load garage presets</button>}
+      </div>
+      {draftActions}
     </div>}
     {operation && !review && <LoadingStatus label={operation} floating/>}
     <div className="admin-feedback admin-global-feedback" aria-live="polite">{error ? <p className="admin-error" role="alert">{error}</p> : !operation && notice ? <p className="admin-success"><Check size={16}/>{notice}</p> : null}{section !== 'membership' && !data?.publishReady && <p className="admin-warning">Publishing needs Cloudinary credentials. Preview deployments also need their own content snapshot ID.</p>}</div>
-    {data && section === 'places' && <PlaceEditor places={places} savedPlaces={data.places} selected={selected} cloudName={data.cloudName} cloudReady={data.cloudReady} busy={busy} dirty={placesDirty} saving={operation === 'Saving draft…'}
+    {data && section === 'places' && <PlaceEditor places={places} savedPlaces={data.places} selected={selected} cloudName={data.cloudName} cloudReady={data.cloudReady} busy={busy} draftActions={draftActions}
       select={choose} add={addPlace} remove={removePlace} move={movePlace} change={update} save={event => void save('places', event)}
       upload={files => void upload(files)} openLibrary={() => setShowLibrary(true)}/>}
     {data && section === 'upcoming' && <><UpcomingRideEditor ride={upcomingRide} change={ride => { setUpcomingRide(ride); setNotice(''); }} cloudName={data.cloudName} cloudReady={data.cloudReady} busy={busy} upload={files => void upload(files, 'ride')} library={() => setShowLibrary(true)}/><div className="admin-editor admin-upcoming-editor"><p className="admin-muted admin-field-note">After a published ride ends, its announcement becomes an album draft.</p><div className="admin-media-actions"><button disabled={busy || rideDirty || !data.published?.upcomingRide?.id || data.published.upcomingRide.id !== upcomingRide.id} className="admin-danger" onClick={()=>void rideLifecycle('cancel-ride')}>Cancel ride &amp; notify members</button><button disabled={busy || rideDirty || !upcomingRide.id} onClick={()=>void rideLifecycle('new-ride')}>Start a new ride</button></div></div></>}

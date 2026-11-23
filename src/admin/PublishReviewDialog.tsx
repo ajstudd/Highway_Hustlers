@@ -33,6 +33,7 @@ export default function PublishReviewDialog({ review, unsaved, local, busy, erro
       <p className="admin-muted">Select the changes to publish. Leave other drafts unchecked.</p>
     </div><button type="button" onClick={dismiss} disabled={busy} aria-label="Close publication review"><X size={20}/></button></header>
     {!!unsaved.length && <p className="admin-warning">Unsaved edits are excluded from this review. Save the draft in {unsaved.join(', ')} to review those edits.</p>}
+    {review.changes.some(change => change.area === 'Homepage hero') && <p className="admin-muted admin-review-detail">If a lineup change uses a new member or bike, select the matching Hero members or Bike library changes too. Only visible entries with an active member and available bike appear on the homepage.</p>}
     {!hasDraftChanges && <p className="admin-muted admin-review-empty">No saved changes to publish.</p>}
     <ul className="admin-review-list">
       {review.changes.map(change => <li key={change.id}>

@@ -5,6 +5,7 @@ import { mediaUrl } from '../lib/gallery';
 import { uploadMemberPhoto } from './photo-upload';
 import { RidePhotos } from './RidePhotos';
 import { UpcomingRideView } from '../components/UpcomingRide';
+import { LoadingStatus } from '../components/Loading';
 import './member.css';
 import './member-bikes.css';
 import { ProfileBike } from './ProfileBike';
@@ -37,7 +38,8 @@ export default function Member(){
   const unread=home?.notifications.filter(n=>!account?.seenAt||n.createdAt>account.seenAt).length||0;
   return <main className="hhr-member"><header className="member-top"><a href="/" className="member-wordmark">Highway Hustlers<span>Bhopal · Members</span></a><a href="/" className="member-back"><ArrowLeft size={16}/>Website</a></header>
     <div className="member-main">
-      {!session&&!error&&<p role="status">Opening your profile…</p>}
+      {!session&&!error&&<LoadingStatus label="Opening your profile…"/>}
+      {busy&&<LoadingStatus label="Saving changes…" floating/>}
       {error&&<div className="member-feedback member-error" role="alert">{error}<button type="button" onClick={()=>void action(load)}>Try again</button></div>}
       {notice&&<p className="member-feedback" role="status"><Check size={17}/>{notice}</p>}
       {session&&!session.account&&<section className="member-login"><UserRound size={30}/><h1>A familiar face.<br/><em>A new road.</em></h1><p>Your HHR profile is where you join rides, look after your details, and catch updates from the crew.</p><a className={`member-primary ${session.googleReady?'':'is-disabled'}`} href={session.googleReady?`/api/member?action=google${/^ride-[a-f0-9]{24}$/.test(intended)?`&ride=${intended}`:''}`:undefined} aria-disabled={!session.googleReady}>Continue with Google <ArrowUpRight size={18}/></a>{!session.googleReady&&<p className="member-small">Google sign-in is being set up. Please check back shortly.</p>}<p className="member-small">New to HHR? Sign in, complete your profile and request membership. Ride enrolment opens after approval.</p>{new URLSearchParams(window.location.search).has('error')&&<p className="member-error" role="alert">Google sign-in wasn’t completed. Try again with a Gmail or Google Workspace account.</p>}<p className="member-small">We use your Google name, email and photo to create your profile. Your phone and membership details are visible only to you and HHR administrators—not in the public content feed.</p></section>}

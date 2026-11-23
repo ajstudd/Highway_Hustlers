@@ -8,13 +8,14 @@ import { useReveal } from './hooks/motion';
 import { lazy, Suspense } from 'react';
 import { PublicContentProvider } from './lib/public-content';
 import { UpcomingRide } from './components/UpcomingRide';
+import { LoadingStatus } from './components/Loading';
 
 const Admin = lazy(() => import('./admin/Admin'));
 const Member = lazy(() => import('./member/Member'));
 
 export function App() {
-  if (/^\/member\/?$/.test(window.location.pathname)) return <Suspense fallback={<main className="p-8" role="status">Opening your HHR profile…</main>}><Member /></Suspense>;
-  if (/^\/admin(?:\/|$)/.test(window.location.pathname)) return <Suspense fallback={<main className="p-8" role="status">Loading dashboard…</main>}><Admin /></Suspense>;
+  if (/^\/member\/?$/.test(window.location.pathname)) return <Suspense fallback={<main className="p-8"><LoadingStatus label="Opening your HHR profile…"/></main>}><Member /></Suspense>;
+  if (/^\/admin(?:\/|$)/.test(window.location.pathname)) return <Suspense fallback={<main className="p-8"><LoadingStatus label="Loading dashboard…"/></main>}><Admin /></Suspense>;
   return <PublicSite />;
 }
 

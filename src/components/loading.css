@@ -1,0 +1,21 @@
+.hh-loading-spinner { flex-shrink: 0; animation: hh-loading-turn .85s linear infinite; }
+.hh-loading-status { display: flex; align-items: center; gap: 9px; }
+.hh-loading-status .hh-loading-spinner { color: rgb(var(--marigold)); }
+.hh-loading-toast {
+  position: fixed;
+  z-index: 70;
+  right: 16px;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  padding: 11px 14px;
+  border: 1px solid #615039;
+  border-radius: 8px;
+  color: rgb(var(--paper));
+  background: #242019;
+  box-shadow: 0 6px 22px #0006;
+  font-size: 14px;
+  pointer-events: none;
+}
+@keyframes hh-loading-turn { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .hh-loading-spinner { animation: none; } }

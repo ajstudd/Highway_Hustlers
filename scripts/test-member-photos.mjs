@@ -38,6 +38,10 @@ try{
   assert(!JSON.stringify(results).includes('server-key-only'));assert(!JSON.stringify(results).includes('signature'));assert(!JSON.stringify(results).includes('server-secret-only'));
   assert.equal((await upload(0,{uuid})).status,200);assert.equal(calls,2,'confirmed replay must not upload again');assert.equal((await upload(0)).status,409);assert.equal(calls,2);
   await admin('login','POST',{password:'Photo-test-admin-password'});assert.equal((await admin('ride-photos')).data.photos.length,2);
+  const filtered = await admin(`ride-photos&status=pending&ride=${rideId}`);
+  assert.equal(filtered.status,200);assert.equal(filtered.data.rides[0].id,rideId);assert.equal(filtered.data.photos.length,2);
+  assert.equal((await admin('ride-photos&ride=ride-ffffffffffffffffffffffff')).data.photos.length,0);
+  assert.equal((await admin('ride-photos&ride=bad%20ride')).status,400);
   let doc=(await admin('editor')).data;const submission=results[0].data.id,target=doc.places[0].id;
   assert.equal((await admin('add-ride-photo','POST',{id:submission,placeId:target,revision:doc.revision})).status,400);
   assert.equal((await admin('moderate-ride-photo','POST',{id:submission,status:'approved',expected:'pending'})).status,200);

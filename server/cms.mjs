@@ -115,8 +115,11 @@ export function createCms(env = process.env, injectedStore, fetcher = fetch) {
       if(action==='ride-photos'&&req.method==='GET'){
         const status=url.searchParams.get('status')||'';if(!['','pending','approved','rejected'].includes(status))fail(400,'Invalid photo status.');
         const offset=Number(url.searchParams.get('offset')||0);if(!Number.isSafeInteger(offset)||offset<0||offset>100000)fail(400,'Invalid catalogue page.');
-        const [photos,{state}]=await Promise.all([db.reviewPhotos(status,offset),db.getMemberState()]);
-        return send(200,{photos:photos.slice(0,50).map(p=>({...p,name:state.accounts.find(a=>a.id===p.accountId)?.name||'Former member',ride:state.rides.find(r=>r.id===p.rideId)?.details.location||p.rideId})),more:photos.length>50});
+        const rideId=url.searchParams.get('ride')||'';
+        if(rideId&&!/^[a-z0-9-]{1,80}$/.test(rideId))fail(400,'Choose a ride to filter photos.');
+        const [photos,{state}]=await Promise.all([db.reviewPhotos(status,offset,rideId),db.getMemberState()]);
+        const rides=state.rides.map(ride=>({id:ride.id,name:ride.details.location,date:ride.details.date})).reverse();
+        return send(200,{photos:photos.slice(0,50).map(p=>({...p,name:state.accounts.find(a=>a.id===p.accountId)?.name||'Former member',ride:state.rides.find(r=>r.id===p.rideId)?.details.location||p.rideId})),more:photos.length>50,rides});
       }
       if(action==='moderate-ride-photo'&&req.method==='POST'){
         if(!['pending','approved','rejected'].includes(body.expected)||!['approved','rejected'].includes(body.status))fail(400,'Choose a review decision.');

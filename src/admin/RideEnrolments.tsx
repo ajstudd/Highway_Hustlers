@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, RefreshCw, UserPlus, X } from 'lucide-react';
+import { CalendarDays, Check, ChevronDown, RefreshCw, UserPlus, X } from 'lucide-react';
 import type { UpcomingRide } from '../../shared/upcoming-ride.mjs';
 import type { MemberAccount } from '../member/api';
 
@@ -23,8 +23,7 @@ export default function RideEnrolments({ rides, accounts, allowed, selected, sel
   }
 
   return <>
-    <h2>Ride enrolments</h2>
-    {rides.length ? <div className="admin-allow-form">
+    {rides.length ? <div className="membership-picker">
       <label>Ride
         <select value={ride?.id ?? ''} onChange={event => select(event.target.value)} disabled={busy}>
           <option value="">Choose a ride</option>
@@ -33,10 +32,10 @@ export default function RideEnrolments({ rides, accounts, allowed, selected, sel
           </optgroup>)}
         </select>
       </label>
-    </div> : <p className="admin-muted admin-field-note">Published rides appear here when member enrolment is available.</p>}
+    </div> : <p className="membership-empty">Published rides appear here when member enrolment is available.</p>}
     {ride && <RideRosterEditor key={ride.id} ride={ride} statusLabel={ride.status === 'open' && groups.past.includes(ride) ? 'Past ride' : rideStatus[ride.status]} accounts={accounts} allowed={allowed} busy={busy} action={action}/>}
-    <div className="admin-field-note">
-      <button type="button" disabled={busy} onClick={() => void action('sync-member-ride', {}, 'Published ride synced to member profiles.')}><RefreshCw size={16}/> Sync published ride</button>
+    <div className="membership-ride-tools">
+      <button type="button" className="membership-quiet" disabled={busy} onClick={() => void action('sync-member-ride', {}, 'Published ride synced to member profiles.')}><RefreshCw size={15}/> Sync published ride</button>
     </div>
   </>;
 }
@@ -61,21 +60,29 @@ function RideRosterEditor({ ride, statusLabel, accounts, allowed, busy, action }
     if (saved) setAccountId('');
   }
 
-  return <details className="admin-member-ride" open>
-    <summary><strong>{name}</strong><span className="admin-muted">{rideDate(ride)} · {statusLabel} · {ride.participants.length} enrolled</span></summary>
-    {ride.participants.length ? <ul className="admin-ride-roster" aria-label={`Riders on ${name}`}>{ride.participants.map(account => <li key={account.id}>
-      <div><strong>{account.name}</strong><p>{account.email} · {account.phone}</p><p className="admin-muted">{account.bikeName || 'Bike details not added'}{account.bikeColour && ` · ${account.bikeColour}`}{account.bikeNickname && ` · ${account.bikeNickname}`}</p></div>
-      {canEdit && <button type="button" disabled={busy} aria-label={`Remove ${account.name} from ${name}`} onClick={() => void action('ride-participant', { operation: 'remove', rideId: ride.id, accountId: account.id }, 'Rider removed.')}><X size={15}/> Remove</button>}
-    </li>)}</ul> : <p className="admin-muted admin-field-note">No riders enrolled yet.</p>}
-    {canEdit && <form className="admin-allow-form" onSubmit={event => { event.preventDefault(); void add(); }}>
-      <label>Add a rider
-        <select value={selected?.id ?? ''} disabled={busy || (!members.length && !requests.length)} onChange={event => setAccountId(event.target.value)}>
-          <option value="">{members.length || requests.length ? 'Choose a rider' : 'No eligible riders to add'}</option>
-          {members.length > 0 && <optgroup label="Approved members">{members.map(account => <option value={account.id} key={account.id}>{account.name} · {account.email}</option>)}</optgroup>}
-          {requests.length > 0 && <optgroup label="Pending membership requests">{requests.map(account => <option value={account.id} key={account.id}>{account.name} · {account.email}</option>)}</optgroup>}
-        </select>
-      </label>
-      <button className="admin-primary" disabled={busy || !selected}>{needsApproval ? <Check size={16}/> : <UserPlus size={16}/>} {needsApproval ? 'Approve membership & add' : 'Add to ride'}</button>
-    </form>}
+  return <details className="membership-ride" open>
+    <summary>
+      <span className="membership-ride-icon"><CalendarDays size={20} aria-hidden="true"/></span>
+      <span className="membership-ride-title"><strong>{name}</strong><small>{rideDate(ride)} · {ride.participants.length} enrolled</small></span>
+      <span className="membership-ride-status" data-status={ride.status}>{statusLabel}</span>
+      <ChevronDown className="membership-ride-chevron" size={17} aria-hidden="true"/>
+    </summary>
+    <div className="membership-ride-body">
+      {canEdit && <form className="membership-form membership-task" onSubmit={event => { event.preventDefault(); void add(); }}>
+        <label>Add a rider
+          <select value={selected?.id ?? ''} disabled={busy || (!members.length && !requests.length)} onChange={event => setAccountId(event.target.value)}>
+            <option value="">{members.length || requests.length ? 'Choose a rider' : 'No eligible riders to add'}</option>
+            {members.length > 0 && <optgroup label="Approved members">{members.map(account => <option value={account.id} key={account.id}>{account.name} · {account.email}</option>)}</optgroup>}
+            {requests.length > 0 && <optgroup label="Pending membership requests">{requests.map(account => <option value={account.id} key={account.id}>{account.name} · {account.email}</option>)}</optgroup>}
+          </select>
+        </label>
+        <button className="admin-primary" disabled={busy || !selected}>{needsApproval ? <Check size={16}/> : <UserPlus size={16}/>} {needsApproval ? 'Approve membership & add' : 'Add to ride'}</button>
+      </form>}
+      {ride.participants.length ? <ul className="membership-list" aria-label={`Riders on ${name}`}>{ride.participants.map(account => <li className="membership-row membership-roster-row" key={account.id}>
+        <div className="membership-person"><strong>{account.name}</strong><p>{account.email}{account.phone && ` · ${account.phone}`}</p></div>
+        <p className="membership-roster-bike">{account.bikeName || 'Bike details not added'}{account.bikeColour && ` · ${account.bikeColour}`}{account.bikeNickname && ` · ${account.bikeNickname}`}</p>
+        {canEdit && <button type="button" className="membership-quiet" disabled={busy} aria-label={`Remove ${account.name} from ${name}`} onClick={() => void action('ride-participant', { operation: 'remove', rideId: ride.id, accountId: account.id }, 'Rider removed.')}><X size={15}/> Remove</button>}
+      </li>)}</ul> : <p className="membership-empty">No riders enrolled yet.</p>}
+    </div>
   </details>;
 }

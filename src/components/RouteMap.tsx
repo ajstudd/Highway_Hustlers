@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowDownRight, ArrowLeft, ArrowRight, ArrowUpRight, Check, Images, Play, Shuffle, X } from 'lucide-react';
 import { DESTINATION_VISUALS } from '../data/destinationVisuals';
 import { usePrefersReducedMotion } from '../hooks/motion';
-import { mediaUrl, type Place } from '../lib/gallery';
+import { mediaUrl, placeMapUrl, type Place } from '../lib/gallery';
 import { usePublicContent } from '../lib/public-content';
 import './gallery.css';
 
@@ -20,6 +20,7 @@ export function RouteMap() {
   const rail = useRef<HTMLDivElement>(null);
   const choices = gallery.places.filter(p => matches(p, filter));
   const selected = choices.find(p => p.id === selectedId) || choices[0];
+  const mapUrl = selected ? placeMapUrl(selected) : '';
   const index = choices.findIndex(p => p.id === selected?.id);
   const visual = selected?.legacyId ? DESTINATION_VISUALS[selected.legacyId] : undefined;
   const media = selected?.media[Math.min(mediaIndex, selected.media.length - 1)];
@@ -39,7 +40,7 @@ export function RouteMap() {
         <div className="mornings-photo-stack">{source && source !== failed ? <img key={source} src={source} width={media?.width || 1280} height={media?.height || 853} loading="lazy" decoding="async" className="is-selected" alt={media ? media.caption || `Highway Hustlers ride at ${selected.name}` : visual?.alt || selected.name} style={{objectPosition: media ? '50% 50%' : visual?.position}} onError={()=>setFailed(source)}/> : <div className="mornings-photo-fallback">{selected.name}<small>Photo unavailable.</small></div>}</div>
         <div className="mornings-feature-top"><span className="mornings-ride-kind"><span/>{selected.kind}</span><div className="mornings-pagination"><button type="button" aria-label="Previous destination" onClick={()=>step(-1)} disabled={choices.length<2}><ArrowLeft size={18}/></button><span>{String(index+1).padStart(2,'0')} / {String(choices.length).padStart(2,'0')}</span><button type="button" aria-label="Next destination" onClick={()=>step(1)} disabled={choices.length<2}><ArrowRight size={18}/></button></div></div>
         {media && <button type="button" className="album-open" onClick={()=>setLightbox(true)} aria-label={`Open ${selected.name} album, ${selected.media.length} photos and videos`}>{media.type === 'video' ? <Play size={18}/> : <Images size={18}/>} {media.type === 'video' ? 'Play video' : 'View album'} <span>{selected.media.length}</span></button>}
-        <div className="mornings-feature-copy" key={selected.id}><span className="mornings-mood">{media ? 'With HH' : visual?.mood}</span><h3>{selected.name}</h3><p>{selected.description}</p><a href={selected.mapsUrl || `https://www.google.com/maps/search/?api=1&query=${selected.lat},${selected.lon}`} target="_blank" rel="noopener noreferrer" aria-label={`Find ${selected.name} in Google Maps`}>Find this place <ArrowUpRight size={18}/></a></div>
+        <div className="mornings-feature-copy" key={selected.id}><span className="mornings-mood">{media ? 'With HH' : visual?.mood}</span><h3>{selected.name}</h3><p>{selected.description}</p>{mapUrl && <a href={mapUrl} target="_blank" rel="noopener noreferrer" aria-label={`Find ${selected.name} in Google Maps`}>Find this place <ArrowUpRight size={18}/></a>}</div>
         {media ? <span className="mornings-photo-note">{media.caption || 'Highway Hustlers'}</span> : visual && <a className="mornings-photo-note" href={visual.source} target="_blank" rel="noopener noreferrer">Photo: {visual.author} ↗</a>}
       </div><div className="mornings-picker"><div className="mornings-picker-heading">Pick a ride <ArrowDownRight size={21}/></div><div ref={rail} className="mornings-rail" role="group" aria-label="Ride destinations">{choices.map(p => <button key={p.id} type="button" className="mornings-destination" aria-pressed={p.id === selected.id} aria-controls="morning-destination" aria-label={p.distanceUnknown?p.name:`${p.name}, about ${p.km} kilometres one way`} onClick={()=>setSelectedId(p.id)} onKeyDown={e => {
         if (!['ArrowDown','ArrowRight','ArrowUp','ArrowLeft','Home','End'].includes(e.key)) return;

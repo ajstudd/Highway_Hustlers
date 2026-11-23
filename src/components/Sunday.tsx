@@ -1,6 +1,7 @@
 import { lazy, Suspense, useState } from 'react';
 import { ArrowRight, Coffee, Camera, Home, MapPin } from 'lucide-react';
 import { BEYOND, SUNDAY } from '../data/site';
+import { LoadingStatus } from './Loading';
 const SundayGame = lazy(() => import('./sunday/game/SundayGame'));
 
 export function Sunday() {
@@ -14,7 +15,7 @@ export function Sunday() {
       {story ? <ol className="ride-written-story">{SUNDAY.map((stop, index) => {
         const Icon = index === 3 ? Coffee : index === 4 ? Camera : index === 5 ? Home : MapPin;
         return <li key={stop.time}><span>{stop.time}</span><Icon size={22} /><div><h3>{stop.title}</h3><p>{stop.body}</p></div></li>;
-      })}</ol> : <Suspense fallback={<div className="ride-loading-shell">Getting the garage ready…</div>}><SundayGame /></Suspense>}
+      })}</ol> : <Suspense fallback={<div className="ride-loading-shell"><LoadingStatus label="Getting the garage ready…"/></div>}><SundayGame /></Suspense>}
       <div className="sunday-beyond"><ul>{BEYOND.map(item => <li key={item}>{item}</li>)}</ul></div>
     </div>
   </section>;

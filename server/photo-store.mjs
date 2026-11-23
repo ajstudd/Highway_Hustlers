@@ -18,7 +18,7 @@ export async function postgresPhotos(sql){
     async finishPhoto(id,media,status){const [row]=await sql`UPDATE hh_member_photos SET media=${JSON.stringify(media)}::jsonb,status=${status},expires=0 WHERE id=${id} AND status='reserved' RETURNING id`;return !!row;},
     async releasePhoto(id){await sql`UPDATE hh_member_photos SET expires=0 WHERE id=${id} AND status='reserved'`;},
     async accountPhotos(accountId){return(await sql`SELECT id,ride_id AS "rideId",status,media,expires,created_at AS "createdAt" FROM hh_member_photos WHERE account_id=${accountId} AND purpose='ride' AND (status<>'reserved' OR expires>${Date.now()}) ORDER BY created_at`).map(view);},
-    async reviewPhotos(status='',offset=0){return(await sql`SELECT id,account_id AS "accountId",ride_id AS "rideId",status,media,created_at AS "createdAt" FROM hh_member_photos WHERE purpose='ride' AND status<>'reserved' AND (${status}='' OR status=${status}) ORDER BY created_at DESC,id DESC LIMIT 51 OFFSET ${offset}`).map(view);},
+    async reviewPhotos(status='',offset=0,rideId=''){return(await sql`SELECT id,account_id AS "accountId",ride_id AS "rideId",status,media,created_at AS "createdAt" FROM hh_member_photos WHERE purpose='ride' AND status<>'reserved' AND (${status}='' OR status=${status}) AND (${rideId}='' OR ride_id=${rideId}) ORDER BY created_at DESC,id DESC LIMIT 51 OFFSET ${offset}`).map(view);},
     async moderatePhoto(id,status,expected){const [row]=await sql`UPDATE hh_member_photos SET status=${status} WHERE id=${id} AND purpose='ride' AND status=${expected} AND media IS NOT NULL RETURNING id`;return !!row;},
   };
 }
@@ -38,7 +38,7 @@ export function localPhotos(transaction){
     finishPhoto:(id,media,status)=>transaction(d=>{const p=d.photos?.[id];if(!p||p.status!=='reserved')return false;p.media=media;p.status=status;p.expires=0;return true;}),
     releasePhoto:id=>transaction(d=>{const p=d.photos?.[id];if(p?.status==='reserved')p.expires=0;}),
     accountPhotos:accountId=>transaction(d=>Object.values(d.photos||{}).filter(p=>p.accountId===accountId&&p.purpose==='ride'&&(p.status!=='reserved'||p.expires>Date.now())).sort((a,b)=>a.createdAt-b.createdAt)),
-    reviewPhotos:(status='',offset=0)=>transaction(d=>Object.values(d.photos||{}).filter(p=>p.purpose==='ride'&&p.status!=='reserved'&&(!status||p.status===status)).sort((a,b)=>b.createdAt-a.createdAt||b.id.localeCompare(a.id)).slice(offset,offset+51)),
+    reviewPhotos:(status='',offset=0,rideId='')=>transaction(d=>Object.values(d.photos||{}).filter(p=>p.purpose==='ride'&&p.status!=='reserved'&&(!status||p.status===status)&&(!rideId||p.rideId===rideId)).sort((a,b)=>b.createdAt-a.createdAt||b.id.localeCompare(a.id)).slice(offset,offset+51)),
     moderatePhoto:(id,status,expected)=>transaction(d=>{const p=d.photos?.[id];if(!p||p.purpose!=='ride'||p.status!==expected||!p.media)return false;p.status=status;return true;}),
   };
 }

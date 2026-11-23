@@ -1,10 +1,18 @@
 import seed from '../data/gallery-seed.json';
+import { googleMapsUrl } from '../../shared/maps-link.mjs';
 
 export type Media = { id: string; type: 'image' | 'video'; publicId: string; version: number; width: number; height: number; caption: string };
 export type Place = { id: string; name: string; description: string; kind: 'Sunday morning' | 'Full day' | 'Weekend'; mapsUrl?:string;distanceUnknown?:boolean; km: number; lat: number; lon: number; published: boolean; legacyId?: string; needsLocationReview?: boolean; sourceRideId?: string; rideDate?: string; media: Media[] };
 export type Gallery = { places: Place[]; cloudName: string };
 export const initialPlaces = seed as Place[];
 export const initialGallery: Gallery = { places: initialPlaces, cloudName: 'jr5po5s7' };
+
+export function placeMapUrl(place: Place) {
+  if (place.mapsUrl) {
+    try { return googleMapsUrl(place.mapsUrl).href; } catch { return ''; }
+  }
+  return place.needsLocationReview ? '' : `https://www.google.com/maps/search/?api=1&query=${place.lat},${place.lon}`;
+}
 
 export function mediaUrl(media: Media, cloudName: string, width = 1280, poster = false) {
   const id = media.publicId.split('/').map(encodeURIComponent).join('/');

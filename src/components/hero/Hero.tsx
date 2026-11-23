@@ -5,6 +5,7 @@ import type { PublicRider } from '../../../shared/garage.mjs';
 import { usePrefersReducedMotion } from '../../hooks/motion';
 import { BikeSpinner } from './BikeSpinner';
 import { FittedModelName } from './FittedModelName';
+import { LoadingStatus } from '../Loading';
 
 const AUTO_MS = 7000;
 const OUT_MS = 400;
@@ -15,7 +16,7 @@ const Spinner = memo(BikeSpinner);
 export function Hero() {
   const { snapshot, status } = usePublicContent();
   const riders = snapshot?.riders || [];
-  if (!riders.length) return <section id="top" className="relative flex min-h-[75svh] items-center px-4 pt-24 sm:px-8"><div className="mx-auto w-full max-w-[1336px]"><h1 className="font-display text-[clamp(44px,7vw,96px)] font-extrabold leading-[.95]">Highway <span className="font-serif font-normal italic text-marigold">Hustlers</span></h1><p className="mt-6 text-paper/70">Bhopal’s riding family. Sunday rides and chai stops.</p>{status === 'loading' && <div className="mt-12 h-48" aria-busy="true" aria-label="Loading riders"/>}</div></section>;
+  if (!riders.length) return <section id="top" className="relative flex min-h-[75svh] items-center px-4 pt-24 sm:px-8"><div className="mx-auto w-full max-w-[1336px]"><h1 className="font-display text-[clamp(44px,7vw,96px)] font-extrabold leading-[.95]">Highway <span className="font-serif font-normal italic text-marigold">Hustlers</span></h1><p className="mt-6 text-paper/70">Bhopal’s riding family. Sunday rides and chai stops.</p>{status === 'loading' && <div className="mt-12 h-48"><LoadingStatus label="Loading riders…"/></div>}</div></section>;
   return <Showroom key={JSON.stringify(riders)} riders={riders} cloudName={snapshot!.cloudName}/>;
 }
 

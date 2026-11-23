@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Send, X } from 'lucide-react';
+import { LoadingSpinner } from '../components/Loading';
 import type { PublishReview } from './types';
 
 export default function PublishReviewDialog({ review, unsaved, local, busy, error, close, confirm }: {
@@ -44,6 +45,6 @@ export default function PublishReviewDialog({ review, unsaved, local, busy, erro
       </li>)}
     </ul>
     {error && <p className="admin-error admin-review-error" role="alert">{error}</p>}
-    <footer><span className="admin-muted" role="status">{selected.length} selected</span><button type="button" onClick={dismiss} disabled={busy}>Back to drafts</button><button type="button" className="admin-primary" disabled={!selected.length || busy} onClick={() => confirm(selected)}><Send size={16}/>{busy ? 'Publishing…' : local ? 'Publish to preview' : 'Publish selected'}</button></footer>
+    <footer><span className="admin-muted" role="status">{busy ? 'Publishing selected changes…' : `${selected.length} selected`}</span><button type="button" onClick={dismiss} disabled={busy}>Back to drafts</button><button type="button" className="admin-primary" disabled={!selected.length || busy} onClick={() => confirm(selected)}>{busy ? <LoadingSpinner size={16}/> : <Send size={16}/>} {busy ? 'Publishing…' : local ? 'Publish to preview' : 'Publish selected'}</button></footer>
   </dialog>;
 }

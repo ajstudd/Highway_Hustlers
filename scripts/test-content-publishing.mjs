@@ -46,7 +46,7 @@ try {
   }
   assert.equal(sqlCalls,before,'public requests must not initialize or query the database');
   assert.equal(lookups,0); assert.equal(uploads,0);
-  for (const action of ['editor','garage','publish','discard-draft','sign-bike-upload','confirm-bike-upload']) assert.equal((await request(action, action === 'editor' ? 'GET' : 'POST', action === 'editor' ? undefined : {})).status,401);
+  for (const action of ['editor','garage','publish','preview-publication','discard-draft','sign-bike-upload','confirm-bike-upload']) assert.equal((await request(action, action === 'editor' ? 'GET' : 'POST', action === 'editor' ? undefined : {})).status,401);
   const login = await request('login','POST',{password}); assert.equal(login.status,200);
   const cookie = login.headers.get('set-cookie').split(';')[0];
   const doc = (await request('editor','GET',undefined,cookie)).data;
@@ -82,6 +82,18 @@ try {
   const selection = {...publish, reviewId: review.data.reviewId, selection:['hero-members']};
   const blocked = await request('publish','POST',{...selection,selection:['hero-lineup']},cookie);
   assert.equal(blocked.status,400); assert.match(blocked.data.error, /Hero members/);
+  const preview = await request('preview-publication','POST',selection,cookie);
+  assert.equal(preview.status,200);
+  assert.equal(preview.headers.get('cache-control'),'no-store');
+  assert.deepEqual(Object.keys(preview.data),['snapshot']);
+  assert(!('garage' in preview.data.snapshot));
+  assert.equal(uploads,count,'preview makes no Cloudinary writes');
+  assert.deepEqual(assets.get('hh-site/published.json'),legacyLive);
+  const baseline = await request('preview-publication','POST',{...selection,selection:[]},cookie);
+  assert.deepEqual(baseline.data.snapshot.riders,legacyLive.riders);
+  const invalidPreview = await request('preview-publication','POST',{...selection,selection:['hero-lineup']},cookie);
+  assert.equal(invalidPreview.status,400);
+  assert.equal(invalidPreview.data.error,blocked.data.error);
   failAlias = true;
   assert.equal((await request('publish','POST',selection,cookie)).status,502);
   assert.equal(assets.get('hh-site/published.json').riders.length,13,'failed alias update keeps the previous live snapshot');
@@ -89,6 +101,8 @@ try {
   failAlias = false;
   assert.equal((await request('publish','POST',selection,cookie)).status,200);
   const partial = assets.get('hh-site/published.json');
+  assert.deepEqual(partial.riders,preview.data.snapshot.riders,'hero preview matches selective publishing');
+  assert.equal((await request('preview-publication','POST',selection,cookie)).status,409,'a preview cannot use an outdated review');
   assert(partial.riders.some(r => r.id === 'classic-350'));
   assert(partial.riders.some(r => r.id === 'tvs-raider-125'));
   assert(!partial.riders.some(r => r.name === 'Junaid A' || r.name === 'QA Member'));

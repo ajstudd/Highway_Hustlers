@@ -1,14 +1,6 @@
-import { Hero } from './components/hero/Hero';
-import { Join, Footer } from './components/Join';
-import { Manifesto } from './components/Manifesto';
-import { Nav } from './components/Nav';
-import { RouteMap } from './components/RouteMap';
-import { Sunday } from './components/Sunday';
-import { useReveal } from './hooks/motion';
 import { lazy, Suspense } from 'react';
-import { PublicContentProvider } from './lib/public-content';
-import { UpcomingRide } from './components/UpcomingRide';
 import { LoadingStatus } from './components/Loading';
+import { PublicSite } from './components/PublicSite';
 
 const Admin = lazy(() => import('./admin/Admin'));
 const Member = lazy(() => import('./member/Member'));
@@ -17,22 +9,4 @@ export function App() {
   if (/^\/member\/?$/.test(window.location.pathname)) return <Suspense fallback={<main className="p-8"><LoadingStatus label="Opening your HHR profile…"/></main>}><Member /></Suspense>;
   if (/^\/admin(?:\/|$)/.test(window.location.pathname)) return <Suspense fallback={<main className="p-8"><LoadingStatus label="Loading dashboard…"/></main>}><Admin /></Suspense>;
   return <PublicSite />;
-}
-
-function PublicSite() {
-  useReveal();
-  return (
-    <PublicContentProvider>
-      <Nav />
-      <main>
-        <Hero />
-        <Manifesto />
-        <Sunday />
-        <RouteMap />
-        <UpcomingRide />
-        <Join />
-      </main>
-      <Footer />
-    </PublicContentProvider>
-  );
 }

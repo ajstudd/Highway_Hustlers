@@ -1,4 +1,4 @@
-.admin-surface::after { display:none; }
+.admin-surface:not(.website-preview-open)::after { display:none; }
 .hh-admin { --admin-border:#37332e; --admin-muted:#bdb5a9; --admin-accent:#f5a524; min-height:100dvh; color:#f2ebdd; background:#12110f; font-family:'Inter Tight',system-ui,sans-serif; font-size:15px; line-height:1.5; }
 .hh-admin * { box-sizing:border-box; }
 .hh-admin h1,.hh-admin h2,.hh-admin h3 { font-family:inherit; font-weight:600; letter-spacing:-.025em; text-wrap:balance; }
@@ -163,6 +163,17 @@ dialog.admin-library { color:#f2ebdd; background:#181613; border:1px solid #5148
 .admin-review-detail li+li { margin-top:4px; }
 .admin-review-empty,.admin-review-error { margin-top:20px; }
 .admin-review footer { flex-wrap:wrap; }
+.website-preview-open #root { display:none; }
+.website-preview { padding-bottom:calc(112px + env(safe-area-inset-bottom)); }
+.website-preview-controls {
+  position:fixed; z-index:70; left:50%; bottom:max(12px, env(safe-area-inset-bottom)); transform:translateX(-50%);
+  display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px 24px;
+  min-height:0; width:max-content; max-width:calc(100% - 24px); padding:12px 14px;
+  border:1px solid #51483e; border-radius:10px; background:#181613; box-shadow:0 8px 30px #0009;
+}
+.website-preview-controls strong { font-size:15px; }
+.website-preview-controls p { font-size:13px; }
+.website-preview-actions { display:flex; flex-wrap:wrap; gap:8px; }
 .admin-global-feedback { max-width:1500px; margin:auto; padding:16px 32px; min-height:58px; }
 .admin-global-feedback:empty { display:none; }
 .admin-editor-heading { position:static; }

@@ -6,7 +6,7 @@ import { resolveMapsLink } from './maps-link.mjs';
 import { digest, validPasswordHash, verifyPassword, sessionToken, readToken, sessionCookie, sameOrigin } from './security.mjs';
 import { validateUploadSize, uploadParameters, uploadSignature, uploadTicket, verifyUploadTicket, policy } from './uploads.mjs';
 import { cleanGarage } from '../shared/garage.mjs';
-import { createPublisher, snapshotOf, seedGarage, localFramePaths } from './publication.mjs';
+import { createPublisher, snapshotOf, seedGarage, localFramePaths, MAX_PUBLICATION_BYTES } from './publication.mjs';
 import { reviewPublication } from './publication-review.mjs';
 import { missingLineupReference, publishedGarageFor } from './garage-review.mjs';
 import { validateSnapshot } from '../shared/public-snapshot.mjs';
@@ -50,6 +50,26 @@ export function createCms(env = process.env, injectedStore, fetcher = fetch) {
       for (const ride of state.rides) if (['completed', 'cancelled'].includes(ride.status)) closedRides.add(ride.id);
     }
     return reviewPublication(live, places, garage, closedRides);
+  }
+  async function reviewedPublication(db, places, garage, body, revision) {
+    const review = await publicationReview(db, places, garage);
+    if (body.reviewId !== review.reviewId) fail(409, 'The website or saved drafts changed. Open a new review to continue.');
+    const { selection } = body;
+    const eligible = new Set(review.changes.filter(change => !change.issue).map(change => change.id));
+    if (!Array.isArray(selection) || (revision !== undefined && !selection.length) || selection.length > eligible.size || new Set(selection).size !== selection.length || selection.some(id => !eligible.has(id))) fail(400, 'Select available changes from the publication review.');
+    if (selection.includes('ride') && selection.includes('remove-ride')) fail(400, 'Choose one action for the upcoming ride.');
+    try {
+      const selected = review.apply(selection);
+      const snapshot = validateSnapshot({
+        schemaVersion: 1,
+        revision: revision ?? `preview-${digest(JSON.stringify([review.reviewId, selection]))}`,
+        publishedAt: new Date().toISOString(),
+        cloudName,
+        ...selected.publicContent,
+      });
+      if (Buffer.byteLength(JSON.stringify(snapshot)) > MAX_PUBLICATION_BYTES) throw Error('The public content file is too large. Reduce the number of items.');
+      return { snapshot, garage: selected.garage };
+    } catch (error) { fail(400, error.message); }
   }
   let storePromise;
   const store = () => {
@@ -352,6 +372,12 @@ export function createCms(env = process.env, injectedStore, fetcher = fetch) {
         const { changes, reviewId, revision, garageRevision } = await publicationReview(db, places, garage);
         return send(200, { changes, reviewId, revision, garageRevision });
       }
+      if (action === 'preview-publication' && req.method === 'POST') {
+        const [places, garage] = await Promise.all([db.get(seed), db.getGarage(seedGarage)]);
+        if (places.revision !== body.revision || garage.revision !== body.garageRevision) fail(409, 'Saved drafts changed. Reload before previewing.');
+        const { snapshot } = await reviewedPublication(db, places, garage, body);
+        return send(200, { snapshot });
+      }
       if (action === 'publish' && req.method === 'POST') {
         if (!publisher.ready) fail(503, 'Publishing needs Cloudinary credentials. Preview deployments also need a separate CONTENT_SNAPSHOT_ID.');
         if (![body.revision, body.garageRevision].every(n => Number.isInteger(n) && n >= 0)) fail(400, 'Save your draft before publishing.');
@@ -365,17 +391,9 @@ export function createCms(env = process.env, injectedStore, fetcher = fetch) {
           const reviewed = body.reviewId !== undefined || body.selection !== undefined;
           let snapshot, publishedGarage;
           if (reviewed) {
-            const review = await publicationReview(db, places, garage);
-            if (body.reviewId !== review.reviewId) fail(409, 'The website or saved drafts changed. Open a new review before publishing.');
-            const selection = body.selection;
-            const eligible = new Set(review.changes.filter(change => !change.issue).map(change => change.id));
-            if (!Array.isArray(selection) || !selection.length || selection.length > eligible.size || new Set(selection).size !== selection.length || selection.some(id => !eligible.has(id))) fail(400, 'Select available changes from the publication review.');
-            if (selection.includes('ride') && selection.includes('remove-ride')) fail(400, 'Choose one action for the upcoming ride.');
-            try {
-              const selected = review.apply(selection);
-              snapshot = validateSnapshot({ schemaVersion: 1, revision, publishedAt: new Date().toISOString(), cloudName, ...selected.publicContent });
-              publishedGarage = selected.garage;
-            } catch (error) { fail(400, error.message); }
+            const selected = await reviewedPublication(db, places, garage, body, revision);
+            snapshot = selected.snapshot;
+            publishedGarage = selected.garage;
           } else {
             snapshot = snapshotOf(places.places, garage.garage, cloudName, revision, undefined, places.upcomingRide);
             publishedGarage = garage.garage;

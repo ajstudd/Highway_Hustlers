@@ -9,6 +9,7 @@ import { cleanUpcomingRide } from '../shared/upcoming-ride.mjs';
 import { validateSnapshot } from '../shared/public-snapshot.mjs';
 
 export { seedGarage, seedPlaces, localFramePaths };
+export const MAX_PUBLICATION_BYTES = 1_500_000;
 export function snapshotOf(places, garage, cloudName, revision, publishedAt = new Date().toISOString(), upcomingRide = null) {
   const ride = cleanUpcomingRide(upcomingRide);
   return { schemaVersion: 1, revision, publishedAt, cloudName,
@@ -47,9 +48,9 @@ export function createPublisher(env, fetcher = fetch) {
       else {
         const response = await fetcher(snapshotUrl, { cache: 'no-store', signal: AbortSignal.timeout(10000) });
         if (response.status === 404 && !expectedRevision) return null;
-        if (!response.ok || Number(response.headers.get('content-length')) > 1500000) throw Error('Public content is unavailable.');
+        if (!response.ok || Number(response.headers.get('content-length')) > MAX_PUBLICATION_BYTES) throw Error('Public content is unavailable.');
         const json = await response.text();
-        if (Buffer.byteLength(json) > 1500000) throw Error('Public content is too large.');
+        if (Buffer.byteLength(json) > MAX_PUBLICATION_BYTES) throw Error('Public content is too large.');
         value = JSON.parse(json);
       }
       const snapshot = validateSnapshot(value);
@@ -59,7 +60,7 @@ export function createPublisher(env, fetcher = fetch) {
     async publish(snapshot, releaseId) {
       if (!ready) throw Error('Publishing needs Cloudinary credentials and a separate snapshot ID for Preview environments.');
       const json = JSON.stringify(snapshot);
-      if (Buffer.byteLength(json) > 1500000) throw Error('The public content file is too large. Reduce the number of items.');
+      if (Buffer.byteLength(json) > MAX_PUBLICATION_BYTES) throw Error('The public content file is too large. Reduce the number of items.');
       if (local) {
         await mkdir(dirname(local), { recursive: true });
         await writeFile(`${local}.published.json.tmp`, json, { mode: 0o600 });

@@ -8,7 +8,12 @@ const id = import.meta.env.VITE_CONTENT_SNAPSHOT_ID || 'hh-site/published.json';
 export const publicContentUrl = import.meta.env.DEV ? '/content.json' : `https://res.cloudinary.com/${encodeURIComponent(cloud)}/raw/upload/${id.split('/').map(encodeURIComponent).join('/')}`;
 const Content = createContext<{ snapshot: PublicSnapshot | null; status: 'loading' | 'ready' | 'offline' }>({ snapshot: null, status: 'loading' });
 
-export function PublicContentProvider({ children }: { children: ReactNode }) {
+export function PublicContentProvider({ children, snapshot }: { children: ReactNode; snapshot?: PublicSnapshot }) {
+  if (snapshot) return <Content.Provider value={{ snapshot, status: 'ready' }}>{children}</Content.Provider>;
+  return <PublishedContentProvider>{children}</PublishedContentProvider>;
+}
+
+function PublishedContentProvider({ children }: { children: ReactNode }) {
   const [value, setValue] = useState<{ snapshot: PublicSnapshot | null; status: 'loading' | 'ready' | 'offline' }>({ snapshot: null, status: 'loading' });
   useEffect(() => {
     let active = true;

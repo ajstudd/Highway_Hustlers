@@ -90,11 +90,13 @@ try {
   assert.equal(saved.status, 200, 'incomplete rides can be saved as drafts');
   const reviewed = async () => (await request('publish-review', 'GET', undefined, cookie)).data;
   const publishSelected = (review, selection) => request('publish', 'POST', { revision: review.revision, garageRevision: review.garageRevision, reviewId: review.reviewId, selection }, cookie);
+  const previewSelected = (review, selection) => request('preview-publication', 'POST', { revision: review.revision, garageRevision: review.garageRevision, reviewId: review.reviewId, selection }, cookie);
   assert.equal((await publishSelected(reviewBeforeRide.data, [`place:${first.id}`])).status, 409);
   let review = await reviewed();
   assert.deepEqual(review.changes.map(change => change.id), [`place:${first.id}`, `place:${second.id}`, 'ride']);
   assert.match(review.changes.find(change => change.id === 'ride').issue, /description/);
   assert.equal((await publishSelected(review, ['ride'])).status, 400);
+  assert.equal((await previewSelected(review, ['ride'])).status, 400);
   assert.equal((await publishSelected(review, [`place:${first.id}`])).status, 200);
   const partial = (await request('public')).data;
   assert.equal(partial.places[0].name, 'First changed album');
@@ -105,6 +107,12 @@ try {
   saved = await request('upcoming-ride', 'PUT', { revision: review.revision, upcomingRide: { ...ride, ...rideLocations }, draft: true }, cookie);
   assert.equal(saved.status, 200);
   review = await reviewed();
+  const combined = await previewSelected(review, ['ride', `place:${second.id}`]);
+  assert.equal(combined.status, 200);
+  assert.equal(combined.data.snapshot.upcomingRide.location, ride.location);
+  assert.equal(combined.data.snapshot.places[1].name, 'Second changed album');
+  assert.equal((await request('public')).data.upcomingRide, null);
+  assert.equal((await request('public')).data.places[1].name, second.name);
   assert.equal((await publishSelected(review, ['ride'])).status, 200);
   const liveRide = (await request('public')).data.upcomingRide;
   const discard = (section, revision) => request('discard-draft', 'POST', { section, revision }, cookie);
@@ -119,6 +127,10 @@ try {
   assert.deepEqual((await request('editor', 'GET', undefined, cookie)).data.upcomingRide, liveRide);
   review = await reviewed();
   assert.equal(review.changes.find(change => change.id === 'remove-ride').title, ride.location);
+  const removalPreview = await previewSelected(review, ['remove-ride']);
+  assert.equal(removalPreview.status, 200);
+  assert.equal(removalPreview.data.snapshot.upcomingRide, null);
+  assert.equal((await request('public')).data.upcomingRide.location, ride.location);
   assert.equal((await publishSelected(review, ['remove-ride'])).status, 200);
   assert.equal((await request('public')).data.upcomingRide, null);
   assert.equal((await request('editor', 'GET', undefined, cookie)).data.upcomingRide.location, ride.location, 'removing a live ride keeps its draft');
@@ -126,7 +138,7 @@ try {
   assert.equal(removedDraft.status, 200);
   assert.equal(removedDraft.data.upcomingRide, null);
   assert.deepEqual((await reviewed()).changes, []);
-  const app = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8'); assert(app.indexOf('<UpcomingRide />') > app.indexOf('<RouteMap />') && app.indexOf('<UpcomingRide />') < app.indexOf('<Join />'));
+  const site = await readFile(new URL('../src/components/PublicSite.tsx', import.meta.url), 'utf8'); assert(site.indexOf('<UpcomingRide />') > site.indexOf('<RouteMap />') && site.indexOf('<UpcomingRide />') < site.indexOf('<Join />'));
   const join = await readFile(new URL('../src/components/Join.tsx', import.meta.url), 'utf8'); assert(!join.includes('Find the next ride on Instagram'));
   console.log('Upcoming ride: draft validation, reviewed selection, stale review rejection, saved draft preservation, safe links, migration, and public snapshot isolation passed.');
 } finally { await new Promise(resolve => server.close(resolve)); await pg.close(); await rm(temp, { recursive: true }); }
